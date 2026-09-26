@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head> 
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Supplier Payables &amp; Settlement Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-alt: #EEF3FB;
+    --ink: #14213A;
+    --ink-soft: #57647D;
+    --ink-faint: #97A3B8;
+    --rule: #D7E1F0;
+    --rule-strong: #AFC2E0;
+    --accent: #1D5FD6;
+    --accent-ink: #FFFFFF;
+    --positive: #1F7A4D;
+    --warning: #B0761E;
+    --danger: #D0362C;
+    --focus: #1D5FD6;
+    --shadow-drawer: rgba(20, 33, 58, 0.16);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151F;
+      --surface: #161D2B;
+      --surface-alt: #1B2436;
+      --ink: #E9EDF6;
+      --ink-soft: #A0ACC2;
+      --ink-faint: #5C6884;
+      --rule: #2B3448;
+      --rule-strong: #3A4560;
+      --accent: #5B93F2;
+      --accent-ink: #0B1220;
+      --positive: #6FBE93;
+      --warning: #E0B368;
+      --danger: #F0847A;
+      --focus: #5B93F2;
+      --shadow-drawer: rgba(0, 0, 0, 0.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151F;
+    --surface: #161D2B;
+    --surface-alt: #1B2436;
+    --ink: #E9EDF6;
+    --ink-soft: #A0ACC2;
+    --ink-faint: #5C6884;
+    --rule: #2B3448;
+    --rule-strong: #3A4560;
+    --accent: #5B93F2;
+    --accent-ink: #0B1220;
+    --positive: #6FBE93;
+    --warning: #E0B368;
+    --danger: #F0847A;
+    --focus: #5B93F2;
+    --shadow-drawer: rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    height: auto;
+    min-height: 100%;
+  }
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 800;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .tnum { font-variant-numeric: tabular-nums; }
+  button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: var(--accent); }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 20px 80px;
+  }
+
+  /* ---------- Header ---------- */
+  header.masthead {
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+    border-bottom: 2px solid var(--accent);
+  }
+  .masthead-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .masthead-title h1 {
+    margin: 0 0 4px;
+    font-size: clamp(24px, 4vw, 34px);
+    line-height: 1.1;
+  }
+  .masthead-title .company {
+    font-size: clamp(18px, 2.6vw, 28px);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .masthead-sub {
+    margin-top: 6px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    max-width: 60ch;
+  }
+  .masthead-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 3px;
+    border: 1.5px solid transparent;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--rule-strong);
+  }
+  .btn-ghost:hover { border-color: var(--ink-soft); background: var(--surface-alt); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ---------- Stat strip ---------- */
+  .ledger-tally {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 14px;
+  }
+  .tally-cell {
+    padding: 14px 16px;
+    border-right: 1px solid var(--rule);
+  }
+  .tally-cell:nth-child(3n) { border-right: none; }
+  .tally-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tally-value {
+    font-size: 19px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif; font-weight: 700;
+  }
+  .tally-value.pos { color: var(--positive); }
+  .tally-value.neg { color: var(--danger); }
+
+  .balance-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 0 0 18px;
+  }
+  .balance-card {
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 14px 16px;
+  }
+  .balance-card label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .balance-card input {
+    width: 100%;
+    border: 1.5px solid var(--rule-strong);
+    background: var(--bg);
+    border-radius: 3px;
+    padding: 10px 12px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .balance-card .balance-help {
+    margin-top: 6px;
+    color: var(--ink-faint);
+    font-size: 11px;
+  }
+
+  .balance-panel { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:0 0 16px; }
+  .balance-card { background:linear-gradient(135deg,var(--surface),var(--surface-alt)); border:1px solid var(--rule-strong); border-radius:12px; padding:16px; box-shadow:0 6px 20px rgba(20,33,58,.07); }
+  .balance-card label { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); font-weight:800; margin-bottom:7px; }
+  .balance-card input { width:100%; border:1.5px solid var(--rule-strong); border-radius:8px; padding:11px 12px; font-size:22px; font-weight:800; background:var(--bg); }
+  .balance-help { margin-top:6px; font-size:11px; color:var(--ink-faint); }
+  .bank-manager { margin:0 0 20px; padding:18px; border:1px solid var(--rule-strong); border-radius:14px; background:linear-gradient(135deg,var(--surface),var(--surface-alt)); box-shadow:0 8px 24px rgba(20,33,58,.08); }
+  .bank-manager-head { display:flex; justify-content:space-between; gap:15px; align-items:center; margin-bottom:12px; }
+  .bank-manager h2 { margin:0 0 4px; font-size:20px; }
+  .bank-manager p { margin:0; color:var(--ink-soft); font-size:12px; }
+  .bank-account-row { display:grid; grid-template-columns:1.1fr 1.3fr .9fr .9fr auto; gap:9px; align-items:end; padding:10px; margin-top:9px; background:var(--bg); border:1px solid var(--rule); border-radius:10px; }
+  .bank-account-row label { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:800; margin-bottom:4px; }
+  .bank-account-row input { width:100%; border:1.5px solid var(--rule-strong); border-radius:7px; padding:8px; background:var(--surface); }
+  .bank-current { font-weight:800; font-size:16px; }
+  .bank-remove { border:0; background:transparent; color:var(--danger); font-weight:800; cursor:pointer; padding:8px; }
+  .payment-impact { margin-top:6px; padding:7px 9px; border-radius:8px; background:var(--surface-alt); font-size:11px; color:var(--ink-soft); }
+
+  .status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    padding: 12px 4px 24px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+  .status-row .item { display: flex; align-items: baseline; gap: 6px; }
+  .status-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 2px; }
+  .status-row b { color: var(--ink); font-size: 15px; font-family: 'Inter', sans-serif; font-weight: 700; }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .toolbar input[type="search"],
+  .toolbar select {
+    background: var(--surface);
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 3px;
+    padding: 8px 12px;
+    color: var(--ink);
+  }
+  .toolbar input[type="search"] { flex: 1 1 220px; min-width: 180px; }
+  .toolbar select { flex: 0 0 auto; }
+  .toolbar .spacer { flex: 1 1 auto; }
+
+  /* ---------- Table ---------- */
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1160px;
+  }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-alt);
+    text-align: left;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    padding: 10px 12px;
+    border-bottom: 1.5px solid var(--rule-strong);
+    white-space: nowrap;
+  }
+  thead th.num, td.num { text-align: right; }
+  tbody tr {
+    border-bottom: 1px solid var(--rule);
+  }
+  tbody tr:nth-child(even) { background: var(--surface-alt); }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+  td {
+    padding: 10px 12px;
+    font-size: 13.5px;
+    white-space: nowrap;
+    vertical-align: top;
+  }
+  td.supplier { white-space: normal; min-width: 160px; }
+  td .sub { color: var(--ink-soft); font-size: 11.5px; margin-top: 2px; }
+  .badge {
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .badge.unpaid { color: var(--ink-soft); }
+  .badge.partial { color: var(--warning); }
+  .badge.paid { color: var(--positive); }
+  .badge.refund { color: var(--danger); }
+  .row-actions { display: flex; gap: 12px; }
+  .row-actions button {
+    background: none; border: none; padding: 0;
+    font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .row-actions button:hover { color: var(--accent); }
+  .row-actions button.danger:hover { color: var(--danger); }
+  .overdue-tag { color: var(--danger); font-weight: 600; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+  .empty-state h3 { margin: 0 0 8px; color: var(--ink); }
+  .empty-state button { margin-top: 16px; }
+
+  /* ---------- Drawer ---------- */
+  .scrim {
+    position: fixed; inset: 0;
+    background: rgba(20, 24, 22, 0.4);
+    opacity: 0; pointer-events: none;
+    transition: opacity 150ms ease;
+    z-index: 40;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: min(520px, 100vw);
+    background: var(--surface);
+    box-shadow: -8px 0 28px var(--shadow-drawer);
+    transform: translateX(100%);
+    transition: transform 180ms ease;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--rule);
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    flex-shrink: 0;
+  }
+  .drawer-head h2 { margin: 0; font-size: 20px; }
+  .drawer-close {
+    background: none; border: none; font-size: 22px; line-height: 1;
+    color: var(--ink-soft); padding: 4px 8px;
+  }
+  .drawer-close:hover { color: var(--ink); }
+  .drawer-body { padding: 4px 24px 24px; overflow-y: auto; flex: 1 1 auto; }
+  .drawer-foot {
+    padding: 14px 24px;
+    border-top: 1px solid var(--rule);
+    display: flex; justify-content: flex-end; gap: 10px;
+    flex-shrink: 0;
+  }
+
+  fieldset {
+    border: none; padding: 0; margin: 22px 0 0;
+  }
+  fieldset legend {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--accent); font-weight: 700; padding: 0 0 8px;
+    border-bottom: 1px solid var(--rule);
+    width: 100%; margin-bottom: 12px;
+  }
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+  .field label .req { color: var(--danger); }
+  .field input, .field select, .field textarea {
+    background: var(--bg);
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 3px;
+    padding: 9px 10px;
+    color: var(--ink);
+  }
+  .field textarea { resize: vertical; min-height: 64px; }
+  .readout {
+    margin-top: 14px;
+    background: var(--surface-alt);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .readout .ro-item { font-size: 13px; }
+  .readout .ro-item .ro-label { color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px; }
+  .readout .ro-item .ro-val { font-family: 'Inter', sans-serif; font-weight: 700; font-weight: 600; font-size: 16px; }
+
+  .toast {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 4px;
+    font-size: 13.5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+    z-index: 60;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .sync-note { font-size: 12px; color: var(--ink-faint); }
+
+  @media (max-width: 760px) {
+    .ledger-tally { grid-template-columns: repeat(2, 1fr); }
+    .balance-panel { grid-template-columns:1fr; }
+    .bank-account-row { grid-template-columns:1fr 1fr; }
+    .bank-manager-head { align-items:flex-start; flex-direction:column; }
+    .balance-panel { grid-template-columns: 1fr; }
+    .tally-cell:nth-child(3n) { border-right: 1px solid var(--rule); }
+    .tally-cell:nth-child(2n) { border-right: none; }
+    .field-grid { grid-template-columns: 1fr; }
+
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .table-scroll { overflow-x: visible; border: none; background: transparent; }
+    tbody tr {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      margin-bottom: 10px;
+      padding: 6px 0;
+    }
+    tbody tr:nth-child(even) { background: var(--surface); }
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      white-space: normal;
+      text-align: right;
+      padding: 7px 14px;
+      border-bottom: 1px dashed var(--rule);
+    }
+    td:last-child { border-bottom: none; }
+    td::before {
+      content: attr(data-label);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-soft);
+      font-weight: 700;
+      text-align: left;
+      flex-shrink: 0;
+    }
+    td.num { text-align: right; }
+    .row-actions { justify-content: flex-end; }
+  }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style id="upgradeStyles">
+  .export-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+  .btn-small{padding:8px 11px;font-size:12px}
+  .quick-hint{font-size:11px;color:var(--ink-soft);margin-top:7px}
+  .report-card{margin:0 0 16px;border:1px solid var(--rule);background:var(--surface);padding:12px 14px;border-radius:10px}
+  .report-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .report-row strong{font-size:13px}.report-row select{min-width:220px}
+  .theme-toggle{display:inline-flex;align-items:center;gap:5px}
+  .theme-toggle.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .bank-presets{font-size:11px;color:var(--ink-soft);margin-top:4px}
+  .shortcut-badge{display:inline-block;padding:2px 5px;border:1px solid var(--rule-strong);border-radius:4px;background:var(--surface-alt);font-size:10px}
+  @media(max-width:760px){.export-actions{width:100%}.export-actions .btn{flex:1}.report-row select{min-width:100%;flex:1}.report-row .btn{flex:1}}
+</style>
+<style id="exportPrintStyles">
+@media print { @page { size: A4 landscape; margin: 10mm; } body { background:#fff !important; color:#000 !important; } .masthead-actions, .toolbar, .balance-panel, .bank-manager, .sync-note, .drawer, .scrim, .toast, .row-actions, #emptyState { display:none !important; } .wrap { max-width:none; padding:0; } header.masthead { margin-bottom:8px; padding-bottom:8px; } .ledger-tally { grid-template-columns:repeat(8,1fr); margin-bottom:8px; } .tally-cell { padding:6px 5px; } .tally-label { font-size:7px; } .tally-value { font-size:9px; } .status-row { padding:5px 0 8px; font-size:8px; } table { min-width:0 !important; font-size:7px; } thead th { position:static; font-size:6.5px; padding:4px; } td { font-size:7px; padding:4px; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="masthead-top">
+      <div class="masthead-title">
+        <div class="company" id="companyLabel">ZENTRA SOLUTION (PVT) LTD </div>
+        <h1>Supplier Payables &amp; Settlement Register</h1>
+        <div class="masthead-sub">Tracks cash and credit purchases, returns, notes, payments, supplier refunds and statement reconciliation.</div>
+      </div>
+      <div class="masthead-actions export-actions">
+        <button class="btn btn-ghost btn-small" id="exportBtn" type="button">CSV</button>
+        <button class="btn btn-ghost btn-small" id="exportExcelBtn" type="button">Excel</button>
+        <button class="btn btn-ghost btn-small" id="exportPdfBtn" type="button">PDF</button>
+        <button class="btn btn-ghost btn-small" id="printA4Btn" type="button">Print A4</button>
+        <button class="btn btn-ghost btn-small theme-toggle" id="themeToggleBtn" type="button" title="Switch display mode">🌙 Dark</button>
+        <button class="btn btn-primary btn-small" id="newEntryBtn" type="button">+ Quick Entry</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="ledger-tally" id="tally"></section>
+
+  <section class="report-card" aria-label="Supplier reports">
+    <div class="report-row">
+      <strong>📊 Supplier Report</strong>
+      <select id="reportSupplier" aria-label="Choose supplier for report">
+        <option value="">All Suppliers</option>
+      </select>
+      <button class="btn btn-ghost btn-small" id="reportCsvBtn" type="button">CSV Report</button>
+      <button class="btn btn-ghost btn-small" id="reportExcelBtn" type="button">Excel Report</button>
+      <button class="btn btn-ghost btn-small" id="reportPdfBtn" type="button">PDF Report</button>
+      <button class="btn btn-ghost btn-small" id="reportPrintBtn" type="button">Print A4 Report</button>
+    </div>
+    <div class="quick-hint">Choose one supplier to export only that supplier's records, or choose All Suppliers for the full report.</div>
+  </section>
+
+  <section class="balance-panel" aria-label="Current funds">
+    <div class="balance-card">
+      <label for="cashInHand">Cash in hand (Rs.)</label>
+      <input type="number" id="cashInHand" min="0" step="0.01" value="0">
+      <div class="balance-help">Current physical cash available.</div>
+    </div>
+    <div class="balance-card">
+      <label for="bankAmount">Bank account amount (Rs.)</label>
+      <input type="number" id="bankAmount" min="0" step="0.01" value="0">
+      <div class="balance-help">Current bank balance available.</div>
+    </div>
+  </section>
+
+  <section class="bank-manager" aria-label="Bank accounts">
+    <div class="bank-manager-head">
+      <div><h2>Bank Accounts — Bank &amp; Account Wise</h2><p>Current balance = opening balance minus payments recorded against that bank account.</p></div>
+      <button class="btn btn-primary" id="addBankBtn" type="button">+ Add bank account</button>
+    </div>
+    <div id="bankAccountsList"></div>
+  </section>
+
+  <div class="status-row" id="statusRow"></div>
+
+  <div class="toolbar">
+    <input type="search" id="searchInput" placeholder="Search supplier, invoice #, remarks…">
+    <select id="filterBasis">
+      <option value="">All bases</option>
+      <option value="Cash">Cash</option>
+      <option value="Credit">Credit</option>
+    </select>
+    <select id="filterStatus">
+      <option value="">All statuses</option>
+      <option value="UNPAID">Unpaid</option>
+      <option value="PARTIALLY PAID">Partially paid</option>
+      <option value="PAID / SETTLED">Paid / settled</option>
+      <option value="REFUND DUE">Refund due</option>
+    </select>
+    <select id="filterRecon">
+      <option value="">All reconciliation</option>
+      <option value="Reconciled">Reconciled</option>
+      <option value="Not Reconciled">Not reconciled</option>
+      <option value="Pending">Pending</option>
+    </select>
+    <div class="spacer"></div>
+    <select id="sortBy">
+      <option value="invoiceDate_desc">Invoice date (newest)</option>
+      <option value="invoiceDate_asc">Invoice date (oldest)</option>
+      <option value="dueDate_asc">Due date (soonest)</option>
+      <option value="outstanding_desc">Outstanding (highest)</option>
+      <option value="supplier_asc">Supplier (A–Z)</option>
+      <option value="no_asc">Entry No.</option>
+    </select>
+  </div>
+
+  <div id="tableArea">
+    <div class="table-scroll">
+      <table id="registerTable">
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Supplier</th>
+            <th>Invoice</th>
+            <th>Basis</th>
+            <th class="num">Credit days</th>
+            <th>Due date</th>
+            <th class="num">Gross</th>
+            <th class="num">Returns</th>
+            <th class="num">Net payable</th>
+            <th class="num">Paid</th>
+            <th class="num">Outstanding</th>
+            <th>Status</th>
+            <th>Reconciliation</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <h3>No entries yet</h3>
+      <p>Add your first invoice to start the register.</p>
+      <button class="btn btn-primary" id="emptyAddBtn">+ New entry</button>
+    </div>
+  </div>
+
+  <p class="sync-note" id="syncNote">Loading register…</p>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+  <div class="drawer-head">
+    <h2 id="drawerTitle">New entry</h2>
+    <button class="drawer-close" id="drawerClose" aria-label="Close">&times;</button>
+  </div>
+  <div class="drawer-body">
+    <form id="entryForm">
+      <fieldset>
+        <legend>Parties</legend>
+        <div class="field-grid">
+          <div class="field full">
+            <label>Company name</label>
+            <input type="text" id="f_companyName">
+          </div>
+          <div class="field full">
+            <label>Supplier name <span class="req">*</span></label>
+            <input type="text" id="f_supplierName" list="supplierOptions" autocomplete="off" required>
+            <datalist id="supplierOptions"></datalist>
+          </div>
+          <div class="field full">
+            <label>Supplier contact number</label>
+            <input type="text" id="f_supplierContact">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Invoice &amp; purchase basis</legend>
+        <div class="field-grid">
+          <div class="field">
+            <label>Invoice date <span class="req">*</span></label>
+            <input type="date" id="f_invoiceDate" required>
+          </div>
+          <div class="field">
+            <label>Invoice number</label>
+            <input type="text" id="f_invoiceNumber">
+          </div>
+          <div class="field">
+            <label>Purchase basis</label>
+            <select id="f_purchaseBasis">
+              <option value="Cash">Cash</option>
+              <option value="Credit">Credit</option>
+            </select>
+          </div>
+          <div class="field" id="creditPeriodField">
+            <label>Credit period (days)</label>
+            <input type="number" id="f_creditPeriod" min="0" step="1" value="30">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Amounts</legend>
+        <div class="field-grid">
+          <div class="field">
+            <label>Gross invoice amount <span class="req">*</span></label>
+            <input type="number" id="f_gross" min="0" step="0.01" required>
+          </div>
+          <div class="field">
+            <label>Returned amount</label>
+            <input type="number" id="f_returned" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="readout" id="netPayableReadout">
+          <div class="ro-item"><span class="ro-label">Net payable</span><span class="ro-val tnum" id="ro_netPayable">Rs. 0.00</span></div>
+          <div class="ro-item"><span class="ro-label">Credit days</span><span class="ro-val tnum" id="ro_creditDays">—</span></div>
+          <div class="ro-item"><span class="ro-label">Due date</span><span class="ro-val" id="ro_dueDate">—</span></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Payment</legend>
+        <div class="field-grid">
+          <div class="field">
+            <label>Payment made</label>
+            <input type="number" id="f_paymentMade" min="0" step="0.01">
+          </div>
+          <div class="field">
+            <label>Payment date</label>
+            <input type="date" id="f_paymentDate">
+          </div>
+          <div class="field">
+            <label>Payment mode</label>
+            <select id="f_paymentMode">
+              <option value="">—</option>
+              <option value="Cash">Cash</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Bank name</label>
+            <input type="text" id="f_bankName" list="bankNameOptions" autocomplete="off" placeholder="Type or choose a bank">
+            <datalist id="bankNameOptions">
+              <option value="Bank of Ceylon (BOC)"></option>
+              <option value="Commercial Bank"></option>
+              <option value="Amana Bank"></option>
+              <option value="Sampath Bank"></option>
+              <option value="Hatton National Bank (HNB)"></option>
+              <option value="People's Bank"></option>
+              <option value="National Development Bank (NDB)"></option>
+              <option value="Nations Trust Bank (NTB)"></option>
+              <option value="Seylan Bank"></option>
+              <option value="DFCC Bank"></option>
+              <option value="Pan Asia Banking Corporation"></option>
+              <option value="Union Bank"></option>
+              <option value="National Savings Bank (NSB)"></option>
+              <option value="Cargills Bank"></option>
+              <option value="Standard Chartered Bank"></option>
+              <option value="HSBC"></option>
+              <option value="Indian Bank"></option>
+              <option value="Indian Overseas Bank"></option>
+              <option value="ICICI Bank"></option>
+              <option value="Other / Custom"></option>
+            </datalist>
+            <div class="bank-presets">BOC · Commercial · Amana · Sampath · HNB · People's · NDB · NTB · Seylan · DFCC · more/custom</div>
+          </div>
+          <div class="field">
+            <label>Bank account number</label>
+            <input type="text" id="f_bankAccountNo" placeholder="Account number">
+          </div>
+          <div class="field">
+            <label>Payment source</label>
+            <select id="f_paymentSource">
+              <option value="">—</option>
+              <option value="Cash">Cash in hand</option>
+              <option value="Bank">Bank account</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Cheque / transfer reference</label>
+            <input type="text" id="f_chequeRef">
+          </div>
+          <div class="field">
+            <label>Given by</label>
+            <input type="text" id="f_givenBy">
+          </div>
+          <div class="field">
+            <label>Received by</label>
+            <input type="text" id="f_receivedBy">
+          </div>
+        </div>
+        <div class="readout">
+          <div class="ro-item"><span class="ro-label">Outstanding balance</span><span class="ro-val tnum" id="ro_outstanding">Rs. 0.00</span></div>
+          <div class="ro-item"><span class="ro-label">Payment status</span><span class="ro-val" id="ro_status">—</span></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Returns &amp; reconciliation</legend>
+        <div class="field-grid">
+          <div class="field">
+            <label>Cash returned date</label>
+            <input type="date" id="f_cashReturnedDate">
+          </div>
+          <div class="field">
+            <label>Cash returned amount</label>
+            <input type="number" id="f_cashReturnedAmount" min="0" step="0.01">
+          </div>
+          <div class="field">
+            <label>Supplier statement balance</label>
+            <input type="number" id="f_statementBalance" step="0.01">
+          </div>
+          <div class="field">
+            <label>Reconciliation status</label>
+            <select id="f_reconStatus">
+              <option value="Pending">Pending</option>
+              <option value="Reconciled">Reconciled</option>
+              <option value="Not Reconciled">Not Reconciled</option>
+            </select>
+          </div>
+        </div>
+        <div class="readout">
+          <div class="ro-item"><span class="ro-label">Reconciliation difference</span><span class="ro-val tnum" id="ro_reconDiff">—</span></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Notes</legend>
+        <div class="field-grid">
+          <div class="field full">
+            <label>Remarks</label>
+            <textarea id="f_remarks" placeholder="Disputes, partial deliveries, pending notes…"></textarea>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+  <div class="drawer-foot">
+    <div class="quick-hint" style="margin-right:auto;">Quick: <span class="shortcut-badge">Ctrl+N</span> New · <span class="shortcut-badge">Ctrl+S</span> Save · <span class="shortcut-badge">Esc</span> Close</div>
+    <button class="btn btn-ghost" id="deleteEntryBtn" style="display:none;">Delete</button>
+    <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
+    <button class="btn btn-primary" id="saveBtn">Save entry</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- State ----------
+  var entries = [];        // raw docs from db: {id, ...fields}
+  var editingId = null;
+  var supabaseClient = null;
+  var unsubscribe = null;
+  var cloudReady = false;
+  var LOCAL_ENTRIES_KEY = 'spr_entries_v2';
+  var LOCAL_BALANCES_KEY = 'spr_balances_v2';
+
+  var els = {
+    tally: document.getElementById('tally'),
+    statusRow: document.getElementById('statusRow'),
+    tableBody: document.getElementById('tableBody'),
+    emptyState: document.getElementById('emptyState'),
+    syncNote: document.getElementById('syncNote'),
+    search: document.getElementById('searchInput'),
+    filterBasis: document.getElementById('filterBasis'),
+    filterStatus: document.getElementById('filterStatus'),
+    filterRecon: document.getElementById('filterRecon'),
+    sortBy: document.getElementById('sortBy'),
+    scrim: document.getElementById('scrim'),
+    drawer: document.getElementById('drawer'),
+    drawerTitle: document.getElementById('drawerTitle'),
+    toast: document.getElementById('toast'),
+  };
+
+  var DEFAULT_COMPANY = "Kandy Tile Auto Enterprises";
+
+  var LOCAL_BANKS_KEY = 'spr_bank_accounts_v2';
+  var bankAccounts = [];
+
+  function loadBankAccounts() {
+    try { var raw = localStorage.getItem(LOCAL_BANKS_KEY); bankAccounts = raw ? JSON.parse(raw) : []; if (!Array.isArray(bankAccounts)) bankAccounts = []; } catch (err) { bankAccounts = []; }
+    renderBankAccounts();
+  }
+  function saveBankAccounts() { try { localStorage.setItem(LOCAL_BANKS_KEY, JSON.stringify(bankAccounts)); } catch (err) {} }
+  function bankPaymentsByAccount() {
+    var map = {};
+    entries.forEach(function(e) {
+      if ((e.paymentSource === 'Bank' || e.paymentMode === 'Bank Transfer') && e.bankAccountNo) { var key=String(e.bankAccountNo); map[key]=(map[key]||0)+(Number(e.paymentMade)||0); }
+    });
+    return map;
+  }
+  function renderBankAccounts() {
+    var box=document.getElementById('bankAccountsList'); if(!box) return;
+    var paid=bankPaymentsByAccount();
+    box.innerHTML=bankAccounts.length ? bankAccounts.map(function(b,i){
+      var opening=Number(b.openingBalance)||0, deductions=paid[String(b.accountNo||'')]||0, current=opening-deductions;
+      return '<div class="bank-account-row" data-bank-index="'+i+'">'+
+        '<div><label>Bank</label><input data-bank-field="bankName" value="'+escapeHtml(b.bankName||'')+'" placeholder="Bank name"></div>'+
+        '<div><label>Account No.</label><input data-bank-field="accountNo" value="'+escapeHtml(b.accountNo||'')+'" placeholder="Account number"></div>'+
+        '<div><label>Opening / Added</label><input type="number" step="0.01" data-bank-field="openingBalance" value="'+opening+'"></div>'+
+        '<div><label>Auto Current Balance</label><div class="bank-current">'+fmtMoney(current)+'</div><div class="payment-impact">Payments deducted: '+fmtMoney(deductions)+'</div></div>'+
+        '<button class="bank-remove" type="button" data-remove-bank="'+i+'">Remove</button></div>';
+    }).join('') : '<div class="payment-impact">No bank accounts added. Add each bank and account number with its opening balance.</div>';
+  }
+  async function addBankAccount(){ var b={bankName:'',accountNo:'',openingBalance:0,createdAt:Date.now()}; if(cloudReady&&supabaseClient){ try{var row=await upsertBankCloud(b); b.id=row.id; b.createdAt=Number(row.created_at)||b.createdAt; showToast('Bank account added to cloud.');}catch(err){showToast('Cloud bank save failed: '+(err.message||'try again')); return;} } bankAccounts.push(b); saveBankAccounts(); renderBankAccounts(); }
+
+  function refreshSupplierOptions(){
+    var dl=document.getElementById('supplierOptions'); if(!dl) return;
+    var seen={}, vals=[];
+    entries.slice().reverse().forEach(function(e){var n=String(e.supplierName||'').trim(); if(n&&!seen[n.toLowerCase()]){seen[n.toLowerCase()]=1; vals.push(n);}});
+    dl.innerHTML=vals.slice(0,80).map(function(v){return '<option value="'+escapeHtml(v)+'"></option>';}).join('');
+  }
+
+  // ---------- Helpers ----------
+  function fmtMoney(n) {
+    var v = Number(n) || 0;
+    var neg = v < 0;
+    v = Math.abs(v);
+    var s = v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (neg ? '−Rs. ' : 'Rs. ') + s;
+  }
+
+  function parseDateUTC(str) {
+    if (!str) return null;
+    var parts = str.split('-');
+    if (parts.length !== 3) return null;
+    return new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2]));
+  }
+
+  function addDaysUTC(date, days) {
+    var d = new Date(date.getTime());
+    d.setUTCDate(d.getUTCDate() + (Number(days) || 0));
+    return d;
+  }
+
+  function fmtDateUTC(date) {
+    if (!date) return '';
+    var y = date.getUTCFullYear();
+    var m = String(date.getUTCMonth() + 1).padStart(2, '0');
+    var d = String(date.getUTCDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+  }
+
+  function fmtDateDisplay(dateStr) {
+    var d = parseDateUTC(dateStr);
+    if (!d) return '—';
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  }
+
+  function todayUTC() {
+    var n = new Date();
+    return new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()));
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // ---------- Computation ----------
+  function computeEntry(e) {
+    var gross = Number(e.grossInvoiceAmount) || 0;
+    var returned = Number(e.returnedAmount) || 0;
+    var paymentMade = Number(e.paymentMade) || 0;
+    var statementBalance = e.supplierStatementBalance === '' || e.supplierStatementBalance == null ? null : Number(e.supplierStatementBalance);
+
+    var netPayable = gross - returned;
+    var outstanding = netPayable - paymentMade;
+
+    var invoiceDate = parseDateUTC(e.invoiceDate);
+    var dueDate = null;
+    if (invoiceDate) {
+      if (e.purchaseBasis === 'Credit') {
+        dueDate = addDaysUTC(invoiceDate, e.creditPeriodDays || 0);
+      } else {
+        dueDate = invoiceDate;
+      }
+    }
+
+    var daysOverdue = 0;
+    if (dueDate && outstanding > 0.004) {
+      var diff = Math.floor((todayUTC().getTime() - dueDate.getTime()) / 86400000);
+      if (diff > 0) daysOverdue = diff;
+    }
+
+    var status;
+    if (outstanding < -0.004) status = 'REFUND DUE';
+    else if (outstanding <= 0.004) status = 'PAID / SETTLED';
+    else if (paymentMade > 0.004) status = 'PARTIALLY PAID';
+    else status = 'UNPAID';
+
+    var reconDiff = statementBalance == null ? null : (statementBalance - outstanding);
+
+    return {
+      netPayable: netPayable,
+      outstanding: outstanding,
+      dueDate: dueDate,
+      dueDateStr: fmtDateUTC(dueDate),
+      daysOverdue: daysOverdue,
+      status: status,
+      reconDiff: reconDiff,
+    };
+  }
+
+  function statusClass(status) {
+    if (status === 'UNPAID') return 'unpaid';
+    if (status === 'PARTIALLY PAID') return 'partial';
+    if (status === 'PAID / SETTLED') return 'paid';
+    if (status === 'REFUND DUE') return 'refund';
+    return '';
+  }
+
+  // ---------- Entry numbering (stable by creation order) ----------
+  function entryNumbers() {
+    var sorted = entries.slice().sort(function (a, b) {
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    });
+    var map = {};
+    sorted.forEach(function (e, i) { map[e.id] = i + 1; });
+    return map;
+  }
+
+  // ---------- Rendering ----------
+  function render() {
+    refreshSupplierOptions();
+    refreshReportSupplierOptions();
+    var numbers = entryNumbers();
+    var computed = entries.map(function (e) {
+      return Object.assign({}, e, { _c: computeEntry(e), _no: numbers[e.id] });
+    });
+
+    renderTally(computed);
+    renderTable(computed);
+    renderBankAccounts();
+  }
+
+  function renderTally(computed) {
+    var totals = { gross: 0, returned: 0, netPayable: 0, paid: 0, outstanding: 0, refundDue: 0 };
+    var statusCounts = { 'UNPAID': 0, 'PARTIALLY PAID': 0, 'PAID / SETTLED': 0, 'REFUND DUE': 0 };
+
+    computed.forEach(function (e) {
+      totals.gross += Number(e.grossInvoiceAmount) || 0;
+      totals.returned += Number(e.returnedAmount) || 0;
+      totals.netPayable += e._c.netPayable;
+      totals.paid += Number(e.paymentMade) || 0;
+      if (e._c.outstanding > 0.004) totals.outstanding += e._c.outstanding;
+      if (e._c.outstanding < -0.004) totals.refundDue += Math.abs(e._c.outstanding);
+      statusCounts[e._c.status] = (statusCounts[e._c.status] || 0) + 1;
+    });
+
+    var cells = [
+      ['Gross invoices', fmtMoney(totals.gross), ''],
+      ['Returned amount', fmtMoney(totals.returned), ''],
+      ['Net payable', fmtMoney(totals.netPayable), ''],
+      ['Payments made', fmtMoney(totals.paid), ''],
+      ['Outstanding', fmtMoney(totals.outstanding), totals.outstanding > 0.004 ? 'neg' : ''],
+      ['Refund due', fmtMoney(totals.refundDue), totals.refundDue > 0.004 ? 'neg' : 'pos'],
+      ['Cash in hand', fmtMoney(document.getElementById('cashInHand').value), 'pos'],
+      ['Bank balance', fmtMoney(document.getElementById('bankAmount').value), 'pos']
+    ];
+    els.tally.innerHTML = cells.map(function (c) {
+      return '<div class="tally-cell"><div class="tally-label">' + c[0] + '</div><div class="tally-value tnum ' + c[2] + '">' + c[1] + '</div></div>';
+    }).join('');
+
+    var statusDefs = [
+      ['UNPAID', 'var(--ink-faint)'],
+      ['PARTIALLY PAID', 'var(--warning)'],
+      ['PAID / SETTLED', 'var(--positive)'],
+      ['REFUND DUE', 'var(--danger)'],
+    ];
+    els.statusRow.innerHTML = statusDefs.map(function (s) {
+      return '<span class="item"><span class="dot" style="background:' + s[1] + '"></span><b class="tnum">' + statusCounts[s[0]] + '</b>&nbsp;' + s[0].charAt(0) + s[0].slice(1).toLowerCase() + '</span>';
+    }).join('');
+  }
+
+  function applyFiltersAndSort(computed) {
+    var q = els.search.value.trim().toLowerCase();
+    var basis = els.filterBasis.value;
+    var status = els.filterStatus.value;
+    var recon = els.filterRecon.value;
+
+    var filtered = computed.filter(function (e) {
+      if (basis && e.purchaseBasis !== basis) return false;
+      if (status && e._c.status !== status) return false;
+      if (recon && e.reconciliationStatus !== recon) return false;
+      if (q) {
+        var hay = [e.supplierName, e.invoiceNumber, e.remarks, e.companyName].join(' ').toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+
+    var sortKey = els.sortBy.value;
+    filtered.sort(function (a, b) {
+      switch (sortKey) {
+        case 'invoiceDate_asc': return (a.invoiceDate || '').localeCompare(b.invoiceDate || '');
+        case 'invoiceDate_desc': return (b.invoiceDate || '').localeCompare(a.invoiceDate || '');
+        case 'dueDate_asc': return (a._c.dueDateStr || '9999').localeCompare(b._c.dueDateStr || '9999');
+        case 'outstanding_desc': return b._c.outstanding - a._c.outstanding;
+        case 'supplier_asc': return (a.supplierName || '').localeCompare(b.supplierName || '');
+        case 'no_asc': return a._no - b._no;
+        default: return 0;
+      }
+    });
+
+    return filtered;
+  }
+
+  function renderTable(computed) {
+    var rows = applyFiltersAndSort(computed);
+
+    if (entries.length === 0) {
+      els.emptyState.style.display = '';
+      document.getElementById('tableArea').querySelector('.table-scroll').style.display = 'none';
+    } else {
+      els.emptyState.style.display = 'none';
+      document.getElementById('tableArea').querySelector('.table-scroll').style.display = '';
+    }
+
+    els.tableBody.innerHTML = rows.map(function (e) {
+      var c = e._c;
+      var returns = Number(e.returnedAmount) || 0;
+      var overdueTag = c.daysOverdue > 0 ? ' <span class="overdue-tag">(' + c.daysOverdue + 'd overdue)</span>' : '';
+      var creditDays = e.purchaseBasis === 'Credit' ? (Number(e.creditPeriodDays) || 0) : '—';
+      return (
+        '<tr data-id="' + e.id + '">' +
+          '<td data-label="No." class="num tnum">' + e._no + '</td>' +
+          '<td data-label="Supplier" class="supplier">' + escapeHtml(e.supplierName || '—') +
+            (e.invoiceNumber ? '' : '') + '<div class="sub">' + escapeHtml(e.companyName || '') + '</div></td>' +
+          '<td data-label="Invoice">' + escapeHtml(e.invoiceNumber || '—') + '<div class="sub">' + fmtDateDisplay(e.invoiceDate) + '</div></td>' +
+          '<td data-label="Basis">' + escapeHtml(e.purchaseBasis || '—') + '</td>' +
+          '<td data-label="Credit days" class="num tnum">' + creditDays + '</td>' +
+          '<td data-label="Due date">' + fmtDateDisplay(c.dueDateStr) + overdueTag + '</td>' +
+          '<td data-label="Gross" class="num tnum">' + fmtMoney(e.grossInvoiceAmount) + '</td>' +
+          '<td data-label="Returns" class="num tnum">' + fmtMoney(returns) + '</td>' +
+          '<td data-label="Net payable" class="num tnum">' + fmtMoney(c.netPayable) + '</td>' +
+          '<td data-label="Paid" class="num tnum">' + fmtMoney(e.paymentMade) + '</td>' +
+          '<td data-label="Outstanding" class="num tnum">' + fmtMoney(c.outstanding) + '</td>' +
+          '<td data-label="Status"><span class="badge ' + statusClass(c.status) + '">' + c.status + '</span></td>' +
+          '<td data-label="Reconciliation">' + escapeHtml(e.reconciliationStatus || 'Pending') + '</td>' +
+          '<td data-label=""><div class="row-actions"><button data-act="edit">Edit</button><button data-act="delete" class="danger">Delete</button></div></td>' +
+        '</tr>'
+      );
+    }).join('');
+  }
+
+  // ---------- Drawer / form ----------
+  var formIds = ['companyName', 'supplierName', 'supplierContact', 'invoiceDate', 'invoiceNumber',
+    'purchaseBasis', 'creditPeriod', 'gross', 'returned',
+    'paymentMade', 'paymentDate', 'paymentMode', 'bankName', 'bankAccountNo', 'paymentSource', 'chequeRef', 'givenBy', 'receivedBy',
+    'cashReturnedDate', 'cashReturnedAmount', 'statementBalance', 'reconStatus', 'remarks'];
+
+  function fieldEl(id) { return document.getElementById('f_' + id); }
+
+  function openDrawer(entry) {
+    editingId = entry ? entry.id : null;
+    document.getElementById('drawerTitle').textContent = entry ? 'Edit entry' : 'New entry';
+    document.getElementById('deleteEntryBtn').style.display = entry ? '' : 'none';
+
+    var lastCompany = null;
+    try { lastCompany = localStorage.getItem('spr_lastCompany'); } catch (err) {}
+
+    var data = entry || {
+      companyName: lastCompany || DEFAULT_COMPANY,
+      supplierName: '', supplierContact: '', invoiceDate: fmtDateUTC(todayUTC()),
+      invoiceNumber: '', purchaseBasis: 'Cash', creditPeriodDays: 30,
+      grossInvoiceAmount: '', returnedAmount: '',
+      paymentMade: '', paymentDate: '', paymentMode: '', bankName: '', bankAccountNo: '', paymentSource: '', chequeRef: '', givenBy: '', receivedBy: '',
+      cashReturnedDate: '', cashReturnedAmount: '', supplierStatementBalance: '', reconciliationStatus: 'Pending',
+      remarks: ''
+    };
+
+    fieldEl('companyName').value = data.companyName || '';
+    fieldEl('supplierName').value = data.supplierName || '';
+    fieldEl('supplierContact').value = data.supplierContact || '';
+    fieldEl('invoiceDate').value = data.invoiceDate || '';
+    fieldEl('invoiceNumber').value = data.invoiceNumber || '';
+    fieldEl('purchaseBasis').value = data.purchaseBasis || 'Cash';
+    fieldEl('creditPeriod').value = data.creditPeriodDays != null ? data.creditPeriodDays : 30;
+    fieldEl('gross').value = data.grossInvoiceAmount != null ? data.grossInvoiceAmount : '';
+    fieldEl('returned').value = data.returnedAmount != null ? data.returnedAmount : '';
+    fieldEl('paymentMade').value = data.paymentMade != null ? data.paymentMade : '';
+    fieldEl('paymentDate').value = data.paymentDate || '';
+    fieldEl('paymentMode').value = data.paymentMode || '';
+    fieldEl('bankName').value = data.bankName || '';
+    fieldEl('bankAccountNo').value = data.bankAccountNo || '';
+    fieldEl('paymentSource').value = data.paymentSource || (data.paymentMode === 'Bank Transfer' ? 'Bank' : data.paymentMode === 'Cash' ? 'Cash' : '');
+    fieldEl('chequeRef').value = data.chequeRef || '';
+    fieldEl('givenBy').value = data.givenBy || '';
+    fieldEl('receivedBy').value = data.receivedBy || '';
+    fieldEl('cashReturnedDate').value = data.cashReturnedDate || '';
+    fieldEl('cashReturnedAmount').value = data.cashReturnedAmount != null ? data.cashReturnedAmount : '';
+    fieldEl('statementBalance').value = data.supplierStatementBalance != null ? data.supplierStatementBalance : '';
+    fieldEl('reconStatus').value = data.reconciliationStatus || 'Pending';
+    fieldEl('remarks').value = data.remarks || '';
+
+    toggleCreditPeriodVisibility();
+    updateReadouts();
+
+    els.scrim.classList.add('open');
+    els.drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { fieldEl('supplierName').focus(); }, 50);
+  }
+
+  function closeDrawer() {
+    els.scrim.classList.remove('open');
+    els.drawer.classList.remove('open');
+    document.body.style.overflow = '';
+    editingId = null;
+  }
+
+  function toggleCreditPeriodVisibility() {
+    var isCredit = fieldEl('purchaseBasis').value === 'Credit';
+    document.getElementById('creditPeriodField').style.opacity = isCredit ? '1' : '0.4';
+    fieldEl('creditPeriod').disabled = !isCredit;
+  }
+
+  function collectDraft() {
+    return {
+      companyName: fieldEl('companyName').value.trim(),
+      supplierName: fieldEl('supplierName').value.trim(),
+      supplierContact: fieldEl('supplierContact').value.trim(),
+      invoiceDate: fieldEl('invoiceDate').value,
+      invoiceNumber: fieldEl('invoiceNumber').value.trim(),
+      purchaseBasis: fieldEl('purchaseBasis').value,
+      creditPeriodDays: Number(fieldEl('creditPeriod').value) || 0,
+      grossInvoiceAmount: Number(fieldEl('gross').value) || 0,
+      returnedAmount: Number(fieldEl('returned').value) || 0,
+      paymentMade: Number(fieldEl('paymentMade').value) || 0,
+      paymentDate: fieldEl('paymentDate').value,
+      paymentMode: fieldEl('paymentMode').value,
+      bankName: fieldEl('bankName').value.trim(),
+      bankAccountNo: fieldEl('bankAccountNo').value.trim(),
+      paymentSource: fieldEl('paymentSource').value,
+      chequeRef: fieldEl('chequeRef').value.trim(),
+      givenBy: fieldEl('givenBy').value.trim(),
+      receivedBy: fieldEl('receivedBy').value.trim(),
+      cashReturnedDate: fieldEl('cashReturnedDate').value,
+      cashReturnedAmount: Number(fieldEl('cashReturnedAmount').value) || 0,
+      supplierStatementBalance: fieldEl('statementBalance').value === '' ? null : Number(fieldEl('statementBalance').value),
+      reconciliationStatus: fieldEl('reconStatus').value,
+      remarks: fieldEl('remarks').value.trim(),
+    };
+  }
+
+  function updateReadouts() {
+    var draft = collectDraft();
+    var c = computeEntry(draft);
+    document.getElementById('ro_netPayable').textContent = fmtMoney(c.netPayable);
+    document.getElementById('ro_creditDays').textContent = draft.purchaseBasis === 'Credit' ? (draft.creditPeriodDays || 0) : '—';
+    document.getElementById('ro_dueDate').textContent = draft.invoiceDate ? fmtDateDisplay(c.dueDateStr) : '—';
+    document.getElementById('ro_outstanding').textContent = fmtMoney(c.outstanding);
+    document.getElementById('ro_status').textContent = c.status;
+    document.getElementById('ro_reconDiff').textContent = c.reconDiff == null ? 'Enter statement balance' : fmtMoney(c.reconDiff);
+  }
+
+  document.getElementById('entryForm').addEventListener('input', function (ev) {
+    if (ev.target && ev.target.id === 'f_purchaseBasis') toggleCreditPeriodVisibility();
+    updateReadouts();
+  });
+  document.getElementById('entryForm').addEventListener('change', function(ev) {
+    if (ev.target && ev.target.id === 'f_paymentMade' && Number(ev.target.value)>0 && !fieldEl('paymentDate').value) fieldEl('paymentDate').value=fmtDateUTC(todayUTC());
+    if (ev.target && ev.target.id === 'f_paymentMode') {
+      if (ev.target.value === 'Cash') fieldEl('paymentSource').value = 'Cash';
+      if (ev.target.value === 'Bank Transfer') fieldEl('paymentSource').value = 'Bank';
+    }
+    updateReadouts();
+  });
+
+  // ---------- Toast ----------
+  var toastTimer = null;
+  function showToast(msg) {
+    els.toast.textContent = msg;
+    els.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { els.toast.classList.remove('show'); }, 2400);
+  }
+
+  // ---------- Supabase cloud wiring ----------
+  // Paste your Supabase Project URL and Publishable/Anon key here.
+  // IMPORTANT: never put a Supabase service_role/secret key in this file.
+  var SUPABASE_URL = 'https://btcgmhjujcfhoafabteh.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_JtQN8btEI6-t-rHHe8pKmQ_B47yAjsU';
+  var supabaseClient = null;
+  var realtimeChannel = null;
+  var cloudReady = false;
+  var cloudLoading = false;
+  var LOCAL_SETTINGS_KEY = 'spr_settings_v2';
+
+  var ENTRY_COLUMNS = {
+    companyName:'company_name', supplierName:'supplier_name', supplierContact:'supplier_contact',
+    invoiceDate:'invoice_date', invoiceNumber:'invoice_number', purchaseBasis:'purchase_basis',
+    creditPeriodDays:'credit_period_days', grossInvoiceAmount:'gross_invoice_amount', returnedAmount:'returned_amount',
+    paymentMade:'payment_made', paymentDate:'payment_date', paymentMode:'payment_mode', bankName:'bank_name',
+    bankAccountNo:'bank_account_no', paymentSource:'payment_source', chequeRef:'cheque_ref', givenBy:'given_by',
+    receivedBy:'received_by', cashReturnedDate:'cash_returned_date', cashReturnedAmount:'cash_returned_amount',
+    supplierStatementBalance:'supplier_statement_balance', reconciliationStatus:'reconciliation_status', remarks:'remarks',
+    createdAt:'created_at'
+  };
+
+  function supabaseConfigured(){
+    return !!(window.supabase && window.supabase.createClient &&
+      SUPABASE_URL && SUPABASE_ANON_KEY &&
+      SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0);
+  }
+
+  function initSupabaseClient(){
+    if(!supabaseConfigured()) return false;
+    try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); return true; }
+    catch(err){ supabaseClient=null; return false; }
+  }
+
+  function entryToRow(e){
+    var r={};
+    Object.keys(ENTRY_COLUMNS).forEach(function(k){
+      var col=ENTRY_COLUMNS[k];
+      if(k==='createdAt') r[col]=Number(e[k])||Date.now();
+      else if(['grossInvoiceAmount','returnedAmount','paymentMade','cashReturnedAmount','supplierStatementBalance'].indexOf(k)>=0){
+        r[col]=(e[k]===null||e[k]===''||e[k]===undefined)?null:Number(e[k])||0;
+      } else if(k==='creditPeriodDays') r[col]=Number(e[k])||0;
+      else r[col]=e[k]===undefined?'':e[k];
+    });
+    return r;
+  }
+
+  function rowToEntry(r){
+    var e={id:r.id};
+    Object.keys(ENTRY_COLUMNS).forEach(function(k){
+      var col=ENTRY_COLUMNS[k];
+      e[k]=r[col];
+    });
+    e.createdAt=Number(r.created_at)||Date.now();
+    e.creditPeriodDays=Number(r.credit_period_days)||0;
+    ['grossInvoiceAmount','returnedAmount','paymentMade','cashReturnedAmount'].forEach(function(k){e[k]=Number(e[k])||0;});
+    if(e.supplierStatementBalance!==null && e.supplierStatementBalance!==undefined && e.supplierStatementBalance!=='') e.supplierStatementBalance=Number(e.supplierStatementBalance)||0;
+    return e;
+  }
+
+  function setSyncNote(msg){ if(els.syncNote) els.syncNote.textContent=msg; }
+
+  function saveLocalData() {
+    try {
+      localStorage.setItem(LOCAL_ENTRIES_KEY, JSON.stringify(entries));
+      localStorage.setItem(LOCAL_BALANCES_KEY, JSON.stringify({
+        cashInHand: Number(document.getElementById('cashInHand').value) || 0,
+        bankAmount: Number(document.getElementById('bankAmount').value) || 0
+      }));
+      return true;
+    } catch (err) { return false; }
+  }
+
+  function loadLocalData() {
+    try {
+      var raw = localStorage.getItem(LOCAL_ENTRIES_KEY);
+      var saved = raw ? JSON.parse(raw) : [];
+      entries = Array.isArray(saved) ? saved : [];
+      var balancesRaw = localStorage.getItem(LOCAL_BALANCES_KEY);
+      var balances = balancesRaw ? JSON.parse(balancesRaw) : {};
+      document.getElementById('cashInHand').value = Number(balances.cashInHand) || 0;
+      document.getElementById('bankAmount').value = Number(balances.bankAmount) || 0;
+      return true;
+    } catch (err) { entries=[]; return false; }
+  }
+
+  async function fetchCloudData(){
+    if(!supabaseClient) return false;
+    cloudLoading=true;
+    setSyncNote('Connecting to cloud…');
+    try{
+      var results=await Promise.all([
+        supabaseClient.from('entries').select('*').order('created_at',{ascending:true}),
+        supabaseClient.from('bank_accounts').select('*').order('created_at',{ascending:true}),
+        supabaseClient.from('app_settings').select('*').eq('id',1).maybeSingle()
+      ]);
+      if(results[0].error) throw results[0].error;
+      if(results[1].error) throw results[1].error;
+      if(results[2].error) throw results[2].error;
+
+      var cloudEntries=(results[0].data||[]).map(rowToEntry);
+      var cloudBanks=results[1].data||[];
+      var settings=results[2].data;
+
+      // First-time migration: if the cloud is empty, upload existing local data once.
+      if(cloudEntries.length===0 && entries.length>0){
+        var payload=entries.filter(function(e){return String(e.id||'').indexOf('local_')===0 || e.id;}).map(entryToRow);
+        if(payload.length){
+          var ins=await supabaseClient.from('entries').insert(payload).select('*');
+          if(ins.error) throw ins.error;
+          cloudEntries=(ins.data||[]).map(rowToEntry);
+        }
+      }
+      if(cloudBanks.length===0 && bankAccounts.length>0){
+        var bankPayload=bankAccounts.map(function(b){return {bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};});
+        var bi=await supabaseClient.from('bank_accounts').insert(bankPayload).select('*');
+        if(bi.error) throw bi.error;
+        cloudBanks=bi.data||[];
+      }
+      if(!settings){
+        var localBalances={};
+        try{localBalances=JSON.parse(localStorage.getItem(LOCAL_BALANCES_KEY)||'{}')||{};}catch(e){}
+        var si=await supabaseClient.from('app_settings').upsert({id:1,cash_in_hand:Number(localBalances.cashInHand)||0,bank_amount:Number(localBalances.bankAmount)||0,company_name:localStorage.getItem('spr_lastCompany')||DEFAULT_COMPANY,updated_at:new Date().toISOString()},{onConflict:'id'}).select('*').single();
+        if(si.error) throw si.error;
+        settings=si.data;
+      }
+
+      entries=cloudEntries;
+      bankAccounts=cloudBanks.map(function(b){return {id:b.id,bankName:b.bank_name||'',accountNo:b.account_no||'',openingBalance:Number(b.opening_balance)||0,createdAt:Number(b.created_at)||Date.now()};});
+      if(settings){
+        document.getElementById('cashInHand').value=Number(settings.cash_in_hand)||0;
+        document.getElementById('bankAmount').value=Number(settings.bank_amount)||0;
+        if(settings.company_name) try{localStorage.setItem('spr_lastCompany',settings.company_name);}catch(e){}
+      }
+      saveLocalData();
+      cloudReady=true;
+      renderBankAccounts();
+      render();
+      setSyncNote('☁ Synced to Supabase · '+entries.length+' '+(entries.length===1?'entry':'entries'));
+      subscribeRealtime();
+      return true;
+    }catch(err){
+      cloudReady=false;
+      setSyncNote('Cloud connection failed · local data is still available. '+(err&&err.message?err.message:''));
+      return false;
+    }finally{ cloudLoading=false; }
+  }
+
+  function subscribeRealtime(){
+    if(!supabaseClient) return;
+    try{
+      if(realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+      realtimeChannel=supabaseClient.channel('supplier-payables-live')
+        .on('postgres_changes',{event:'*',schema:'public',table:'entries'},function(){fetchCloudData();})
+        .on('postgres_changes',{event:'*',schema:'public',table:'bank_accounts'},function(){fetchCloudData();})
+        .on('postgres_changes',{event:'*',schema:'public',table:'app_settings'},function(){fetchCloudData();})
+        .subscribe();
+    }catch(err){}
+  }
+
+  async function saveEntryToCloud(draft){
+    var existing=editingId?entries.find(function(e){return e.id===editingId;}):null;
+    var row=entryToRow(Object.assign({},draft,{createdAt:existing&&existing.createdAt||Date.now()}));
+    if(editingId){
+      var u=await supabaseClient.from('entries').update(row).eq('id',editingId).select('*').single();
+      if(u.error) throw u.error;
+      return rowToEntry(u.data);
+    }
+    var i=await supabaseClient.from('entries').insert(row).select('*').single();
+    if(i.error) throw i.error;
+    return rowToEntry(i.data);
+  }
+
+  async function saveCloudSettings(){
+    if(!supabaseClient) return;
+    var row={id:1,cash_in_hand:Number(document.getElementById('cashInHand').value)||0,bank_amount:Number(document.getElementById('bankAmount').value)||0,company_name:localStorage.getItem('spr_lastCompany')||DEFAULT_COMPANY,updated_at:new Date().toISOString()};
+    var r=await supabaseClient.from('app_settings').upsert(row,{onConflict:'id'});
+    if(r.error) throw r.error;
+  }
+
+  async function upsertBankCloud(b){
+    var row={bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};
+    if(b.id){ var u=await supabaseClient.from('bank_accounts').update(row).eq('id',b.id).select('*').single(); if(u.error) throw u.error; return u.data; }
+    var i=await supabaseClient.from('bank_accounts').insert(row).select('*').single(); if(i.error) throw i.error; return i.data;
+  }
+
+  async function deleteBankCloud(id){ if(id){var r=await supabaseClient.from('bank_accounts').delete().eq('id',id); if(r.error) throw r.error;} }
+
+  function initDb() {
+    loadLocalData();
+    render();
+    if(!initSupabaseClient()){
+      setSyncNote('Supabase not configured · saved on this device.');
+      return;
+    }
+    fetchCloudData();
+  }
+
+  async function saveEntry() {
+    var draft = collectDraft();
+    if (!draft.supplierName) { fieldEl('supplierName').focus(); showToast('Supplier name is required.'); return; }
+    if (!draft.invoiceDate) { fieldEl('invoiceDate').focus(); showToast('Invoice date is required.'); return; }
+    try { localStorage.setItem('spr_lastCompany', draft.companyName || ''); } catch (err) {}
+    var btn=document.getElementById('saveBtn'); btn.disabled=true;
+    var oldEditingId=editingId;
+    try{
+      if(cloudReady && supabaseClient){
+        var saved=await saveEntryToCloud(draft);
+        if(oldEditingId){var idx=entries.findIndex(function(e){return e.id===oldEditingId;}); if(idx>=0) entries[idx]=saved;}
+        else entries.push(saved);
+        saveLocalData(); render();
+        showToast(oldEditingId?'Entry updated in cloud.':'Entry added to cloud.');
+      }else{
+        if(oldEditingId){var idx2=entries.findIndex(function(e){return e.id===oldEditingId;}); if(idx2>=0) entries[idx2]=Object.assign({},entries[idx2],draft);}
+        else entries.push(Object.assign({},draft,{id:'local_'+Date.now()+'_'+Math.random().toString(36).slice(2),createdAt:Date.now()}));
+        saveLocalData(); render(); showToast(oldEditingId?'Entry updated locally.':'Entry saved locally.');
+      }
+      closeDrawer();
+    }catch(err){
+      showToast('Cloud save failed: '+(err&&err.message?err.message:'check Supabase/RLS settings'));
+    }finally{btn.disabled=false;}
+  }
+
+  async function deleteEntry() {
+    if (!editingId) return;
+    if (!confirm('Delete this entry? This cannot be undone.')) return;
+    var id=editingId;
+    try{
+      if(cloudReady && supabaseClient && String(id).indexOf('local_')!==0){
+        var r=await supabaseClient.from('entries').delete().eq('id',id); if(r.error) throw r.error;
+      }
+      entries=entries.filter(function(e){return e.id!==id;});
+      saveLocalData(); render(); showToast('Entry deleted.'); closeDrawer();
+    }catch(err){showToast('Delete failed: '+(err&&err.message?err.message:'try again'));}
+  }
+
+  // ---------- CSV export ----------
+  function csvEscape(v) {
+    var s = String(v == null ? '' : v);
+    if (/[",\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function exportCsv() {
+    var numbers = entryNumbers();
+    var header = ['No.', 'Company Name', 'Supplier Name', 'Supplier Contact', 'Invoice Date', 'Invoice Number',
+      'Purchase Basis', 'Credit Days', 'Due Date', 'Gross Invoice Amount', 'Returned Amount',
+      'Net Payable', 'Payment Made', 'Outstanding Balance',
+      'Payment Date', 'Payment Mode', 'Bank Name', 'Bank Account No', 'Payment Source', 'Cheque/Transfer Ref', 'Given By', 'Received By', 'Cash Returned Date',
+      'Cash Returned Amount', 'Reconciliation Status', 'Reconciliation Difference', 'Payment Status',
+      'Days Overdue', 'Supplier Statement Balance', 'Remarks'];
+    var lines = [header.map(csvEscape).join(',')];
+    entries.slice().sort(function (a, b) { return numbers[a.id] - numbers[b.id]; }).forEach(function (e) {
+      var c = computeEntry(e);
+      lines.push([
+        numbers[e.id], e.companyName, e.supplierName, e.supplierContact, e.invoiceDate, e.invoiceNumber,
+        e.purchaseBasis, (e.purchaseBasis === 'Credit' ? e.creditPeriodDays : ''), c.dueDateStr, e.grossInvoiceAmount, e.returnedAmount,
+        c.netPayable.toFixed(2), e.paymentMade, c.outstanding.toFixed(2),
+        e.paymentDate, e.paymentMode, e.bankName, e.bankAccountNo, e.paymentSource, e.chequeRef, e.givenBy, e.receivedBy, e.cashReturnedDate,
+        e.cashReturnedAmount, e.reconciliationStatus, c.reconDiff == null ? '' : c.reconDiff.toFixed(2),
+        c.status, c.daysOverdue, e.supplierStatementBalance, e.remarks
+      ].map(csvEscape).join(','));
+    });
+    var csvContent = lines.join('\r\n');
+
+    if (window.claude && typeof window.claude.use === 'function') {
+      window.claude.use('downloads').then(function (downloads) {
+        if (!downloads) { fallbackDownload(csvContent); return; }
+        downloads.save({ filename: 'supplier-payables-register.csv', data: csvContent }).catch(function (err) {
+          if (err && err.code !== 'declined') fallbackDownload(csvContent);
+        });
+      }).catch(function () { fallbackDownload(csvContent); });
+    } else {
+      fallbackDownload(csvContent);
+    }
+  }
+
+  function fallbackDownload(csvContent) {
+    try {
+      var blob = new Blob([csvContent], { type: 'text/csv' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'supplier-payables-register.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) { showToast('Export failed in this environment.'); }
+  }
+
+  // ---------- Excel / PDF / A4 export ----------
+  function exportRowsForCurrentView() {
+    var numbers = entryNumbers();
+    var computed = entries.map(function(e){ return Object.assign({}, e, {_c:computeEntry(e), _no:numbers[e.id]}); });
+    return applyFiltersAndSort(computed);
+  }
+
+  function selectedReportSupplier() {
+    var el = document.getElementById('reportSupplier');
+    return el ? String(el.value || '').trim() : '';
+  }
+
+  function reportRows() {
+    var rows = exportRowsForCurrentView();
+    var supplier = selectedReportSupplier().toLowerCase();
+    if (!supplier) return rows;
+    return rows.filter(function(e){ return String(e.supplierName || '').trim().toLowerCase() === supplier; });
+  }
+
+  function reportFileLabel() {
+    var s = selectedReportSupplier();
+    return s ? s.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'') : 'all-suppliers';
+  }
+
+  function exportReportCsv() {
+    var rows = reportRows();
+    var lines = [['No.','Supplier Name','Invoice Number','Invoice Date','Purchase Basis','Due Date','Gross','Returns','Net Payable','Paid','Outstanding','Status','Reconciliation'].map(csvEscape).join(',')];
+    rows.forEach(function(e){ var c=e._c; lines.push([e._no,e.supplierName||'',e.invoiceNumber||'',e.invoiceDate||'',e.purchaseBasis||'',c.dueDateStr||'',Number(e.grossInvoiceAmount)||0,Number(e.returnedAmount)||0,c.netPayable,Number(e.paymentMade)||0,c.outstanding,c.status,e.reconciliationStatus||'Pending'].map(csvEscape).join(',')); });
+    var blob=new Blob([lines.join('\r\n')],{type:'text/csv;charset=utf-8;'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='supplier-report-'+reportFileLabel()+'.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); showToast('Supplier CSV report exported.');
+  }
+
+  function exportReportExcel() {
+    if(typeof XLSX==='undefined'){showToast('Excel library unavailable.');return;}
+    var rows=reportRows(); var data=rows.map(function(e){var c=e._c;return {'No.':e._no,'Supplier Name':e.supplierName||'','Invoice Number':e.invoiceNumber||'','Invoice Date':e.invoiceDate||'','Purchase Basis':e.purchaseBasis||'','Due Date':c.dueDateStr||'','Gross':Number(e.grossInvoiceAmount)||0,'Returns':Number(e.returnedAmount)||0,'Net Payable':c.netPayable,'Paid':Number(e.paymentMade)||0,'Outstanding':c.outstanding,'Status':c.status,'Reconciliation':e.reconciliationStatus||'Pending'};});
+    var ws=XLSX.utils.json_to_sheet(data); var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Supplier Report'); XLSX.writeFile(wb,'supplier-report-'+reportFileLabel()+'.xlsx'); showToast('Supplier Excel report exported.');
+  }
+
+  function exportReportPdf() {
+    if(!(window.jspdf&&window.jspdf.jsPDF)){showToast('PDF library unavailable.');return;}
+    var rows=reportRows(), supplier=selectedReportSupplier()||'All Suppliers'; var doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    doc.setFontSize(14); doc.text('Supplier Payables Report',10,10); doc.setFontSize(8); doc.text(supplier+'  |  Generated: '+new Date().toLocaleString(),10,15);
+    var head=[['No.','Supplier','Invoice','Date','Basis','Due Date','Gross','Returns','Net','Paid','Outstanding','Status','Recon.']];
+    var body=rows.map(function(e){var c=e._c;return[e._no,e.supplierName||'',e.invoiceNumber||'',e.invoiceDate||'',e.purchaseBasis||'',c.dueDateStr||'',fmtMoney(e.grossInvoiceAmount),fmtMoney(e.returnedAmount),fmtMoney(c.netPayable),fmtMoney(e.paymentMade),fmtMoney(c.outstanding),c.status,e.reconciliationStatus||'Pending'];});
+    doc.autoTable({head:head,body:body,startY:19,styles:{fontSize:6,cellPadding:1.4},headStyles:{fontSize:6,fillColor:[238,243,251],textColor:[20,33,58]},margin:{left:8,right:8}}); doc.save('supplier-report-'+reportFileLabel()+'.pdf'); showToast('Supplier PDF report exported.');
+  }
+
+  function printSupplierReport() {
+    var rows=reportRows(), supplier=selectedReportSupplier()||'All Suppliers'; var w=window.open('','_blank'); if(!w){showToast('Please allow pop-ups to print the report.');return;}
+    var body=rows.map(function(e){var c=e._c;return '<tr><td>'+e._no+'</td><td>'+escapeHtml(e.supplierName||'')+'</td><td>'+escapeHtml(e.invoiceNumber||'')+'</td><td>'+escapeHtml(fmtDateDisplay(e.invoiceDate))+'</td><td>'+escapeHtml(e.purchaseBasis||'')+'</td><td>'+escapeHtml(fmtDateDisplay(c.dueDateStr))+'</td><td>'+escapeHtml(fmtMoney(e.grossInvoiceAmount))+'</td><td>'+escapeHtml(fmtMoney(e.returnedAmount))+'</td><td>'+escapeHtml(fmtMoney(c.netPayable))+'</td><td>'+escapeHtml(fmtMoney(e.paymentMade))+'</td><td>'+escapeHtml(fmtMoney(c.outstanding))+'</td><td>'+escapeHtml(c.status)+'</td><td>'+escapeHtml(e.reconciliationStatus||'Pending')+'</td></tr>';}).join('');
+    w.document.write('<!doctype html><html><head><title>Supplier Report</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;color:#111}h1{font-size:18px;margin:0 0 4px}p{font-size:10px;margin:0 0 10px}table{width:100%;border-collapse:collapse;font-size:8px}th,td{border:1px solid #999;padding:4px;text-align:left}th{background:#eee}</style></head><body><h1>Supplier Payables Report</h1><p>'+escapeHtml(supplier)+' | Generated: '+escapeHtml(new Date().toLocaleString())+'</p><table><thead><tr><th>No.</th><th>Supplier</th><th>Invoice</th><th>Date</th><th>Basis</th><th>Due Date</th><th>Gross</th><th>Returns</th><th>Net</th><th>Paid</th><th>Outstanding</th><th>Status</th><th>Recon.</th></tr></thead><tbody>'+body+'</tbody></table><script>window.onload=function(){window.print();};<\/script></body></html>'); w.document.close();
+  }
+
+  function refreshReportSupplierOptions(){
+    var el=document.getElementById('reportSupplier'); if(!el)return; var current=el.value; var seen={}, vals=[]; entries.forEach(function(e){var n=String(e.supplierName||'').trim();var k=n.toLowerCase();if(n&&!seen[k]){seen[k]=1;vals.push(n);}}); vals.sort(function(a,b){return a.localeCompare(b);}); el.innerHTML='<option value="">All Suppliers</option>'+vals.map(function(v){return '<option value="'+escapeHtml(v)+'">'+escapeHtml(v)+'</option>';}).join(''); if(vals.some(function(v){return v.toLowerCase()===current.toLowerCase();}))el.value=current;
+  }
+
+  function setTheme(theme){
+    document.documentElement.setAttribute('data-theme',theme); try{localStorage.setItem('spr_theme',theme);}catch(e){}
+    var b=document.getElementById('themeToggleBtn'); if(b)b.textContent=theme==='dark'?'☀️ Normal':'🌙 Dark'; if(b)b.classList.toggle('active',theme==='dark');
+  }
+  function initTheme(){var t='light';try{t=localStorage.getItem('spr_theme')||'light';}catch(e){} setTheme(t==='dark'?'dark':'light');}
+
+  function exportExcel() {
+    if (typeof XLSX === 'undefined') { showToast('Excel library unavailable. Use CSV instead.'); return; }
+    var rows = exportRowsForCurrentView();
+    var data = rows.map(function(e){ var c=e._c; return {
+      'No.':e._no,'Company Name':e.companyName||'','Supplier Name':e.supplierName||'','Supplier Contact':e.supplierContact||'',
+      'Invoice Date':e.invoiceDate||'','Invoice Number':e.invoiceNumber||'','Purchase Basis':e.purchaseBasis||'',
+      'Credit Days':e.purchaseBasis==='Credit'?(Number(e.creditPeriodDays)||0):'','Due Date':c.dueDateStr||'',
+      'Gross Invoice Amount':Number(e.grossInvoiceAmount)||0,'Returned Amount':Number(e.returnedAmount)||0,'Net Payable':c.netPayable,
+      'Payment Made':Number(e.paymentMade)||0,'Outstanding Balance':c.outstanding,'Payment Date':e.paymentDate||'',
+      'Payment Mode':e.paymentMode||'','Bank Name':e.bankName||'','Bank Account No':e.bankAccountNo||'',
+      'Payment Source':e.paymentSource||'','Cheque/Transfer Ref':e.chequeRef||'','Given By':e.givenBy||'','Received By':e.receivedBy||'',
+      'Cash Returned Date':e.cashReturnedDate||'','Cash Returned Amount':Number(e.cashReturnedAmount)||0,
+      'Reconciliation Status':e.reconciliationStatus||'Pending','Reconciliation Difference':c.reconDiff==null?'':c.reconDiff,
+      'Payment Status':c.status,'Days Overdue':c.daysOverdue,'Supplier Statement Balance':e.supplierStatementBalance==null?'':Number(e.supplierStatementBalance),
+      'Remarks':e.remarks||''
+    }; });
+    var ws=XLSX.utils.json_to_sheet(data);
+    ws['!cols']=Object.keys(data[0]||{}).map(function(k){return {wch:Math.min(Math.max(k.length+2,12),28)};});
+    var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Supplier Register');
+    XLSX.writeFile(wb,'supplier-payables-register.xlsx');
+    showToast('Excel file exported.');
+  }
+
+  function printA4() { window.print(); }
+
+  function exportPdf() {
+    if (!(window.jspdf && window.jspdf.jsPDF)) { window.print(); return; }
+    var rows=exportRowsForCurrentView();
+    var doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    doc.setFontSize(14); doc.text('Supplier Payables & Settlement Register',10,10);
+    doc.setFontSize(8); doc.text((document.getElementById('companyLabel').textContent||'')+'  |  Generated: '+new Date().toLocaleString(),10,15);
+    var head=[['No.','Supplier','Invoice','Date','Basis','Due Date','Gross','Returns','Net','Paid','Outstanding','Status','Recon.']];
+    var body=rows.map(function(e){var c=e._c; return [e._no,e.supplierName||'',e.invoiceNumber||'',e.invoiceDate||'',e.purchaseBasis||'',c.dueDateStr||'',fmtMoney(e.grossInvoiceAmount),fmtMoney(e.returnedAmount),fmtMoney(c.netPayable),fmtMoney(e.paymentMade),fmtMoney(c.outstanding),c.status,e.reconciliationStatus||'Pending'];});
+    doc.autoTable({head:head,body:body,startY:19,styles:{fontSize:6,cellPadding:1.4},headStyles:{fontSize:6,fillColor:[238,243,251],textColor:[20,33,58]},margin:{left:8,right:8}});
+    doc.save('supplier-payables-register.pdf'); showToast('PDF file exported.');
+  }
+
+  // ---------- Event wiring ----------
+  document.getElementById('newEntryBtn').addEventListener('click', function () { openDrawer(null); });
+  document.getElementById('emptyAddBtn').addEventListener('click', function () { openDrawer(null); });
+  document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+  document.getElementById('cancelBtn').addEventListener('click', closeDrawer);
+  document.getElementById('scrim').addEventListener('click', closeDrawer);
+  document.getElementById('saveBtn').addEventListener('click', saveEntry);
+  document.getElementById('deleteEntryBtn').addEventListener('click', deleteEntry);
+  document.getElementById('exportBtn').addEventListener('click', exportCsv);
+  document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+  document.getElementById('exportPdfBtn').addEventListener('click', exportPdf);
+  document.getElementById('printA4Btn').addEventListener('click', printA4);
+  document.getElementById('reportCsvBtn').addEventListener('click', exportReportCsv);
+  document.getElementById('reportExcelBtn').addEventListener('click', exportReportExcel);
+  document.getElementById('reportPdfBtn').addEventListener('click', exportReportPdf);
+  document.getElementById('reportPrintBtn').addEventListener('click', printSupplierReport);
+  document.getElementById('themeToggleBtn').addEventListener('click', function(){ var dark=document.documentElement.getAttribute('data-theme')==='dark'; setTheme(dark?'light':'dark'); });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && els.drawer.classList.contains('open')) closeDrawer();
+  });
+
+  els.tableBody.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-act]');
+    if (!btn) return;
+    var tr = ev.target.closest('tr[data-id]');
+    var id = tr.getAttribute('data-id');
+    var entry = entries.find(function (e) { return e.id === id; });
+    if (!entry) return;
+    if (btn.dataset.act === 'edit') openDrawer(entry);
+    else if (btn.dataset.act === 'delete') {
+      editingId = id;
+      deleteEntry();
+    }
+  });
+
+  [els.search, els.filterBasis, els.filterStatus, els.filterRecon, els.sortBy].forEach(function (el) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  });
+
+  document.getElementById('cashInHand').addEventListener('input', updateBalanceStorage);
+  document.getElementById('bankAmount').addEventListener('input', updateBalanceStorage);
+  document.getElementById('cashInHand').addEventListener('change', function () { saveLocalData(); render(); });
+  document.getElementById('bankAmount').addEventListener('change', function () { saveLocalData(); render(); });
+
+  // ---------- Quick-entry shortcuts ----------
+  document.addEventListener('keydown', function(ev){
+    if((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase()==='n'){ev.preventDefault();openDrawer(null);}
+    if((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase()==='s' && els.drawer.classList.contains('open')){ev.preventDefault();saveEntry();}
+    if(ev.ctrlKey && ev.key==='Enter' && els.drawer.classList.contains('open')){ev.preventDefault();saveEntry();}
+  });
+
+  // ---------- Init ----------
+  initTheme();
+  loadLocalData();
+  render();
+  loadBankAccounts();
+  document.getElementById('cashInHand').addEventListener('input', function(){ saveLocalData(); render(); });
+  document.getElementById('bankAmount').addEventListener('input', function(){ saveLocalData(); render(); });
+  document.getElementById('addBankBtn').addEventListener('click', addBankAccount);
+  document.getElementById('bankAccountsList').addEventListener('change', async function(ev){
+    var row=ev.target.closest('[data-bank-index]'); if(!row) return; var i=Number(row.getAttribute('data-bank-index')); var field=ev.target.getAttribute('data-bank-field'); if(!bankAccounts[i]||!field)return;
+    bankAccounts[i][field]=field==='openingBalance'?(Number(ev.target.value)||0):ev.target.value;
+    if(cloudReady&&supabaseClient){try{var saved=await upsertBankCloud(bankAccounts[i]); bankAccounts[i].id=saved.id; showToast('Bank account synced.');}catch(err){showToast('Bank update failed: '+(err.message||'try again'));}}
+    saveBankAccounts(); renderBankAccounts();
+  });
+  document.getElementById('bankAccountsList').addEventListener('click', async function(ev){
+    var btn=ev.target.closest('[data-remove-bank]'); if(!btn)return; var i=Number(btn.getAttribute('data-remove-bank')); var b=bankAccounts[i];
+    if(cloudReady&&supabaseClient&&b&&b.id){try{await deleteBankCloud(b.id);}catch(err){showToast('Bank delete failed: '+(err.message||'try again'));return;}}
+    bankAccounts.splice(i,1); saveBankAccounts(); renderBankAccounts(); showToast('Bank account removed.');
+  });
+  initDb();
+})();
+</script>
+</body>
+</html>
