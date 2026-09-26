@@ -496,6 +496,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style id="upgradeStyles">
   .export-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
   .btn-small{padding:8px 11px;font-size:12px}
@@ -844,9 +845,9 @@
   // ---------- State ----------
   var entries = [];        // raw docs from db: {id, ...fields}
   var editingId = null;
-  var dbCol = null;
+  var supabaseClient = null;
   var unsubscribe = null;
-  var dbReady = false;
+  var cloudReady = false;
   var LOCAL_ENTRIES_KEY = 'spr_entries_v2';
   var LOCAL_BALANCES_KEY = 'spr_balances_v2';
 
@@ -897,7 +898,7 @@
         '<button class="bank-remove" type="button" data-remove-bank="'+i+'">Remove</button></div>';
     }).join('') : '<div class="payment-impact">No bank accounts added. Add each bank and account number with its opening balance.</div>';
   }
-  function addBankAccount(){ bankAccounts.push({bankName:'',accountNo:'',openingBalance:0}); saveBankAccounts(); renderBankAccounts(); }
+  async function addBankAccount(){ var b={bankName:'',accountNo:'',openingBalance:0,createdAt:Date.now()}; if(cloudReady&&supabaseClient){ try{var row=await upsertBankCloud(b); b.id=row.id; b.createdAt=Number(row.created_at)||b.createdAt; showToast('Bank account added to cloud.');}catch(err){showToast('Cloud bank save failed: '+(err.message||'try again')); return;} } bankAccounts.push(b); saveBankAccounts(); renderBankAccounts(); }
 
   function refreshSupplierOptions(){
     var dl=document.getElementById('supplierOptions'); if(!dl) return;
@@ -951,43 +952,6 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
-  }
-
-  // ---------- Local persistence ----------
-  function loadLocalData() {
-    try {
-      var raw = localStorage.getItem(LOCAL_ENTRIES_KEY);
-      var saved = raw ? JSON.parse(raw) : [];
-      entries = Array.isArray(saved) ? saved : [];
-      var balancesRaw = localStorage.getItem(LOCAL_BALANCES_KEY);
-      var balances = balancesRaw ? JSON.parse(balancesRaw) : {};
-      document.getElementById('cashInHand').value = Number(balances.cashInHand) || 0;
-      document.getElementById('bankAmount').value = Number(balances.bankAmount) || 0;
-      return true;
-    } catch (err) {
-      entries = [];
-      return false;
-    }
-  }
-
-  function saveLocalData() {
-    try {
-      localStorage.setItem(LOCAL_ENTRIES_KEY, JSON.stringify(entries));
-      localStorage.setItem(LOCAL_BALANCES_KEY, JSON.stringify({
-        cashInHand: Number(document.getElementById('cashInHand').value) || 0,
-        bankAmount: Number(document.getElementById('bankAmount').value) || 0
-      }));
-      return true;
-    } catch (err) {
-      return false;
-    }
-  }
-
-  function updateBalanceStorage() {
-    saveLocalData();
-    els.syncNote.textContent = dbReady
-      ? 'Synced to cloud · local backup saved'
-      : 'Saved on this device · local storage';
   }
 
   // ---------- Computation ----------
@@ -1310,128 +1274,240 @@
     toastTimer = setTimeout(function () { els.toast.classList.remove('show'); }, 2400);
   }
 
-  // ---------- DB wiring ----------
+  // ---------- Supabase cloud wiring ----------
+  // Paste your Supabase Project URL and Publishable/Anon key here.
+  // IMPORTANT: never put a Supabase service_role/secret key in this file.
+  var SUPABASE_URL = 'https://btcgmhjujcfhoafabteh.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_JtQN8btEI6-t-rHHe8pKmQ_B47yAjsU';
+  var supabaseClient = null;
+  var realtimeChannel = null;
+  var cloudReady = false;
+  var cloudLoading = false;
+  var LOCAL_SETTINGS_KEY = 'spr_settings_v2';
+
+  var ENTRY_COLUMNS = {
+    companyName:'company_name', supplierName:'supplier_name', supplierContact:'supplier_contact',
+    invoiceDate:'invoice_date', invoiceNumber:'invoice_number', purchaseBasis:'purchase_basis',
+    creditPeriodDays:'credit_period_days', grossInvoiceAmount:'gross_invoice_amount', returnedAmount:'returned_amount',
+    paymentMade:'payment_made', paymentDate:'payment_date', paymentMode:'payment_mode', bankName:'bank_name',
+    bankAccountNo:'bank_account_no', paymentSource:'payment_source', chequeRef:'cheque_ref', givenBy:'given_by',
+    receivedBy:'received_by', cashReturnedDate:'cash_returned_date', cashReturnedAmount:'cash_returned_amount',
+    supplierStatementBalance:'supplier_statement_balance', reconciliationStatus:'reconciliation_status', remarks:'remarks',
+    createdAt:'created_at'
+  };
+
+  function supabaseConfigured(){
+    return !!(window.supabase && window.supabase.createClient &&
+      SUPABASE_URL && SUPABASE_ANON_KEY &&
+      SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0);
+  }
+
+  function initSupabaseClient(){
+    if(!supabaseConfigured()) return false;
+    try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); return true; }
+    catch(err){ supabaseClient=null; return false; }
+  }
+
+  function entryToRow(e){
+    var r={};
+    Object.keys(ENTRY_COLUMNS).forEach(function(k){
+      var col=ENTRY_COLUMNS[k];
+      if(k==='createdAt') r[col]=Number(e[k])||Date.now();
+      else if(['grossInvoiceAmount','returnedAmount','paymentMade','cashReturnedAmount','supplierStatementBalance'].indexOf(k)>=0){
+        r[col]=(e[k]===null||e[k]===''||e[k]===undefined)?null:Number(e[k])||0;
+      } else if(k==='creditPeriodDays') r[col]=Number(e[k])||0;
+      else r[col]=e[k]===undefined?'':e[k];
+    });
+    return r;
+  }
+
+  function rowToEntry(r){
+    var e={id:r.id};
+    Object.keys(ENTRY_COLUMNS).forEach(function(k){
+      var col=ENTRY_COLUMNS[k];
+      e[k]=r[col];
+    });
+    e.createdAt=Number(r.created_at)||Date.now();
+    e.creditPeriodDays=Number(r.credit_period_days)||0;
+    ['grossInvoiceAmount','returnedAmount','paymentMade','cashReturnedAmount'].forEach(function(k){e[k]=Number(e[k])||0;});
+    if(e.supplierStatementBalance!==null && e.supplierStatementBalance!==undefined && e.supplierStatementBalance!=='') e.supplierStatementBalance=Number(e.supplierStatementBalance)||0;
+    return e;
+  }
+
+  function setSyncNote(msg){ if(els.syncNote) els.syncNote.textContent=msg; }
+
+  function saveLocalData() {
+    try {
+      localStorage.setItem(LOCAL_ENTRIES_KEY, JSON.stringify(entries));
+      localStorage.setItem(LOCAL_BALANCES_KEY, JSON.stringify({
+        cashInHand: Number(document.getElementById('cashInHand').value) || 0,
+        bankAmount: Number(document.getElementById('bankAmount').value) || 0
+      }));
+      return true;
+    } catch (err) { return false; }
+  }
+
+  function loadLocalData() {
+    try {
+      var raw = localStorage.getItem(LOCAL_ENTRIES_KEY);
+      var saved = raw ? JSON.parse(raw) : [];
+      entries = Array.isArray(saved) ? saved : [];
+      var balancesRaw = localStorage.getItem(LOCAL_BALANCES_KEY);
+      var balances = balancesRaw ? JSON.parse(balancesRaw) : {};
+      document.getElementById('cashInHand').value = Number(balances.cashInHand) || 0;
+      document.getElementById('bankAmount').value = Number(balances.bankAmount) || 0;
+      return true;
+    } catch (err) { entries=[]; return false; }
+  }
+
+  async function fetchCloudData(){
+    if(!supabaseClient) return false;
+    cloudLoading=true;
+    setSyncNote('Connecting to cloud…');
+    try{
+      var results=await Promise.all([
+        supabaseClient.from('entries').select('*').order('created_at',{ascending:true}),
+        supabaseClient.from('bank_accounts').select('*').order('created_at',{ascending:true}),
+        supabaseClient.from('app_settings').select('*').eq('id',1).maybeSingle()
+      ]);
+      if(results[0].error) throw results[0].error;
+      if(results[1].error) throw results[1].error;
+      if(results[2].error) throw results[2].error;
+
+      var cloudEntries=(results[0].data||[]).map(rowToEntry);
+      var cloudBanks=results[1].data||[];
+      var settings=results[2].data;
+
+      // First-time migration: if the cloud is empty, upload existing local data once.
+      if(cloudEntries.length===0 && entries.length>0){
+        var payload=entries.filter(function(e){return String(e.id||'').indexOf('local_')===0 || e.id;}).map(entryToRow);
+        if(payload.length){
+          var ins=await supabaseClient.from('entries').insert(payload).select('*');
+          if(ins.error) throw ins.error;
+          cloudEntries=(ins.data||[]).map(rowToEntry);
+        }
+      }
+      if(cloudBanks.length===0 && bankAccounts.length>0){
+        var bankPayload=bankAccounts.map(function(b){return {bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};});
+        var bi=await supabaseClient.from('bank_accounts').insert(bankPayload).select('*');
+        if(bi.error) throw bi.error;
+        cloudBanks=bi.data||[];
+      }
+      if(!settings){
+        var localBalances={};
+        try{localBalances=JSON.parse(localStorage.getItem(LOCAL_BALANCES_KEY)||'{}')||{};}catch(e){}
+        var si=await supabaseClient.from('app_settings').upsert({id:1,cash_in_hand:Number(localBalances.cashInHand)||0,bank_amount:Number(localBalances.bankAmount)||0,company_name:localStorage.getItem('spr_lastCompany')||DEFAULT_COMPANY,updated_at:new Date().toISOString()},{onConflict:'id'}).select('*').single();
+        if(si.error) throw si.error;
+        settings=si.data;
+      }
+
+      entries=cloudEntries;
+      bankAccounts=cloudBanks.map(function(b){return {id:b.id,bankName:b.bank_name||'',accountNo:b.account_no||'',openingBalance:Number(b.opening_balance)||0,createdAt:Number(b.created_at)||Date.now()};});
+      if(settings){
+        document.getElementById('cashInHand').value=Number(settings.cash_in_hand)||0;
+        document.getElementById('bankAmount').value=Number(settings.bank_amount)||0;
+        if(settings.company_name) try{localStorage.setItem('spr_lastCompany',settings.company_name);}catch(e){}
+      }
+      saveLocalData();
+      cloudReady=true;
+      renderBankAccounts();
+      render();
+      setSyncNote('☁ Synced to Supabase · '+entries.length+' '+(entries.length===1?'entry':'entries'));
+      subscribeRealtime();
+      return true;
+    }catch(err){
+      cloudReady=false;
+      setSyncNote('Cloud connection failed · local data is still available. '+(err&&err.message?err.message:''));
+      return false;
+    }finally{ cloudLoading=false; }
+  }
+
+  function subscribeRealtime(){
+    if(!supabaseClient) return;
+    try{
+      if(realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+      realtimeChannel=supabaseClient.channel('supplier-payables-live')
+        .on('postgres_changes',{event:'*',schema:'public',table:'entries'},function(){fetchCloudData();})
+        .on('postgres_changes',{event:'*',schema:'public',table:'bank_accounts'},function(){fetchCloudData();})
+        .on('postgres_changes',{event:'*',schema:'public',table:'app_settings'},function(){fetchCloudData();})
+        .subscribe();
+    }catch(err){}
+  }
+
+  async function saveEntryToCloud(draft){
+    var existing=editingId?entries.find(function(e){return e.id===editingId;}):null;
+    var row=entryToRow(Object.assign({},draft,{createdAt:existing&&existing.createdAt||Date.now()}));
+    if(editingId){
+      var u=await supabaseClient.from('entries').update(row).eq('id',editingId).select('*').single();
+      if(u.error) throw u.error;
+      return rowToEntry(u.data);
+    }
+    var i=await supabaseClient.from('entries').insert(row).select('*').single();
+    if(i.error) throw i.error;
+    return rowToEntry(i.data);
+  }
+
+  async function saveCloudSettings(){
+    if(!supabaseClient) return;
+    var row={id:1,cash_in_hand:Number(document.getElementById('cashInHand').value)||0,bank_amount:Number(document.getElementById('bankAmount').value)||0,company_name:localStorage.getItem('spr_lastCompany')||DEFAULT_COMPANY,updated_at:new Date().toISOString()};
+    var r=await supabaseClient.from('app_settings').upsert(row,{onConflict:'id'});
+    if(r.error) throw r.error;
+  }
+
+  async function upsertBankCloud(b){
+    var row={bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};
+    if(b.id){ var u=await supabaseClient.from('bank_accounts').update(row).eq('id',b.id).select('*').single(); if(u.error) throw u.error; return u.data; }
+    var i=await supabaseClient.from('bank_accounts').insert(row).select('*').single(); if(i.error) throw i.error; return i.data;
+  }
+
+  async function deleteBankCloud(id){ if(id){var r=await supabaseClient.from('bank_accounts').delete().eq('id',id); if(r.error) throw r.error;} }
+
   function initDb() {
     loadLocalData();
     render();
-
-    if (!window.claude || typeof window.claude.use !== 'function') {
-      els.syncNote.textContent = '© ZENTRA SOLUTION (PVT) LTD 2026.';
+    if(!initSupabaseClient()){
+      setSyncNote('Supabase not configured · saved on this device.');
       return;
     }
-
-    window.claude.use('db').then(function (db) {
-      if (!db) {
-        els.syncNote.textContent = 'Saved on this device · cloud sync unavailable.';
-        return;
-      }
-      dbCol = db.collection('entries');
-      dbReady = true;
-      unsubscribe = dbCol.onSnapshot(function (snap) {
-        var cloudEntries = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
-
-        // Do not erase a local register when the cloud collection is empty.
-        if (cloudEntries.length > 0 || entries.length === 0) {
-          entries = cloudEntries;
-          saveLocalData();
-        }
-        els.syncNote.textContent = entries.length === 0
-          ? 'Synced — this register is empty. Add your first entry.'
-          : 'Synced · ' + entries.length + ' ' + (entries.length === 1 ? 'entry' : 'entries') + ' · local backup saved';
-        render();
-      }, function (err) {
-        els.syncNote.textContent = 'Cloud sync error; local data is still available. ' +
-          (err && err.message ? err.message : '');
-      });
-    }).catch(function (err) {
-      els.syncNote.textContent = 'Cloud sync unavailable; local data is still saved on this device.';
-    });
+    fetchCloudData();
   }
 
-  function saveEntry() {
+  async function saveEntry() {
     var draft = collectDraft();
     if (!draft.supplierName) { fieldEl('supplierName').focus(); showToast('Supplier name is required.'); return; }
     if (!draft.invoiceDate) { fieldEl('invoiceDate').focus(); showToast('Invoice date is required.'); return; }
-
     try { localStorage.setItem('spr_lastCompany', draft.companyName || ''); } catch (err) {}
-
-    document.getElementById('saveBtn').disabled = true;
-
-    if (!dbReady || !dbCol) {
-      if (editingId) {
-        var idx = entries.findIndex(function (e) { return e.id === editingId; });
-        if (idx >= 0) entries[idx] = Object.assign({}, entries[idx], draft);
-      } else {
-        entries.push(Object.assign({}, draft, { id: 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2), createdAt: Date.now() }));
+    var btn=document.getElementById('saveBtn'); btn.disabled=true;
+    var oldEditingId=editingId;
+    try{
+      if(cloudReady && supabaseClient){
+        var saved=await saveEntryToCloud(draft);
+        if(oldEditingId){var idx=entries.findIndex(function(e){return e.id===oldEditingId;}); if(idx>=0) entries[idx]=saved;}
+        else entries.push(saved);
+        saveLocalData(); render();
+        showToast(oldEditingId?'Entry updated in cloud.':'Entry added to cloud.');
+      }else{
+        if(oldEditingId){var idx2=entries.findIndex(function(e){return e.id===oldEditingId;}); if(idx2>=0) entries[idx2]=Object.assign({},entries[idx2],draft);}
+        else entries.push(Object.assign({},draft,{id:'local_'+Date.now()+'_'+Math.random().toString(36).slice(2),createdAt:Date.now()}));
+        saveLocalData(); render(); showToast(oldEditingId?'Entry updated locally.':'Entry saved locally.');
       }
-      saveLocalData();
-      render();
-      showToast(editingId ? 'Entry updated and saved locally.' : 'Entry saved locally.');
       closeDrawer();
-      document.getElementById('saveBtn').disabled = false;
-      return;
-    }
-
-    var task;
-    if (editingId) {
-      task = dbCol.doc(editingId).set(Object.assign({}, draft, {
-        createdAt: (entries.find(function (e) { return e.id === editingId; }) || {}).createdAt || Date.now()
-      }));
-    } else {
-      task = dbCol.add(Object.assign({}, draft, { createdAt: Date.now() }));
-    }
-
-    task.then(function (doc) {
-      // Keep a local backup immediately as well.
-      if (!editingId && doc && doc.id) {
-        entries.push(Object.assign({ id: doc.id }, draft, { createdAt: Date.now() }));
-      } else if (editingId) {
-        var idx = entries.findIndex(function (e) { return e.id === editingId; });
-        if (idx >= 0) entries[idx] = Object.assign({}, entries[idx], draft);
-      }
-      saveLocalData();
-      showToast(editingId ? 'Entry updated and backed up.' : 'Entry added and backed up.');
-      closeDrawer();
-      render();
-    }).catch(function (err) {
-      // Cloud failed: still save locally instead of losing the entry.
-      if (editingId) {
-        var idx = entries.findIndex(function (e) { return e.id === editingId; });
-        if (idx >= 0) entries[idx] = Object.assign({}, entries[idx], draft);
-      } else {
-        entries.push(Object.assign({}, draft, { id: 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2), createdAt: Date.now() }));
-      }
-      saveLocalData();
-      render();
-      showToast('Cloud save failed; entry was saved locally.');
-    }).finally(function () {
-      document.getElementById('saveBtn').disabled = false;
-    });
+    }catch(err){
+      showToast('Cloud save failed: '+(err&&err.message?err.message:'check Supabase/RLS settings'));
+    }finally{btn.disabled=false;}
   }
 
-  function deleteEntry() {
+  async function deleteEntry() {
     if (!editingId) return;
     if (!confirm('Delete this entry? This cannot be undone.')) return;
-
-    var id = editingId;
-    if (!dbReady || !dbCol || String(id).indexOf('local_') === 0) {
-      entries = entries.filter(function (e) { return e.id !== id; });
-      saveLocalData();
-      render();
-      showToast('Entry deleted.');
-      closeDrawer();
-      return;
-    }
-
-    dbCol.doc(id).delete().then(function () {
-      entries = entries.filter(function (e) { return e.id !== id; });
-      saveLocalData();
-      render();
-      showToast('Entry deleted.');
-      closeDrawer();
-    }).catch(function (err) {
-      showToast('Delete failed: ' + (err && err.message ? err.message : 'try again'));
-    });
+    var id=editingId;
+    try{
+      if(cloudReady && supabaseClient && String(id).indexOf('local_')!==0){
+        var r=await supabaseClient.from('entries').delete().eq('id',id); if(r.error) throw r.error;
+      }
+      entries=entries.filter(function(e){return e.id!==id;});
+      saveLocalData(); render(); showToast('Entry deleted.'); closeDrawer();
+    }catch(err){showToast('Delete failed: '+(err&&err.message?err.message:'try again'));}
   }
 
   // ---------- CSV export ----------
@@ -1645,11 +1721,17 @@
   document.getElementById('cashInHand').addEventListener('input', function(){ saveLocalData(); render(); });
   document.getElementById('bankAmount').addEventListener('input', function(){ saveLocalData(); render(); });
   document.getElementById('addBankBtn').addEventListener('click', addBankAccount);
-  document.getElementById('bankAccountsList').addEventListener('input', function(ev){
+  document.getElementById('bankAccountsList').addEventListener('change', async function(ev){
     var row=ev.target.closest('[data-bank-index]'); if(!row) return; var i=Number(row.getAttribute('data-bank-index')); var field=ev.target.getAttribute('data-bank-field'); if(!bankAccounts[i]||!field)return;
-    bankAccounts[i][field]=field==='openingBalance'?(Number(ev.target.value)||0):ev.target.value; saveBankAccounts(); renderBankAccounts();
+    bankAccounts[i][field]=field==='openingBalance'?(Number(ev.target.value)||0):ev.target.value;
+    if(cloudReady&&supabaseClient){try{var saved=await upsertBankCloud(bankAccounts[i]); bankAccounts[i].id=saved.id; showToast('Bank account synced.');}catch(err){showToast('Bank update failed: '+(err.message||'try again'));}}
+    saveBankAccounts(); renderBankAccounts();
   });
-  document.getElementById('bankAccountsList').addEventListener('click', function(ev){ var btn=ev.target.closest('[data-remove-bank]'); if(!btn)return; bankAccounts.splice(Number(btn.getAttribute('data-remove-bank')),1); saveBankAccounts(); renderBankAccounts(); });
+  document.getElementById('bankAccountsList').addEventListener('click', async function(ev){
+    var btn=ev.target.closest('[data-remove-bank]'); if(!btn)return; var i=Number(btn.getAttribute('data-remove-bank')); var b=bankAccounts[i];
+    if(cloudReady&&supabaseClient&&b&&b.id){try{await deleteBankCloud(b.id);}catch(err){showToast('Bank delete failed: '+(err.message||'try again'));return;}}
+    bankAccounts.splice(i,1); saveBankAccounts(); renderBankAccounts(); showToast('Bank account removed.');
+  });
   initDb();
 })();
 </script>
