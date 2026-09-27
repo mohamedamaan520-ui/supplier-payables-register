@@ -1,0 +1,5370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Supplier Payables & Settlement Register</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --bg:#f1f5f9;
+  --surface:#ffffff;
+  --surface2:#f8fafc;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --primary:#2563eb;
+  --primary2:#1d4ed8;
+  --danger:#dc2626;
+  --success:#059669;
+  --warning:#d97706;
+  --shadow:0 10px 30px rgba(15,23,42,.08);
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,
+body{
+  margin:0;
+  min-height:100%;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+body.dark{
+  --bg:#0b1120;
+  --surface:#111827;
+  --surface2:#172033;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#263449;
+  --shadow:0 10px 30px rgba(0,0,0,.28);
+}
+
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.hidden{
+  display:none!important;
+}
+
+/* =========================
+   AUTH
+========================= */
+
+.auth-wrap{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:24px;
+
+  background:
+    radial-gradient(
+      circle at 15% 15%,
+      rgba(37,99,235,.18),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 85% 80%,
+      rgba(14,165,233,.14),
+      transparent 30%
+    ),
+    var(--bg);
+}
+
+.auth-card{
+  width:min(460px,100%);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  box-shadow:var(--shadow);
+  padding:30px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:24px;
+}
+
+.logo{
+  width:52px;
+  height:52px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#2563eb,#06b6d4);
+  color:#fff;
+  font-size:24px;
+  font-weight:800;
+  box-shadow:0 12px 25px rgba(37,99,235,.25);
+}
+
+.brand h1{
+  font-size:20px;
+  margin:0 0 4px;
+}
+
+.brand p{
+  margin:0;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.auth-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  background:var(--surface2);
+  padding:4px;
+  border-radius:12px;
+  margin-bottom:20px;
+}
+
+.auth-tabs button{
+  border:0;
+  background:transparent;
+  padding:11px;
+  border-radius:9px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.auth-tabs button.active{
+  background:var(--surface);
+  color:var(--primary);
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+
+.field{
+  margin-bottom:14px;
+}
+
+.field label{
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:7px;
+  color:var(--muted);
+}
+
+input,
+select,
+textarea{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface);
+  color:var(--text);
+  outline:none;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+
+textarea{
+  resize:vertical;
+  min-height:90px;
+}
+
+.btn{
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text);
+  border-radius:10px;
+  padding:10px 14px;
+  font-weight:700;
+}
+
+.btn:hover{
+  filter:brightness(.98);
+}
+
+.btn.primary{
+  background:var(--primary);
+  border-color:var(--primary);
+  color:#fff;
+}
+
+.btn.primary:hover{
+  background:var(--primary2);
+}
+
+.btn.danger{
+  color:#fff;
+  background:var(--danger);
+  border-color:var(--danger);
+}
+
+.btn.success{
+  color:#fff;
+  background:var(--success);
+  border-color:var(--success);
+}
+
+.btn.small{
+  padding:7px 10px;
+  font-size:12px;
+}
+
+.btn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.auth-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-top:18px;
+}
+
+.link{
+  border:0;
+  background:none;
+  color:var(--primary);
+  font-weight:700;
+  padding:4px;
+}
+
+.message{
+  padding:11px 12px;
+  border-radius:10px;
+  font-size:13px;
+  margin:12px 0;
+  line-height:1.45;
+}
+
+.message.error{
+  background:#fef2f2;
+  color:#991b1b;
+  border:1px solid #fecaca;
+}
+
+.message.success{
+  background:#ecfdf5;
+  color:#065f46;
+  border:1px solid #a7f3d0;
+}
+
+body.dark .message.error{
+  background:#35191d;
+  color:#fecaca;
+  border-color:#6b252c;
+}
+
+body.dark .message.success{
+  background:#102d25;
+  color:#a7f3d0;
+  border-color:#205b4b;
+}
+
+.password-row{
+  position:relative;
+}
+
+.password-row input{
+  padding-right:70px;
+}
+
+.show-pass{
+  position:absolute;
+  right:8px;
+  top:7px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+  padding:6px;
+}
+
+/* =========================
+   APP SHELL
+========================= */
+
+.shell{
+  display:flex;
+  min-height:100vh;
+}
+
+.sidebar{
+  width:250px;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  padding:20px;
+  position:fixed;
+  inset:0 auto 0 0;
+  z-index:20;
+  display:flex;
+  flex-direction:column;
+}
+
+.side-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:28px;
+}
+
+.side-brand .logo{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  font-size:19px;
+}
+
+.side-brand strong{
+  font-size:14px;
+  line-height:1.2;
+}
+
+.side-brand span{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  margin-top:3px;
+}
+
+.nav{
+  display:grid;
+  gap:7px;
+}
+
+.nav button{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  width:100%;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:12px;
+  border-radius:11px;
+  text-align:left;
+  font-weight:700;
+}
+
+.nav button.active,
+.nav button:hover{
+  background:rgba(37,99,235,.1);
+  color:var(--primary);
+}
+
+.side-bottom{
+  margin-top:auto;
+  display:grid;
+  gap:8px;
+}
+
+.main{
+  margin-left:250px;
+  width:calc(100% - 250px);
+  min-width:0;
+}
+
+.topbar{
+  height:70px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  position:sticky;
+  top:0;
+  z-index:15;
+}
+
+.topbar h2{
+  margin:0;
+  font-size:19px;
+}
+
+.user-area{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.avatar{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#dbeafe;
+  color:#1d4ed8;
+  font-weight:800;
+  font-size:12px;
+}
+
+.content{
+  padding:26px;
+  max-width:1500px;
+  margin:auto;
+}
+
+.mobile-menu{
+  display:none;
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+.grid{
+  display:grid;
+  gap:16px;
+}
+
+.metrics{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  margin-bottom:22px;
+}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  box-shadow:0 5px 18px rgba(15,23,42,.04);
+  padding:18px;
+}
+
+.metric{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+}
+
+.metric .icon{
+  width:40px;
+  height:40px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:var(--surface2);
+  font-size:19px;
+}
+
+.metric .label{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+}
+
+.metric .value{
+  font-size:22px;
+  font-weight:800;
+  margin-top:7px;
+}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.section-head h3{
+  margin:0;
+  font-size:16px;
+}
+
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+}
+
+.toolbar>*{
+  min-width:130px;
+}
+
+.toolbar .search{
+  min-width:240px;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.table-wrap{
+  overflow:auto;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:760px;
+}
+
+.table th,
+.table td{
+  padding:12px 13px;
+  border-bottom:1px solid var(--border);
+  text-align:left;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.table th{
+  background:var(--surface2);
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+.table tr:last-child td{
+  border-bottom:0;
+}
+
+.table td.amount{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+.right{
+  text-align:right!important;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+  text-transform:capitalize;
+}
+
+.badge.purchase{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+
+.badge.payment{
+  background:#d1fae5;
+  color:#047857;
+}
+
+.badge.adjustment{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.balance{
+  font-weight:800;
+}
+
+.balance.due{
+  color:var(--danger);
+}
+
+.balance.credit{
+  color:var(--success);
+}
+
+.muted{
+  color:var(--muted);
+}
+
+.empty{
+  text-align:center;
+  padding:35px 15px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* =========================
+   PAGES
+========================= */
+
+.page{
+  display:none;
+}
+
+.page.active{
+  display:block;
+}
+
+/* =========================
+   FORMS
+========================= */
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.span-2{
+  grid-column:1/-1;
+}
+
+/* =========================
+   MODALS
+========================= */
+
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(2,6,23,.58);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:50;
+}
+
+.modal-backdrop.open{
+  display:flex;
+}
+
+.modal{
+  width:min(650px,100%);
+  max-height:92vh;
+  overflow:auto;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:0 25px 70px rgba(0,0,0,.25);
+  padding:20px;
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:17px;
+}
+
+.modal-head h3{
+  margin:0;
+  font-size:17px;
+}
+
+.close{
+  border:0;
+  background:var(--surface2);
+  color:var(--muted);
+  width:34px;
+  height:34px;
+  border-radius:9px;
+  font-size:18px;
+}
+
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:18px;
+}
+
+/* =========================
+   TOAST
+========================= */
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:100;
+  max-width:360px;
+  padding:12px 15px;
+  border-radius:12px;
+  background:#0f172a;
+  color:#fff;
+  box-shadow:0 12px 35px rgba(0,0,0,.2);
+  font-size:13px;
+  display:none;
+}
+
+.toast.show{
+  display:block;
+}
+
+.toast.error{
+  background:#991b1b;
+}
+
+.toast.success{
+  background:#047857;
+}
+
+.loading{
+  opacity:.65;
+  pointer-events:none;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:1050px){
+  .metrics{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:800px){
+
+  .sidebar{
+    transform:translateX(-105%);
+    transition:.2s;
+    width:255px;
+    box-shadow:20px 0 40px rgba(0,0,0,.12);
+  }
+
+  .sidebar.open{
+    transform:translateX(0);
+  }
+
+  .main{
+    margin-left:0;
+    width:100%;
+  }
+
+  .mobile-menu{
+    display:inline-grid;
+    place-items:center;
+    width:38px;
+    height:38px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface);
+    color:var(--text);
+    margin-right:10px;
+  }
+
+  .topbar{
+    padding:0 14px;
+  }
+
+  .content{
+    padding:16px;
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .span-2{
+    grid-column:auto;
+  }
+
+  .toolbar .search{
+    min-width:180px;
+    flex:1;
+  }
+
+  .toolbar>*{
+    min-width:auto;
+  }
+
+  .section-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
+
+@media(max-width:520px){
+
+  .metrics{
+    grid-template-columns:1fr;
+  }
+
+  .auth-card{
+    padding:22px;
+  }
+
+  .content{
+    padding:12px;
+  }
+
+  .topbar h2{
+    font-size:16px;
+  }
+
+  .user-area .email{
+    display:none;
+  }
+
+  .card{
+    padding:14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     AUTH SCREEN
+========================================================= -->
+
+<div id="authScreen" class="auth-wrap">
+
+  <div class="auth-card">
+
+    <div class="brand">
+      <div class="logo">₹</div>
+
+      <div>
+        <h1>Supplier Payables</h1>
+        <p>Secure settlement register</p>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <button id="signInTab" class="active" type="button">
+        Sign in
+      </button>
+
+      <button id="signUpTab" type="button">
+        Create account
+      </button>
+    </div>
+
+    <div id="authMessage" class="hidden"></div>
+
+    <form id="authForm">
+
+      <div class="field">
+
+        <label>Email address</label>
+
+        <input
+          id="authEmail"
+          type="email"
+          autocomplete="email"
+          placeholder="you@example.com"
+          required
+        >
+
+      </div>
+
+      <div class="field">
+
+        <label>Password</label>
+
+        <div class="password-row">
+
+          <input
+            id="authPassword"
+            type="password"
+            autocomplete="current-password"
+            minlength="6"
+            placeholder="Minimum 6 characters"
+            required
+          >
+
+          <button
+            class="show-pass"
+            type="button"
+            id="togglePassword"
+          >
+            Show
+          </button>
+
+        </div>
+
+      </div>
+
+      <button
+        id="authSubmit"
+        class="btn primary"
+        type="submit"
+        style="width:100%"
+      >
+        Sign in
+      </button>
+
+    </form>
+
+    <div class="auth-actions">
+
+      <button
+        id="forgotBtn"
+        class="link"
+        type="button"
+      >
+        Forgot password?
+      </button>
+
+      <span
+        class="muted"
+        style="font-size:11px"
+      >
+        Secure account data
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     MAIN APPLICATION
+========================================================= -->
+
+<div id="appScreen" class="shell hidden">
+
+  <!-- SIDEBAR -->
+
+  <aside id="sidebar" class="sidebar">
+
+    <div class="side-brand">
+
+      <div class="logo">₹</div>
+
+      <div>
+        <strong>
+          Supplier<br>
+          Payables
+        </strong>
+
+        <span>
+          Settlement Register
+        </span>
+      </div>
+
+    </div>
+
+    <nav class="nav">
+
+      <button
+        data-page="dashboard"
+        class="active"
+      >
+        ▦
+        <span>Dashboard</span>
+      </button>
+
+      <button
+        data-page="suppliers"
+      >
+        ◉
+        <span>Suppliers</span>
+      </button>
+
+      <button
+        data-page="transactions"
+      >
+        ⇄
+        <span>Transactions</span>
+      </button>
+
+    </nav>
+
+    <div class="side-bottom">
+
+      <button
+        id="themeBtn"
+        class="btn"
+      >
+        ☾ Dark mode
+      </button>
+
+      <button
+        id="logoutBtn"
+        class="btn danger"
+      >
+        ↪ Sign out
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <div style="display:flex;align-items:center">
+
+        <button
+          id="mobileMenu"
+          class="mobile-menu"
+        >
+          ☰
+        </button>
+
+        <h2 id="pageTitle">
+          Dashboard
+        </h2>
+
+      </div>
+
+      <div class="user-area">
+
+        <span
+          class="email muted"
+          id="userEmail"
+        ></span>
+
+        <div
+          class="avatar"
+          id="avatar"
+        >
+          U
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <section class="content">
+
+      <!-- DASHBOARD -->
+
+      <div
+        id="dashboardPage"
+        class="page active"
+      >
+
+        <div class="metrics grid">
+
+          <div class="card metric">
+
+            <div>
+              <div class="label">
+                SUPPLIERS
+              </div>
+
+              <div
+                id="mSuppliers"
+                class="value"
+              >
+                0
+              </div>
+            </div>
+
+            <div class="icon">
+              ◉
+            </div>
+
+          </div>
+
+
+          <div class="card metric">
+
+            <div>
+              <div class="label">
+                TOTAL PURCHASES
+              </div>
+
+              <div
+                id="mPurchases"
+                class="value"
+              >
+                0.00
+              </div>
+            </div>
+
+            <div class="icon">
+              ↗
+            </div>
+
+          </div>
+
+
+          <div class="card metric">
+
+            <div>
+              <div class="label">
+                TOTAL PAYMENTS
+              </div>
+
+              <div
+                id="mPayments"
+                class="value"
+              >
+                0.00
+              </div>
+            </div>
+
+            <div class="icon">
+              ↙
+            </div>
+
+          </div>
+
+
+          <div class="card metric">
+
+            <div>
+              <div class="label">
+                OUTSTANDING
+              </div>
+
+              <div
+                id="mOutstanding"
+                class="value"
+              >
+                0.00
+              </div>
+            </div>
+
+            <div class="icon">
+              ₹
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- BALANCES -->
+
+        <div class="card">
+
+          <div class="section-head">
+
+            <h3>
+              Supplier Balances
+            </h3>
+
+            <div class="toolbar">
+
+              <input
+                id="dashSearch"
+                class="search"
+                placeholder="Search supplier..."
+              >
+
+              <button
+                id="refreshBtn"
+                class="btn small"
+              >
+                ↻ Refresh
+              </button>
+
+            </div>
+
+          </div>
+
+          <div
+            id="dashboardBalances"
+            class="table-wrap"
+          ></div>
+
+        </div>
+
+
+        <!-- RECENT -->
+
+        <div
+          class="card"
+          style="margin-top:16px"
+        >
+
+          <div class="section-head">
+
+            <h3>
+              Recent Transactions
+            </h3>
+
+            <button
+              class="btn small"
+              data-page-jump="transactions"
+            >
+              View all
+            </button>
+
+          </div>
+
+          <div
+            id="recentTransactions"
+            class="table-wrap"
+          ></div>
+
+        </div>
+
+      </div>
+
+
+      <!-- SUPPLIERS -->
+
+      <div
+        id="suppliersPage"
+        class="page"
+      >
+
+        <div class="card">
+
+          <div class="section-head">
+
+            <h3>
+              Suppliers
+            </h3>
+
+            <div class="toolbar">
+
+              <input
+                id="supplierSearch"
+                class="search"
+                placeholder="Search name, phone, email..."
+              >
+
+              <button
+                id="addSupplierBtn"
+                class="btn primary"
+              >
+                + Add supplier
+              </button>
+
+              <button
+                id="exportSuppliersBtn"
+                class="btn"
+              >
+                CSV
+              </button>
+
+            </div>
+
+          </div>
+
+          <div
+            id="suppliersTable"
+            class="table-wrap"
+          ></div>
+
+        </div>
+
+      </div>
+
+
+      <!-- TRANSACTIONS -->
+
+      <div
+        id="transactionsPage"
+        class="page"
+      >
+
+        <div class="card">
+
+          <div class="section-head">
+
+            <h3>
+              Transactions
+            </h3>
+
+            <div class="toolbar">
+
+              <input
+                id="transactionSearch"
+                class="search"
+                placeholder="Search reference, notes, supplier..."
+              >
+
+              <select id="transactionTypeFilter">
+
+                <option value="">
+                  All types
+                </option>
+
+                <option value="purchase">
+                  Purchase
+                </option>
+
+                <option value="payment">
+                  Payment
+                </option>
+
+                <option value="adjustment">
+                  Adjustment
+                </option>
+
+              </select>
+
+              <button
+                id="addTransactionBtn"
+                class="btn primary"
+              >
+                + Add transaction
+              </button>
+
+              <button
+                id="exportTransactionsBtn"
+                class="btn"
+              >
+                CSV
+              </button>
+
+              <button
+                id="printTransactionsBtn"
+                class="btn"
+              >
+                Print
+              </button>
+
+            </div>
+
+          </div>
+
+          <div
+            id="transactionsTable"
+            class="table-wrap"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- =========================================================
+     SUPPLIER MODAL
+========================================================= -->
+
+<div
+  id="supplierModal"
+  class="modal-backdrop"
+>
+
+  <div class="modal">
+
+    <div class="modal-head">
+
+      <h3 id="supplierModalTitle">
+        Add Supplier
+      </h3>
+
+      <button
+        class="close"
+        data-close="supplierModal"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <form id="supplierForm">
+
+      <input
+        type="hidden"
+        id="supplierId"
+      >
+
+      <div class="form-grid">
+
+        <div class="field">
+
+          <label>
+            Name *
+          </label>
+
+          <input
+            id="supplierName"
+            required
+            maxlength="150"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Phone
+          </label>
+
+          <input
+            id="supplierPhone"
+            maxlength="40"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Email
+          </label>
+
+          <input
+            id="supplierEmail"
+            type="email"
+            maxlength="160"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Opening balance
+          </label>
+
+          <input
+            id="supplierOpening"
+            type="number"
+            min="0"
+            step="0.01"
+            value="0"
+          >
+
+        </div>
+
+
+        <div class="field span-2">
+
+          <label>
+            Address
+          </label>
+
+          <input
+            id="supplierAddress"
+            maxlength="300"
+          >
+
+        </div>
+
+
+        <div class="field span-2">
+
+          <label>
+            Notes
+          </label>
+
+          <textarea id="supplierNotes"></textarea>
+
+        </div>
+
+      </div>
+
+
+      <div class="modal-actions">
+
+        <button
+          type="button"
+          class="btn"
+          data-close="supplierModal"
+        >
+          Cancel
+        </button>
+
+        <button
+          id="saveSupplierBtn"
+          class="btn primary"
+        >
+          Save supplier
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     TRANSACTION MODAL
+========================================================= -->
+
+<div
+  id="transactionModal"
+  class="modal-backdrop"
+>
+
+  <div class="modal">
+
+    <div class="modal-head">
+
+      <h3 id="transactionModalTitle">
+        Add Transaction
+      </h3>
+
+      <button
+        class="close"
+        data-close="transactionModal"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <form id="transactionForm">
+
+      <input
+        type="hidden"
+        id="transactionId"
+      >
+
+      <div class="form-grid">
+
+        <div class="field">
+
+          <label>
+            Supplier *
+          </label>
+
+          <select
+            id="transactionSupplier"
+            required
+          ></select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Type *
+          </label>
+
+          <select
+            id="transactionType"
+            required
+          >
+
+            <option value="purchase">
+              Purchase
+            </option>
+
+            <option value="payment">
+              Payment
+            </option>
+
+            <option value="adjustment">
+              Adjustment
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Amount *
+          </label>
+
+          <input
+            id="transactionAmount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Date *
+          </label>
+
+          <input
+            id="transactionDate"
+            type="date"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Reference
+          </label>
+
+          <input
+            id="transactionReference"
+            maxlength="120"
+          >
+
+        </div>
+
+
+        <div class="field span-2">
+
+          <label>
+            Notes
+          </label>
+
+          <textarea id="transactionNotes"></textarea>
+
+        </div>
+
+      </div>
+
+
+      <div class="modal-actions">
+
+        <button
+          type="button"
+          class="btn"
+          data-close="transactionModal"
+        >
+          Cancel
+        </button>
+
+        <button
+          id="saveTransactionBtn"
+          class="btn primary"
+        >
+          Save transaction
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div
+  id="toast"
+  class="toast"
+></div>
+
+
+<script>
+
+/* =========================================================
+   SUPABASE CONFIG
+========================================================= */
+
+const SUPABASE_URL =
+  "https://btcgmhjujcfhoafabteh.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_JtQN8btEI6-t-rHHe8pKmQ_B47yAjsU";
+
+const {
+  createClient
+} = window.supabase;
+
+const db = createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth:{
+      persistSession:true,
+      autoRefreshToken:true,
+      detectSessionInUrl:true
+    }
+  }
+);
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+const state = {
+
+  user:null,
+
+  suppliers:[],
+
+  transactions:[],
+
+  authMode:"signin",
+
+  authBusy:false,
+
+  savingSupplier:false,
+
+  savingTransaction:false
+
+};
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const $ = id =>
+  document.getElementById(id);
+
+
+const esc = value =>
+  String(value ?? "").replace(
+    /[&<>"']/g,
+    c => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[c])
+  );
+
+
+const money = value =>
+  Number(value || 0).toLocaleString(
+    undefined,
+    {
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    }
+  );
+
+
+function today(){
+
+  const d = new Date();
+
+  const local =
+    new Date(
+      d.getTime() -
+      d.getTimezoneOffset() * 60000
+    );
+
+  return local
+    .toISOString()
+    .slice(0,10);
+}
+
+
+function initials(email){
+
+  return (
+    email ||
+    "U"
+  )
+  .trim()
+  .slice(0,1)
+  .toUpperCase();
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function showToast(
+  message,
+  type=""
+){
+
+  const el =
+    $("toast");
+
+  el.textContent =
+    message;
+
+  el.className =
+    "toast show " +
+    type;
+
+  clearTimeout(
+    showToast.timer
+  );
+
+  showToast.timer =
+    setTimeout(
+      () => {
+        el.className =
+          "toast";
+      },
+      3500
+    );
+}
+
+
+/* =========================================================
+   AUTH MESSAGE
+========================================================= */
+
+function setAuthMessage(
+  message="",
+  type="error"
+){
+
+  const el =
+    $("authMessage");
+
+  if(!message){
+
+    el.className =
+      "hidden";
+
+    el.textContent =
+      "";
+
+    return;
+  }
+
+  el.className =
+    "message " +
+    type;
+
+  el.textContent =
+    message;
+}
+
+
+/* =========================================================
+   AUTH ERROR HANDLER
+========================================================= */
+
+function friendlyAuthError(
+  error,
+  action="authentication"
+){
+
+  const status =
+    error?.status;
+
+  const msg =
+    String(
+      error?.message ||
+      ""
+    ).toLowerCase();
+
+
+  /*
+    Supabase 429 protection
+  */
+
+  if(
+    status === 429 ||
+    msg.includes("rate limit") ||
+    msg.includes("too many requests") ||
+    msg.includes("over_request_rate_limit")
+  ){
+
+    return (
+      "Too many authentication requests were sent. " +
+      "Please wait a few minutes before trying again. " +
+      "Do not repeatedly click Sign in or Create account."
+    );
+
+  }
+
+
+  if(
+    msg.includes(
+      "email not confirmed"
+    )
+  ){
+
+    return (
+      "Your email is not confirmed yet. " +
+      "Please check your inbox and confirm your email before signing in."
+    );
+
+  }
+
+
+  if(
+    msg.includes(
+      "invalid login credentials"
+    )
+  ){
+
+    return (
+      "Invalid email or password. " +
+      "If you just created the account, confirm your email first."
+    );
+
+  }
+
+
+  if(
+    msg.includes(
+      "user already registered"
+    ) ||
+    msg.includes(
+      "already been registered"
+    )
+  ){
+
+    return (
+      "This email is already registered. " +
+      "Please use Sign in instead."
+    );
+
+  }
+
+
+  if(
+    msg.includes("password") &&
+    msg.includes("at least")
+  ){
+
+    return (
+      "Password does not meet Supabase's minimum password requirement."
+    );
+
+  }
+
+
+  if(
+    msg.includes(
+      "signup is disabled"
+    )
+  ){
+
+    return (
+      "Account creation is currently disabled in Supabase Authentication settings."
+    );
+
+  }
+
+
+  if(
+    action === "reset" &&
+    (
+      msg.includes("smtp") ||
+      msg.includes("email")
+    )
+  ){
+
+    return (
+      "Password reset email could not be sent. " +
+      "Please check your Supabase Auth email/SMTP settings."
+    );
+
+  }
+
+
+  return (
+    error?.message ||
+    "Authentication failed. Please try again."
+  );
+}
+
+
+/* =========================================================
+   AUTH MODE
+========================================================= */
+
+function setAuthMode(
+  mode
+){
+
+  state.authMode =
+    mode;
+
+  $("signInTab")
+    .classList
+    .toggle(
+      "active",
+      mode === "signin"
+    );
+
+  $("signUpTab")
+    .classList
+    .toggle(
+      "active",
+      mode === "signup"
+    );
+
+  $("authSubmit")
+    .textContent =
+      mode === "signin"
+        ? "Sign in"
+        : "Create account";
+
+  $("forgotBtn")
+    .style
+    .display =
+      mode === "signin"
+        ? "inline-block"
+        : "none";
+
+  $("authPassword")
+    .autocomplete =
+      mode === "signin"
+        ? "current-password"
+        : "new-password";
+
+  setAuthMessage("");
+}
+
+
+/* =========================================================
+   SIGN IN / SIGN UP
+========================================================= */
+
+async function authenticate(
+  event
+){
+
+  event?.preventDefault();
+
+
+  /*
+    Prevent duplicate requests.
+  */
+
+  if(
+    state.authBusy
+  ){
+
+    return;
+  }
+
+
+  const email =
+    $("authEmail")
+      .value
+      .trim()
+      .toLowerCase();
+
+  const password =
+    $("authPassword")
+      .value;
+
+
+  if(!email){
+
+    setAuthMessage(
+      "Please enter your email address."
+    );
+
+    return;
+  }
+
+
+  if(!password){
+
+    setAuthMessage(
+      "Please enter your password."
+    );
+
+    return;
+  }
+
+
+  if(password.length < 6){
+
+    setAuthMessage(
+      "Password must contain at least 6 characters."
+    );
+
+    return;
+  }
+
+
+  state.authBusy =
+    true;
+
+
+  const btn =
+    $("authSubmit");
+
+
+  btn.disabled =
+    true;
+
+
+  btn.textContent =
+    state.authMode === "signin"
+      ? "Signing in..."
+      : "Creating account...";
+
+
+  setAuthMessage("");
+
+
+  try{
+
+    let result;
+
+
+    if(
+      state.authMode === "signup"
+    ){
+
+      result =
+        await db.auth.signUp({
+
+          email,
+
+          password,
+
+          options:{
+            emailRedirectTo:
+              window.location.origin +
+              window.location.pathname
+          }
+
+        });
+
+    }
+    else{
+
+      result =
+        await db.auth.signInWithPassword({
+
+          email,
+
+          password
+
+        });
+
+    }
+
+
+    if(result.error){
+
+      throw result.error;
+
+    }
+
+
+    /*
+      SIGN UP
+    */
+
+    if(
+      state.authMode === "signup"
+    ){
+
+      /*
+        If email confirmation is OFF,
+        Supabase may return a session.
+      */
+
+      if(
+        result.data?.session
+      ){
+
+        showToast(
+          "Account created successfully.",
+          "success"
+        );
+
+        await applySession(
+          result.data.session
+        );
+
+      }
+      else{
+
+        /*
+          Email confirmation ON
+        */
+
+        setAuthMessage(
+          "Account created successfully. Please check your email and click the confirmation link before signing in.",
+          "success"
+        );
+
+      }
+
+    }
+
+
+    /*
+      SIGN IN
+    */
+
+    else{
+
+      if(
+        result.data?.session
+      ){
+
+        showToast(
+          "Signed in successfully.",
+          "success"
+        );
+
+        await applySession(
+          result.data.session
+        );
+
+      }
+      else{
+
+        setAuthMessage(
+          "Sign in did not return a session. Please try again."
+        );
+
+      }
+
+    }
+
+  }
+  catch(error){
+
+    console.error(
+      "Supabase authentication error:",
+      error
+    );
+
+    setAuthMessage(
+      friendlyAuthError(error)
+    );
+
+  }
+  finally{
+
+    state.authBusy =
+      false;
+
+    btn.disabled =
+      false;
+
+    btn.textContent =
+      state.authMode === "signin"
+        ? "Sign in"
+        : "Create account";
+
+  }
+
+}
+
+
+/* =========================================================
+   PASSWORD RESET
+========================================================= */
+
+async function forgotPassword(){
+
+  if(
+    state.authBusy
+  ){
+
+    return;
+  }
+
+
+  const email =
+    $("authEmail")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  if(!email){
+
+    setAuthMessage(
+      "Enter your email address first, then click Forgot password."
+    );
+
+    $("authEmail")
+      .focus();
+
+    return;
+  }
+
+
+  state.authBusy =
+    true;
+
+
+  $("forgotBtn")
+    .disabled =
+    true;
+
+
+  setAuthMessage("");
+
+
+  try{
+
+    const {
+      error
+    } =
+      await db.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo:
+            window.location.origin +
+            window.location.pathname
+        }
+      );
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    setAuthMessage(
+      "If the email is registered, a password reset email has been sent. Check your inbox/spam folder.",
+      "success"
+    );
+
+  }
+  catch(error){
+
+    console.error(
+      "Password reset error:",
+      error
+    );
+
+    setAuthMessage(
+      friendlyAuthError(
+        error,
+        "reset"
+      )
+    );
+
+  }
+  finally{
+
+    state.authBusy =
+      false;
+
+    $("forgotBtn")
+      .disabled =
+      false;
+
+  }
+
+}
+
+
+/* =========================================================
+   SIGN OUT
+========================================================= */
+
+async function signOut(){
+
+  try{
+
+    const {
+      error
+    } =
+      await db.auth.signOut();
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    showToast(
+      error.message ||
+      "Could not sign out.",
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   APPLY SESSION
+========================================================= */
+
+async function applySession(
+  session
+){
+
+  state.user =
+    session?.user ||
+    null;
+
+
+  if(!state.user){
+
+    showAuth();
+
+    return;
+
+  }
+
+
+  $("userEmail")
+    .textContent =
+    state.user.email ||
+    "";
+
+
+  $("avatar")
+    .textContent =
+    initials(
+      state.user.email
+    );
+
+
+  $("authScreen")
+    .classList
+    .add("hidden");
+
+
+  $("appScreen")
+    .classList
+    .remove("hidden");
+
+
+  await loadData();
+
+}
+
+
+/* =========================================================
+   SHOW AUTH
+========================================================= */
+
+function showAuth(){
+
+  state.user =
+    null;
+
+  state.suppliers =
+    [];
+
+  state.transactions =
+    [];
+
+
+  $("appScreen")
+    .classList
+    .add("hidden");
+
+
+  $("authScreen")
+    .classList
+    .remove("hidden");
+
+}
+
+
+/* =========================================================
+   AUTH STATE CHANGE
+========================================================= */
+
+db.auth.onAuthStateChange(
+  async (
+    event,
+    session
+  ) => {
+
+    if(session?.user){
+
+      state.user =
+        session.user;
+
+
+      $("userEmail")
+        .textContent =
+        state.user.email ||
+        "";
+
+
+      $("avatar")
+        .textContent =
+        initials(
+          state.user.email
+        );
+
+
+      $("authScreen")
+        .classList
+        .add("hidden");
+
+
+      $("appScreen")
+        .classList
+        .remove("hidden");
+
+
+      if(
+        event === "SIGNED_IN" ||
+        event === "INITIAL_SESSION"
+      ){
+
+        await loadData();
+
+      }
+
+    }
+    else if(
+      event === "SIGNED_OUT"
+    ){
+
+      showAuth();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   LOAD DATA
+========================================================= */
+
+async function loadData(){
+
+  if(!state.user){
+
+    return;
+  }
+
+
+  document.body
+    .classList
+    .add("loading");
+
+
+  try{
+
+    const [
+      suppliersResult,
+      transactionsResult
+    ] =
+      await Promise.all([
+
+        db
+          .from("suppliers")
+          .select("*")
+          .eq(
+            "user_id",
+            state.user.id
+          )
+          .order(
+            "name",
+            {
+              ascending:true
+            }
+          ),
+
+        db
+          .from("supplier_transactions")
+          .select("*")
+          .eq(
+            "user_id",
+            state.user.id
+          )
+          .order(
+            "date",
+            {
+              ascending:false
+            }
+          )
+          .order(
+            "created_at",
+            {
+              ascending:false
+            }
+          )
+
+      ]);
+
+
+    if(
+      suppliersResult.error
+    ){
+
+      throw suppliersResult.error;
+
+    }
+
+
+    if(
+      transactionsResult.error
+    ){
+
+      throw transactionsResult.error;
+
+    }
+
+
+    state.suppliers =
+      suppliersResult.data ||
+      [];
+
+
+    state.transactions =
+      transactionsResult.data ||
+      [];
+
+
+    renderAll();
+
+  }
+  catch(error){
+
+    console.error(
+      "Data load error:",
+      error
+    );
+
+    showToast(
+      "Could not load data: " +
+      (
+        error.message ||
+        "Database error"
+      ),
+      "error"
+    );
+
+  }
+  finally{
+
+    document.body
+      .classList
+      .remove("loading");
+
+  }
+
+}
+
+
+/* =========================================================
+   SUPPLIER NAME
+========================================================= */
+
+function supplierName(
+  id
+){
+
+  const supplier =
+    state.suppliers.find(
+      s => s.id === id
+    );
+
+  return (
+    supplier?.name ||
+    "Unknown supplier"
+  );
+
+}
+
+
+/* =========================================================
+   SUPPLIER TOTALS
+========================================================= */
+
+function transactionTotalsForSupplier(
+  supplierId
+){
+
+  const supplier =
+    state.suppliers.find(
+      s => s.id === supplierId
+    );
+
+
+  let purchases = 0;
+
+  let payments = 0;
+
+  let adjustments = 0;
+
+
+  for(
+    const t
+    of state.transactions
+      .filter(
+        x => x.supplier_id === supplierId
+      )
+  ){
+
+    if(
+      t.type === "purchase"
+    ){
+
+      purchases +=
+        Number(t.amount);
+
+    }
+    else if(
+      t.type === "payment"
+    ){
+
+      payments +=
+        Number(t.amount);
+
+    }
+    else if(
+      t.type === "adjustment"
+    ){
+
+      adjustments +=
+        Number(t.amount);
+
+    }
+
+  }
+
+
+  const opening =
+    Number(
+      supplier?.opening_balance ||
+      0
+    );
+
+
+  const balance =
+    opening +
+    purchases +
+    adjustments -
+    payments;
+
+
+  return {
+    opening,
+    purchases,
+    payments,
+    adjustments,
+    balance
+  };
+
+}
+
+
+/* =========================================================
+   OVERALL TOTALS
+========================================================= */
+
+function overallTotals(){
+
+  let purchases = 0;
+
+  let payments = 0;
+
+  let adjustments = 0;
+
+  let opening = 0;
+
+
+  state.suppliers
+    .forEach(
+      s => {
+
+        opening +=
+          Number(
+            s.opening_balance ||
+            0
+          );
+
+      }
+    );
+
+
+  state.transactions
+    .forEach(
+      t => {
+
+        const amount =
+          Number(
+            t.amount ||
+            0
+          );
+
+
+        if(
+          t.type === "purchase"
+        ){
+
+          purchases +=
+            amount;
+
+        }
+        else if(
+          t.type === "payment"
+        ){
+
+          payments +=
+            amount;
+
+        }
+        else{
+
+          adjustments +=
+            amount;
+
+        }
+
+      }
+    );
+
+
+  return {
+
+    opening,
+
+    purchases,
+
+    payments,
+
+    adjustments,
+
+    outstanding:
+      opening +
+      purchases +
+      adjustments -
+      payments
+
+  };
+
+}
+
+
+/* =========================================================
+   RENDER ALL
+========================================================= */
+
+function renderAll(){
+
+  renderMetrics();
+
+  renderDashboardBalances();
+
+  renderRecentTransactions();
+
+  renderSuppliers();
+
+  renderTransactions();
+
+  populateSupplierSelect();
+
+}
+
+
+/* =========================================================
+   METRICS
+========================================================= */
+
+function renderMetrics(){
+
+  const t =
+    overallTotals();
+
+
+  $("mSuppliers")
+    .textContent =
+    state.suppliers.length;
+
+
+  $("mPurchases")
+    .textContent =
+    money(
+      t.purchases +
+      t.adjustments
+    );
+
+
+  $("mPayments")
+    .textContent =
+    money(
+      t.payments
+    );
+
+
+  $("mOutstanding")
+    .textContent =
+    money(
+      t.outstanding
+    );
+
+}
+
+
+/* =========================================================
+   DASHBOARD BALANCES
+========================================================= */
+
+function renderDashboardBalances(){
+
+  const query =
+    (
+      $("dashSearch")
+        .value ||
+      ""
+    )
+    .toLowerCase()
+    .trim();
+
+
+  const rows =
+    state.suppliers
+      .filter(
+        s => {
+
+          return (
+            !query ||
+            [
+              s.name,
+              s.phone,
+              s.email
+            ]
+            .some(
+              v =>
+                String(
+                  v || ""
+                )
+                .toLowerCase()
+                .includes(query)
+            )
+          );
+
+        }
+      );
+
+
+  if(!rows.length){
+
+    $("dashboardBalances")
+      .innerHTML =
+      `
+      <div class="empty">
+        No suppliers found.
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  $("dashboardBalances")
+    .innerHTML =
+    `
+    <table class="table">
+
+      <thead>
+
+        <tr>
+
+          <th>Supplier</th>
+
+          <th>Opening</th>
+
+          <th>Purchases</th>
+
+          <th>Payments</th>
+
+          <th>Adjustments</th>
+
+          <th class="right">
+            Balance
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        ${
+          rows
+          .map(
+            s => {
+
+              const t =
+                transactionTotalsForSupplier(
+                  s.id
+                );
+
+
+              return `
+              <tr>
+
+                <td>
+
+                  <strong>
+                    ${esc(s.name)}
+                  </strong>
+
+                  <div class="muted">
+                    ${esc(
+                      s.phone ||
+                      ""
+                    )}
+                  </div>
+
+                </td>
+
+                <td>
+                  ${money(t.opening)}
+                </td>
+
+                <td>
+                  ${money(t.purchases)}
+                </td>
+
+                <td>
+                  ${money(t.payments)}
+                </td>
+
+                <td>
+                  ${money(t.adjustments)}
+                </td>
+
+                <td class="amount">
+
+                  <span
+                    class="balance ${
+                      t.balance >= 0
+                        ? "due"
+                        : "credit"
+                    }"
+                  >
+
+                    ${money(
+                      Math.abs(
+                        t.balance
+                      )
+                    )}
+
+                    ${
+                      t.balance >= 0
+                        ? "Due"
+                        : "Credit"
+                    }
+
+                  </span>
+
+                </td>
+
+              </tr>
+              `;
+
+            }
+          )
+          .join("")
+        }
+
+      </tbody>
+
+    </table>
+    `;
+
+}
+
+
+/* =========================================================
+   RECENT TRANSACTIONS
+========================================================= */
+
+function renderRecentTransactions(){
+
+  const rows =
+    state.transactions
+      .slice(0,8);
+
+
+  if(!rows.length){
+
+    $("recentTransactions")
+      .innerHTML =
+      `
+      <div class="empty">
+        No transactions yet.
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  $("recentTransactions")
+    .innerHTML =
+    `
+    <table class="table">
+
+      <thead>
+
+        <tr>
+
+          <th>Date</th>
+
+          <th>Supplier</th>
+
+          <th>Type</th>
+
+          <th>Reference</th>
+
+          <th class="right">
+            Amount
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        ${
+          rows
+          .map(
+            t => {
+
+              return `
+              <tr>
+
+                <td>
+                  ${esc(t.date)}
+                </td>
+
+                <td>
+                  ${esc(
+                    supplierName(
+                      t.supplier_id
+                    )
+                  )}
+                </td>
+
+                <td>
+
+                  <span
+                    class="badge ${
+                      esc(t.type)
+                    }"
+                  >
+                    ${esc(t.type)}
+                  </span>
+
+                </td>
+
+                <td>
+                  ${esc(
+                    t.reference ||
+                    "-"
+                  )}
+                </td>
+
+                <td class="amount">
+                  ${money(t.amount)}
+                </td>
+
+              </tr>
+              `;
+
+            }
+          )
+          .join("")
+        }
+
+      </tbody>
+
+    </table>
+    `;
+
+}
+
+
+/* =========================================================
+   SUPPLIERS TABLE
+========================================================= */
+
+function renderSuppliers(){
+
+  const q =
+    (
+      $("supplierSearch")
+        .value ||
+      ""
+    )
+    .toLowerCase()
+    .trim();
+
+
+  const rows =
+    state.suppliers
+      .filter(
+        s => {
+
+          return (
+            !q ||
+            [
+              s.name,
+              s.phone,
+              s.email,
+              s.address,
+              s.notes
+            ]
+            .some(
+              v =>
+                String(
+                  v || ""
+                )
+                .toLowerCase()
+                .includes(q)
+            )
+          );
+
+        }
+      );
+
+
+  if(!rows.length){
+
+    $("suppliersTable")
+      .innerHTML =
+      `
+      <div class="empty">
+        No suppliers found.
+        Click “Add supplier” to create one.
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  $("suppliersTable")
+    .innerHTML =
+    `
+    <table class="table">
+
+      <thead>
+
+        <tr>
+
+          <th>Supplier</th>
+
+          <th>Phone</th>
+
+          <th>Email</th>
+
+          <th>Opening</th>
+
+          <th>Balance</th>
+
+          <th>Actions</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        ${
+          rows
+          .map(
+            s => {
+
+              const t =
+                transactionTotalsForSupplier(
+                  s.id
+                );
+
+
+              return `
+              <tr>
+
+                <td>
+
+                  <strong>
+                    ${esc(s.name)}
+                  </strong>
+
+                  <div class="muted">
+                    ${esc(
+                      s.address ||
+                      ""
+                    )}
+                  </div>
+
+                </td>
+
+                <td>
+                  ${esc(
+                    s.phone ||
+                    "-"
+                  )}
+                </td>
+
+                <td>
+                  ${esc(
+                    s.email ||
+                    "-"
+                  )}
+                </td>
+
+                <td>
+                  ${money(
+                    s.opening_balance
+                  )}
+                </td>
+
+                <td>
+
+                  <span
+                    class="balance ${
+                      t.balance >= 0
+                        ? "due"
+                        : "credit"
+                    }"
+                  >
+
+                    ${money(
+                      Math.abs(
+                        t.balance
+                      )
+                    )}
+
+                    ${
+                      t.balance >= 0
+                        ? "Due"
+                        : "Credit"
+                    }
+
+                  </span>
+
+                </td>
+
+                <td>
+
+                  <button
+                    class="btn small"
+                    data-edit-supplier="${esc(
+                      s.id
+                    )}"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    class="btn small danger"
+                    data-delete-supplier="${esc(
+                      s.id
+                    )}"
+                  >
+                    Delete
+                  </button>
+
+                </td>
+
+              </tr>
+              `;
+
+            }
+          )
+          .join("")
+        }
+
+      </tbody>
+
+    </table>
+    `;
+
+}
+
+
+/* =========================================================
+   TRANSACTIONS TABLE
+========================================================= */
+
+function renderTransactions(){
+
+  const q =
+    (
+      $("transactionSearch")
+        .value ||
+      ""
+    )
+    .toLowerCase()
+    .trim();
+
+
+  const type =
+    $("transactionTypeFilter")
+      .value;
+
+
+  const rows =
+    state.transactions
+      .filter(
+        t => {
+
+          const text =
+            [
+              supplierName(
+                t.supplier_id
+              ),
+              t.reference,
+              t.notes,
+              t.date,
+              t.type
+            ]
+            .join(" ")
+            .toLowerCase();
+
+
+          return (
+            (!q ||
+              text.includes(q)) &&
+            (!type ||
+              t.type === type)
+          );
+
+        }
+      );
+
+
+  if(!rows.length){
+
+    $("transactionsTable")
+      .innerHTML =
+      `
+      <div class="empty">
+        No transactions found.
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  $("transactionsTable")
+    .innerHTML =
+    `
+    <table class="table">
+
+      <thead>
+
+        <tr>
+
+          <th>Date</th>
+
+          <th>Supplier</th>
+
+          <th>Type</th>
+
+          <th>Reference</th>
+
+          <th>Notes</th>
+
+          <th class="right">
+            Amount
+          </th>
+
+          <th>Actions</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        ${
+          rows
+          .map(
+            t => {
+
+              return `
+              <tr>
+
+                <td>
+                  ${esc(t.date)}
+                </td>
+
+                <td>
+                  <strong>
+                    ${esc(
+                      supplierName(
+                        t.supplier_id
+                      )
+                    )}
+                  </strong>
+                </td>
+
+                <td>
+
+                  <span
+                    class="badge ${
+                      esc(t.type)
+                    }"
+                  >
+                    ${esc(t.type)}
+                  </span>
+
+                </td>
+
+                <td>
+                  ${esc(
+                    t.reference ||
+                    "-"
+                  )}
+                </td>
+
+                <td>
+                  ${esc(
+                    t.notes ||
+                    "-"
+                  )}
+                </td>
+
+                <td class="amount">
+                  ${money(t.amount)}
+                </td>
+
+                <td>
+
+                  <button
+                    class="btn small"
+                    data-edit-transaction="${esc(
+                      t.id
+                    )}"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    class="btn small danger"
+                    data-delete-transaction="${esc(
+                      t.id
+                    )}"
+                  >
+                    Delete
+                  </button>
+
+                </td>
+
+              </tr>
+              `;
+
+            }
+          )
+          .join("")
+        }
+
+      </tbody>
+
+    </table>
+    `;
+
+}
+
+
+/* =========================================================
+   SUPPLIER MODAL
+========================================================= */
+
+function openSupplierModal(
+  supplier=null
+){
+
+  $("supplierForm")
+    .reset();
+
+
+  $("supplierId")
+    .value =
+      supplier?.id ||
+      "";
+
+
+  $("supplierModalTitle")
+    .textContent =
+      supplier
+        ? "Edit Supplier"
+        : "Add Supplier";
+
+
+  $("supplierName")
+    .value =
+      supplier?.name ||
+      "";
+
+
+  $("supplierPhone")
+    .value =
+      supplier?.phone ||
+      "";
+
+
+  $("supplierEmail")
+    .value =
+      supplier?.email ||
+      "";
+
+
+  $("supplierOpening")
+    .value =
+      supplier?.opening_balance ??
+      0;
+
+
+  $("supplierAddress")
+    .value =
+      supplier?.address ||
+      "";
+
+
+  $("supplierNotes")
+    .value =
+      supplier?.notes ||
+      "";
+
+
+  $("supplierModal")
+    .classList
+    .add("open");
+
+
+  setTimeout(
+    () =>
+      $("supplierName")
+        .focus(),
+    50
+  );
+
+}
+
+
+/* =========================================================
+   SAVE SUPPLIER
+========================================================= */
+
+async function saveSupplier(
+  event
+){
+
+  event.preventDefault();
+
+
+  if(
+    state.savingSupplier ||
+    !state.user
+  ){
+
+    return;
+  }
+
+
+  state.savingSupplier =
+    true;
+
+
+  $("saveSupplierBtn")
+    .disabled =
+    true;
+
+
+  const id =
+    $("supplierId")
+      .value;
+
+
+  const payload = {
+
+    user_id:
+      state.user.id,
+
+    name:
+      $("supplierName")
+        .value
+        .trim(),
+
+    phone:
+      $("supplierPhone")
+        .value
+        .trim() ||
+      null,
+
+    email:
+      $("supplierEmail")
+        .value
+        .trim() ||
+      null,
+
+    opening_balance:
+      Number(
+        $("supplierOpening")
+          .value ||
+        0
+      ),
+
+    address:
+      $("supplierAddress")
+        .value
+        .trim() ||
+      null,
+
+    notes:
+      $("supplierNotes")
+        .value
+        .trim() ||
+      null
+
+  };
+
+
+  try{
+
+    if(
+      !payload.name
+    ){
+
+      throw new Error(
+        "Supplier name is required."
+      );
+
+    }
+
+
+    if(
+      payload.opening_balance < 0
+    ){
+
+      throw new Error(
+        "Opening balance cannot be negative."
+      );
+
+    }
+
+
+    let result;
+
+
+    if(id){
+
+      result =
+        await db
+          .from("suppliers")
+          .update(payload)
+          .eq(
+            "id",
+            id
+          )
+          .eq(
+            "user_id",
+            state.user.id
+          )
+          .select()
+          .single();
+
+    }
+    else{
+
+      result =
+        await db
+          .from("suppliers")
+          .insert(payload)
+          .select()
+          .single();
+
+    }
+
+
+    if(result.error){
+
+      throw result.error;
+
+    }
+
+
+    closeModal(
+      "supplierModal"
+    );
+
+
+    showToast(
+      id
+        ? "Supplier updated."
+        : "Supplier added.",
+      "success"
+    );
+
+
+    await loadData();
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    showToast(
+      error.message ||
+      "Could not save supplier.",
+      "error"
+    );
+
+  }
+  finally{
+
+    state.savingSupplier =
+      false;
+
+    $("saveSupplierBtn")
+      .disabled =
+      false;
+
+  }
+
+}
+
+
+/* =========================================================
+   DELETE SUPPLIER
+========================================================= */
+
+async function deleteSupplier(
+  id
+){
+
+  const supplier =
+    state.suppliers.find(
+      s => s.id === id
+    );
+
+
+  if(!supplier){
+
+    return;
+  }
+
+
+  const count =
+    state.transactions.filter(
+      t =>
+        t.supplier_id === id
+    ).length;
+
+
+  const ok =
+    confirm(
+      `Delete "${supplier.name}"?` +
+      (
+        count
+          ? ` This will also delete ${count} transaction(s).`
+          : ""
+      )
+    );
+
+
+  if(!ok){
+
+    return;
+  }
+
+
+  try{
+
+    const {
+      error
+    } =
+      await db
+        .from("suppliers")
+        .delete()
+        .eq(
+          "id",
+          id
+        )
+        .eq(
+          "user_id",
+          state.user.id
+        );
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    showToast(
+      "Supplier deleted.",
+      "success"
+    );
+
+
+    await loadData();
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    showToast(
+      error.message ||
+      "Could not delete supplier.",
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   SUPPLIER SELECT
+========================================================= */
+
+function populateSupplierSelect(
+  selected=""
+){
+
+  const select =
+    $("transactionSupplier");
+
+
+  const current =
+    selected ||
+    select.value;
+
+
+  select.innerHTML =
+    `
+    <option value="">
+      Select supplier
+    </option>
+    ` +
+    state.suppliers
+      .map(
+        s =>
+          `
+          <option value="${esc(s.id)}">
+            ${esc(s.name)}
+          </option>
+          `
+      )
+      .join("");
+
+
+  if(
+    current &&
+    state.suppliers.some(
+      s => s.id === current
+    )
+  ){
+
+    select.value =
+      current;
+
+  }
+
+}
+
+
+/* =========================================================
+   TRANSACTION MODAL
+========================================================= */
+
+function openTransactionModal(
+  transaction=null
+){
+
+  $("transactionForm")
+    .reset();
+
+
+  $("transactionId")
+    .value =
+      transaction?.id ||
+      "";
+
+
+  $("transactionModalTitle")
+    .textContent =
+      transaction
+        ? "Edit Transaction"
+        : "Add Transaction";
+
+
+  populateSupplierSelect(
+    transaction?.supplier_id ||
+    ""
+  );
+
+
+  $("transactionSupplier")
+    .value =
+      transaction?.supplier_id ||
+      "";
+
+
+  $("transactionType")
+    .value =
+      transaction?.type ||
+      "purchase";
+
+
+  $("transactionAmount")
+    .value =
+      transaction?.amount ??
+      "";
+
+
+  $("transactionDate")
+    .value =
+      transaction?.date ||
+      today();
+
+
+  $("transactionReference")
+    .value =
+      transaction?.reference ||
+      "";
+
+
+  $("transactionNotes")
+    .value =
+      transaction?.notes ||
+      "";
+
+
+  $("transactionModal")
+    .classList
+    .add("open");
+
+
+  setTimeout(
+    () =>
+      $("transactionSupplier")
+        .focus(),
+    50
+  );
+
+}
+
+
+/* =========================================================
+   SAVE TRANSACTION
+========================================================= */
+
+async function saveTransaction(
+  event
+){
+
+  event.preventDefault();
+
+
+  if(
+    state.savingTransaction ||
+    !state.user
+  ){
+
+    return;
+  }
+
+
+  state.savingTransaction =
+    true;
+
+
+  $("saveTransactionBtn")
+    .disabled =
+    true;
+
+
+  const id =
+    $("transactionId")
+      .value;
+
+
+  const payload = {
+
+    user_id:
+      state.user.id,
+
+    supplier_id:
+      $("transactionSupplier")
+        .value,
+
+    type:
+      $("transactionType")
+        .value,
+
+    amount:
+      Number(
+        $("transactionAmount")
+          .value
+      ),
+
+    date:
+      $("transactionDate")
+        .value,
+
+    reference:
+      $("transactionReference")
+        .value
+        .trim() ||
+      null,
+
+    notes:
+      $("transactionNotes")
+        .value
+        .trim() ||
+      null
+
+  };
+
+
+  try{
+
+    if(
+      !payload.supplier_id
+    ){
+
+      throw new Error(
+        "Please select a supplier."
+      );
+
+    }
+
+
+    if(
+      ![
+        "purchase",
+        "payment",
+        "adjustment"
+      ]
+      .includes(
+        payload.type
+      )
+    ){
+
+      throw new Error(
+        "Invalid transaction type."
+      );
+
+    }
+
+
+    if(
+      !(payload.amount > 0)
+    ){
+
+      throw new Error(
+        "Amount must be greater than zero."
+      );
+
+    }
+
+
+    if(
+      !payload.date
+    ){
+
+      throw new Error(
+        "Date is required."
+      );
+
+    }
+
+
+    if(
+      !state.suppliers.some(
+        s =>
+          s.id ===
+          payload.supplier_id
+      )
+    ){
+
+      throw new Error(
+        "Selected supplier is not available."
+      );
+
+    }
+
+
+    let result;
+
+
+    if(id){
+
+      result =
+        await db
+          .from(
+            "supplier_transactions"
+          )
+          .update(payload)
+          .eq(
+            "id",
+            id
+          )
+          .eq(
+            "user_id",
+            state.user.id
+          )
+          .select()
+          .single();
+
+    }
+    else{
+
+      result =
+        await db
+          .from(
+            "supplier_transactions"
+          )
+          .insert(payload)
+          .select()
+          .single();
+
+    }
+
+
+    if(result.error){
+
+      throw result.error;
+
+    }
+
+
+    closeModal(
+      "transactionModal"
+    );
+
+
+    showToast(
+      id
+        ? "Transaction updated."
+        : "Transaction added.",
+      "success"
+    );
+
+
+    await loadData();
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    showToast(
+      error.message ||
+      "Could not save transaction.",
+      "error"
+    );
+
+  }
+  finally{
+
+    state.savingTransaction =
+      false;
+
+    $("saveTransactionBtn")
+      .disabled =
+      false;
+
+  }
+
+}
+
+
+/* =========================================================
+   DELETE TRANSACTION
+========================================================= */
+
+async function deleteTransaction(
+  id
+){
+
+  const transaction =
+    state.transactions.find(
+      t => t.id === id
+    );
+
+
+  if(!transaction){
+
+    return;
+  }
+
+
+  if(
+    !confirm(
+      `Delete this ${transaction.type} transaction of ${money(transaction.amount)}?`
+    )
+  ){
+
+    return;
+  }
+
+
+  try{
+
+    const {
+      error
+    } =
+      await db
+        .from(
+          "supplier_transactions"
+        )
+        .delete()
+        .eq(
+          "id",
+          id
+        )
+        .eq(
+          "user_id",
+          state.user.id
+        );
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    showToast(
+      "Transaction deleted.",
+      "success"
+    );
+
+
+    await loadData();
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    showToast(
+      error.message ||
+      "Could not delete transaction.",
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+function showPage(
+  page
+){
+
+  const pages = [
+    "dashboard",
+    "suppliers",
+    "transactions"
+  ];
+
+
+  pages.forEach(
+    p => {
+
+      $(p + "Page")
+        .classList
+        .toggle(
+          "active",
+          p === page
+        );
+
+    }
+  );
+
+
+  document
+    .querySelectorAll(
+      ".nav button"
+    )
+    .forEach(
+      button => {
+
+        button.classList.toggle(
+          "active",
+          button.dataset.page === page
+        );
+
+      }
+    );
+
+
+  $("pageTitle")
+    .textContent =
+      page
+        .charAt(0)
+        .toUpperCase() +
+      page.slice(1);
+
+
+  $("sidebar")
+    .classList
+    .remove("open");
+
+}
+
+
+/* =========================================================
+   MODALS
+========================================================= */
+
+function closeModal(
+  id
+){
+
+  $(id)
+    .classList
+    .remove("open");
+
+}
+
+
+/* =========================================================
+   THEME
+========================================================= */
+
+function toggleTheme(){
+
+  document.body
+    .classList
+    .toggle("dark");
+
+
+  const dark =
+    document.body
+      .classList
+      .contains("dark");
+
+
+  localStorage.setItem(
+    "supplier-theme",
+    dark
+      ? "dark"
+      : "light"
+  );
+
+
+  $("themeBtn")
+    .textContent =
+      dark
+        ? "☀ Light mode"
+        : "☾ Dark mode";
+
+}
+
+
+/* =========================================================
+   CSV
+========================================================= */
+
+function csvCell(
+  value
+){
+
+  const s =
+    String(
+      value ?? ""
+    );
+
+
+  return (
+    '"' +
+    s.replace(
+      /"/g,
+      '""'
+    ) +
+    '"'
+  );
+
+}
+
+
+function downloadCSV(
+  filename,
+  rows
+){
+
+  if(!rows.length){
+
+    showToast(
+      "Nothing to export."
+    );
+
+    return;
+
+  }
+
+
+  const csv =
+    rows
+      .map(
+        row =>
+          row
+            .map(csvCell)
+            .join(",")
+      )
+      .join("\n");
+
+
+  const blob =
+    new Blob(
+      [
+        "\ufeff" +
+        csv
+      ],
+      {
+        type:
+          "text/csv;charset=utf-8"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const a =
+    document.createElement(
+      "a"
+    );
+
+
+  a.href =
+    url;
+
+  a.download =
+    filename;
+
+  a.click();
+
+
+  URL.revokeObjectURL(
+    url
+  );
+
+}
+
+
+/* =========================================================
+   EXPORT SUPPLIERS
+========================================================= */
+
+function exportSuppliers(){
+
+  const rows = [
+    [
+      "Supplier",
+      "Phone",
+      "Email",
+      "Address",
+      "Opening Balance",
+      "Purchases",
+      "Payments",
+      "Adjustments",
+      "Balance",
+      "Notes"
+    ]
+  ];
+
+
+  state.suppliers
+    .forEach(
+      s => {
+
+        const t =
+          transactionTotalsForSupplier(
+            s.id
+          );
+
+
+        rows.push([
+          s.name,
+          s.phone,
+          s.email,
+          s.address,
+          t.opening,
+          t.purchases,
+          t.payments,
+          t.adjustments,
+          t.balance,
+          s.notes
+        ]);
+
+      }
+    );
+
+
+  downloadCSV(
+    "suppliers.csv",
+    rows
+  );
+
+}
+
+
+/* =========================================================
+   EXPORT TRANSACTIONS
+========================================================= */
+
+function exportTransactions(){
+
+  const rows = [
+    [
+      "Date",
+      "Supplier",
+      "Type",
+      "Amount",
+      "Reference",
+      "Notes"
+    ]
+  ];
+
+
+  state.transactions
+    .forEach(
+      t => {
+
+        rows.push([
+          t.date,
+          supplierName(
+            t.supplier_id
+          ),
+          t.type,
+          t.amount,
+          t.reference,
+          t.notes
+        ]);
+
+      }
+    );
+
+
+  downloadCSV(
+    "supplier-transactions.csv",
+    rows
+  );
+
+}
+
+
+/* =========================================================
+   PRINT
+========================================================= */
+
+function printTransactions(){
+
+  const rows =
+    state.transactions;
+
+
+  const html =
+    `
+    <!doctype html>
+
+    <html>
+
+    <head>
+
+      <title>
+        Supplier Transactions
+      </title>
+
+      <style>
+
+        body{
+          font-family:Arial;
+          padding:25px;
+        }
+
+        h1{
+          font-size:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+        }
+
+        th,
+        td{
+          border:1px solid #ccc;
+          padding:7px;
+          text-align:left;
+          font-size:11px;
+        }
+
+        th{
+          background:#eee;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h1>
+        Supplier Transactions
+      </h1>
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>Date</th>
+            <th>Supplier</th>
+            <th>Type</th>
+            <th>Reference</th>
+            <th>Notes</th>
+            <th>Amount</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${
+            rows
+            .map(
+              t =>
+                `
+                <tr>
+
+                  <td>
+                    ${esc(t.date)}
+                  </td>
+
+                  <td>
+                    ${esc(
+                      supplierName(
+                        t.supplier_id
+                      )
+                    )}
+                  </td>
+
+                  <td>
+                    ${esc(t.type)}
+                  </td>
+
+                  <td>
+                    ${esc(
+                      t.reference ||
+                      ""
+                    )}
+                  </td>
+
+                  <td>
+                    ${esc(
+                      t.notes ||
+                      ""
+                    )}
+                  </td>
+
+                  <td>
+                    ${money(t.amount)}
+                  </td>
+
+                </tr>
+                `
+            )
+            .join("")
+          }
+
+        </tbody>
+
+      </table>
+
+    </body>
+
+    </html>
+    `;
+
+
+  const win =
+    window.open(
+      "",
+      "_blank"
+    );
+
+
+  if(!win){
+
+    showToast(
+      "Please allow pop-ups to print.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  win.document.write(
+    html
+  );
+
+  win.document.close();
+
+  win.focus();
+
+
+  setTimeout(
+    () =>
+      win.print(),
+    300
+  );
+
+}
+
+
+/* =========================================================
+   EVENT LISTENERS
+========================================================= */
+
+$("signInTab")
+  .addEventListener(
+    "click",
+    () =>
+      setAuthMode(
+        "signin"
+      )
+  );
+
+
+$("signUpTab")
+  .addEventListener(
+    "click",
+    () =>
+      setAuthMode(
+        "signup"
+      )
+  );
+
+
+$("authForm")
+  .addEventListener(
+    "submit",
+    authenticate
+  );
+
+
+$("forgotBtn")
+  .addEventListener(
+    "click",
+    forgotPassword
+  );
+
+
+$("logoutBtn")
+  .addEventListener(
+    "click",
+    signOut
+  );
+
+
+$("togglePassword")
+  .addEventListener(
+    "click",
+    () => {
+
+      const input =
+        $("authPassword");
+
+
+      input.type =
+        input.type === "password"
+          ? "text"
+          : "password";
+
+
+      $("togglePassword")
+        .textContent =
+          input.type === "password"
+            ? "Show"
+            : "Hide";
+
+    }
+  );
+
+
+/* NAV */
+
+document
+  .querySelectorAll(
+    ".nav button"
+  )
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        () =>
+          showPage(
+            button.dataset.page
+          )
+      );
+
+    }
+  );
+
+
+document
+  .querySelectorAll(
+    "[data-page-jump]"
+  )
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        () =>
+          showPage(
+            button.dataset.pageJump
+          )
+      );
+
+    }
+  );
+
+
+$("mobileMenu")
+  .addEventListener(
+    "click",
+    () =>
+      $("sidebar")
+        .classList
+        .toggle("open")
+  );
+
+
+$("themeBtn")
+  .addEventListener(
+    "click",
+    toggleTheme
+  );
+
+
+$("refreshBtn")
+  .addEventListener(
+    "click",
+    loadData
+  );
+
+
+/* SEARCH */
+
+$("dashSearch")
+  .addEventListener(
+    "input",
+    renderDashboardBalances
+  );
+
+
+$("supplierSearch")
+  .addEventListener(
+    "input",
+    renderSuppliers
+  );
+
+
+$("transactionSearch")
+  .addEventListener(
+    "input",
+    renderTransactions
+  );
+
+
+$("transactionTypeFilter")
+  .addEventListener(
+    "change",
+    renderTransactions
+  );
+
+
+/* SUPPLIER */
+
+$("addSupplierBtn")
+  .addEventListener(
+    "click",
+    () =>
+      openSupplierModal()
+  );
+
+
+$("supplierForm")
+  .addEventListener(
+    "submit",
+    saveSupplier
+  );
+
+
+/* TRANSACTION */
+
+$("addTransactionBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      if(
+        !state.suppliers.length
+      ){
+
+        showPage(
+          "suppliers"
+        );
+
+        showToast(
+          "Add a supplier first.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      openTransactionModal();
+
+    }
+  );
+
+
+$("transactionForm")
+  .addEventListener(
+    "submit",
+    saveTransaction
+  );
+
+
+/* EXPORT */
+
+$("exportSuppliersBtn")
+  .addEventListener(
+    "click",
+    exportSuppliers
+  );
+
+
+$("exportTransactionsBtn")
+  .addEventListener(
+    "click",
+    exportTransactions
+  );
+
+
+$("printTransactionsBtn")
+  .addEventListener(
+    "click",
+    printTransactions
+  );
+
+
+/* =========================================================
+   GLOBAL CLICK HANDLER
+========================================================= */
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const editSupplier =
+      event.target.closest(
+        "[data-edit-supplier]"
+      );
+
+
+    const deleteSupplierButton =
+      event.target.closest(
+        "[data-delete-supplier]"
+      );
+
+
+    const editTransaction =
+      event.target.closest(
+        "[data-edit-transaction]"
+      );
+
+
+    const deleteTransactionButton =
+      event.target.closest(
+        "[data-delete-transaction]"
+      );
+
+
+    const closeButton =
+      event.target.closest(
+        "[data-close]"
+      );
+
+
+    if(editSupplier){
+
+      openSupplierModal(
+        state.suppliers.find(
+          s =>
+            s.id ===
+            editSupplier
+              .dataset
+              .editSupplier
+        )
+      );
+
+    }
+
+
+    if(deleteSupplierButton){
+
+      deleteSupplier(
+        deleteSupplierButton
+          .dataset
+          .deleteSupplier
+      );
+
+    }
+
+
+    if(editTransaction){
+
+      openTransactionModal(
+        state.transactions.find(
+          t =>
+            t.id ===
+            editTransaction
+              .dataset
+              .editTransaction
+        )
+      );
+
+    }
+
+
+    if(deleteTransactionButton){
+
+      deleteTransaction(
+        deleteTransactionButton
+          .dataset
+          .deleteTransaction
+      );
+
+    }
+
+
+    if(closeButton){
+
+      closeModal(
+        closeButton
+          .dataset
+          .close
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   MODAL BACKDROP
+========================================================= */
+
+[
+  "supplierModal",
+  "transactionModal"
+]
+.forEach(
+  id => {
+
+    $(id)
+      .addEventListener(
+        "click",
+        event => {
+
+          if(
+            event.target.id === id
+          ){
+
+            closeModal(id);
+
+          }
+
+        }
+      );
+
+  }
+);
+
+
+/* ESC */
+
+window.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key === "Escape"
+    ){
+
+      closeModal(
+        "supplierModal"
+      );
+
+      closeModal(
+        "transactionModal"
+      );
+
+      $("sidebar")
+        .classList
+        .remove("open");
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+async function initialize(){
+
+  /*
+    Theme
+  */
+
+  const savedTheme =
+    localStorage.getItem(
+      "supplier-theme"
+    );
+
+
+  if(
+    savedTheme === "dark"
+  ){
+
+    document.body
+      .classList
+      .add("dark");
+
+
+    $("themeBtn")
+      .textContent =
+      "☀ Light mode";
+
+  }
+
+
+  /*
+    Default transaction date
+  */
+
+  $("transactionDate")
+    .value =
+    today();
+
+
+  /*
+    Get existing Supabase session
+  */
+
+  try{
+
+    const {
+      data,
+      error
+    } =
+      await db.auth.getSession();
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    if(
+      data?.session?.user
+    ){
+
+      await applySession(
+        data.session
+      );
+
+    }
+    else{
+
+      showAuth();
+
+    }
+
+  }
+  catch(error){
+
+    console.error(
+      "Initialization error:",
+      error
+    );
+
+
+    showAuth();
+
+
+    setAuthMessage(
+      "Could not initialize authentication. Refresh the page and try again."
+    );
+
+  }
+
+}
+
+
+/* START */
+
+initialize();
+
+</script>
+
+</body>
+</html>
