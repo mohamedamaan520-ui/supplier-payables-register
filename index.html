@@ -668,21 +668,24 @@
     <div id="bankAccountsList"></div>
   </section>
 
-  <section class="bank-manager payment-voucher-manager" aria-label="Payment vouchers" style="margin-top:18px;">
-    <div class="bank-manager-head">
-      <div><h2>Payment Vouchers</h2><p>Create separate payment vouchers from existing invoices. Supplier, invoice amount and balance are loaded automatically.</p></div>
-      <button class="btn btn-primary" id="newPaymentVoucherBtn" type="button">+ New Payment Voucher</button>
-    </div>
-    <div id="paymentVoucherPanel" style="display:none;padding:16px;border-top:1px solid rgba(255,255,255,.08);">
+    <section class="payment-voucher-manager" aria-label="Payment vouchers" style="margin-top:18px;">
+    <button class="btn btn-primary" id="newPaymentVoucherBtn" type="button" style="width:100%;font-size:16px;padding:14px 18px;">Payment Voucher</button>
+    <div id="paymentVoucherPanel" style="display:none;margin-top:12px;padding:16px;border:1px solid rgba(255,255,255,.10);border-radius:14px;">
       <div class="field-grid">
         <div class="field"><label>Voucher No.</label><input id="pvVoucherNo" readonly></div>
         <div class="field"><label>Payment Date</label><input type="date" id="pvDate"></div>
-        <div class="field" style="grid-column:span 2;"><label>Supplier</label><select id="pvSupplier"><option value="">— Select supplier —</option></select></div>
-        <div class="field" style="grid-column:span 2;"><label>Invoice</label><select id="pvInvoice"><option value="">— Select invoice —</option></select></div>
+        <div class="field" style="grid-column:span 2;"><label>1. Select Supplier</label><select id="pvSupplier"><option value="">— Select supplier —</option></select></div>
+        <div id="pvSupplierDetails" style="display:none;grid-column:span 2;">
+          <div class="field-grid" style="margin-top:0;">
+            <div class="field"><label>Supplier Name</label><input id="pvSupplierName" readonly></div>
+            <div class="field"><label>Supplier Contact</label><input id="pvSupplierContact" readonly></div>
+          </div>
+        </div>
+        <div class="field" style="grid-column:span 2;"><label>2. Select Invoice</label><select id="pvInvoice"><option value="">— Select invoice —</option></select></div>
         <div class="field"><label>Gross Amount</label><input id="pvGrossAmount" readonly></div>
         <div class="field"><label>Net Payable</label><input id="pvInvoiceAmount" readonly></div>
         <div class="field"><label>Already Paid</label><input id="pvAlreadyPaid" readonly></div>
-        <div class="field"><label>Current Balance</label><input id="pvBalance" readonly></div>
+        <div class="field"><label>Outstanding</label><input id="pvBalance" readonly></div>
         <div class="field"><label>Payment Amount</label><input type="number" id="pvAmount" min="0" step="0.01"></div>
         <div class="field"><label>Payment Method</label><select id="pvMethod">
           <option value="">— Select —</option><option value="Cash">Cash</option><option value="Bank">Bank</option><option value="Card">Card</option><option value="Cheque (CQ)">Cheque (CQ)</option>
@@ -695,14 +698,13 @@
       </div>
       <div id="pvBankInfo" style="display:none;margin:12px 0;padding:12px;border-radius:10px;background:rgba(255,255,255,.04);"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
-        <button class="btn btn-ghost" id="cancelPaymentVoucherBtn" type="button">Cancel</button>
+        <button class="btn btn-ghost" id="cancelPaymentVoucherBtn" type="button">Close</button>
         <button class="btn btn-ghost" id="printPaymentVoucherBtn" type="button">Print</button>
         <button class="btn btn-primary" id="savePaymentVoucherBtn" type="button">Save Payment Voucher</button>
       </div>
     </div>
     <div id="paymentVoucherList" style="padding:12px 16px;"></div>
   </section>
-
   <div class="status-row" id="statusRow"></div>
 
   <div class="toolbar">
@@ -1321,6 +1323,10 @@
     var already=e?(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId):0;
     var balance=e?Math.max(0,total-already):0;
     document.getElementById('pvSupplier').value=e?e.supplierName||'':'';
+    var supDetails=document.getElementById('pvSupplierDetails');
+    if(supDetails) supDetails.style.display=e?'block':'none';
+    var supName=document.getElementById('pvSupplierName'); if(supName) supName.value=e?e.supplierName||'':'';
+    var supContact=document.getElementById('pvSupplierContact'); if(supContact) supContact.value=e?e.supplierContact||'':'';
     document.getElementById('pvGrossAmount').value=e?gross.toFixed(2):'';
     document.getElementById('pvInvoiceAmount').value=e?total.toFixed(2):'';
     document.getElementById('pvAlreadyPaid').value=e?already.toFixed(2):'';
@@ -2392,7 +2398,14 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     var el;
     el=document.getElementById('newPaymentVoucherBtn'); if(el) el.addEventListener('click',openPaymentVoucher);
     el=document.getElementById('cancelPaymentVoucherBtn'); if(el) el.addEventListener('click',closePaymentVoucher);
-    el=document.getElementById('pvSupplier'); if(el) el.addEventListener('change',function(){document.getElementById('pvInvoice').value='';document.getElementById('pvAmount').value='';invoiceVoucherOptions();fillPaymentVoucherInvoice();});
+    el=document.getElementById('pvSupplier'); if(el) el.addEventListener('change',function(){
+      var name=String(el.value||'').trim().toLowerCase();
+      var e=entries.find(function(x){return String(x.supplierName||'').trim().toLowerCase()===name;});
+      var d=document.getElementById('pvSupplierDetails'); if(d) d.style.display=e?'block':'none';
+      var sn=document.getElementById('pvSupplierName'); if(sn) sn.value=e?e.supplierName||'':'';
+      var sc=document.getElementById('pvSupplierContact'); if(sc) sc.value=e?e.supplierContact||'':'';
+      document.getElementById('pvInvoice').value='';document.getElementById('pvAmount').value='';invoiceVoucherOptions();fillPaymentVoucherInvoice();
+    });
     el=document.getElementById('pvInvoice'); if(el) el.addEventListener('change',function(){document.getElementById('pvAmount').value='';fillPaymentVoucherInvoice();});
     el=document.getElementById('pvMethod'); if(el) el.addEventListener('change',updatePaymentVoucherMethod);
     el=document.getElementById('pvBank'); if(el) el.addEventListener('change',updatePaymentVoucherBankInfo);
