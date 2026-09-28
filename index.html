@@ -1401,6 +1401,9 @@
 
   function initSupabaseClient(){
     if(!supabaseConfigured()) return false;
+    // Reuse the same client so Supabase Auth does not create multiple
+    // GoTrueClient instances under the same browser storage key.
+    if(supabaseClient) return true;
     try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); return true; }
     catch(err){ supabaseClient=null; return false; }
   }
@@ -1686,6 +1689,28 @@
     }
   }
 
+  var resetPasswordCooldownUntil=0;
+  var resetPasswordCooldownTimer=null;
+
+  function startResetPasswordCooldown(seconds){
+    var btn=document.getElementById('forgotPasswordBtn');
+    resetPasswordCooldownUntil=Date.now()+(Number(seconds)||60)*1000;
+    if(resetPasswordCooldownTimer) clearInterval(resetPasswordCooldownTimer);
+    function tick(){
+      var left=Math.max(0,Math.ceil((resetPasswordCooldownUntil-Date.now())/1000));
+      if(btn){
+        btn.disabled=left>0;
+        btn.textContent=left>0 ? ('TRY AGAIN IN '+left+'s') : 'Forgot Password?';
+      }
+      if(left<=0){
+        clearInterval(resetPasswordCooldownTimer);
+        resetPasswordCooldownTimer=null;
+      }
+    }
+    tick();
+    resetPasswordCooldownTimer=setInterval(tick,1000);
+  }
+
   async function resetPassword(email) {
     if(!supabaseClient || !supabaseConfigured()){
       showLoginMessage('Supabase is not configured correctly.',false);
@@ -1705,12 +1730,18 @@
         redirectTo:window.location.origin+window.location.pathname
       });
       if(r.error) throw r.error;
-      showLoginMessage('Password reset link sent. Check your email.',true);
+      showLoginMessage('Password reset link sent. Check your email. You can request another link after 60 seconds.',true);
+      startResetPasswordCooldown(60);
     }catch(err){
       console.error('Supabase password reset error:',err);
-      showLoginMessage(err&&err.message?err.message:'Unable to send reset email.',false);
-    }finally{
-      if(btn){ btn.disabled=false; btn.textContent='Forgot Password?'; }
+      var msg=err&&err.message?err.message:'Unable to send reset email.';
+      if(/rate limit|rate_limit|too many|429/i.test(msg)){
+        showLoginMessage('Email rate limit reached. Please wait before requesting another reset email.',false);
+        startResetPasswordCooldown(60);
+      }else{
+        showLoginMessage(msg,false);
+        if(btn){ btn.disabled=false; btn.textContent='Forgot Password?'; }
+      }
     }
   }
 
