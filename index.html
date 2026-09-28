@@ -494,71 +494,25 @@
 
 
 
-  /* ---------- Copyright Watermark ---------- */
+  /* ---------- Copyright Footer ---------- */
   .app-copyright-watermark{
-    position:fixed;
-    left:50%;
-    bottom:8px;
-    transform:translateX(-50%);
-    z-index:30;
+    width:100%;
+    margin:28px 0 0;
+    padding:14px 10px 6px;
+    text-align:center;
     pointer-events:none;
     user-select:none;
-    white-space:nowrap;
     font-size:10px;
     font-weight:700;
     letter-spacing:.08em;
     text-transform:uppercase;
     color:var(--ink-faint);
-    opacity:.58;
-    text-shadow:0 1px 2px rgba(0,0,0,.08);
+    opacity:.7;
+    border-top:1px solid var(--rule);
   }
-  @media(max-width:600px){.app-copyright-watermark{font-size:8px;bottom:5px;letter-spacing:.05em}}
-
-  /* ---------- Supabase Login ---------- */
-  #loginPage{
-    position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
-    padding:20px;background:
-      radial-gradient(circle at 15% 20%,rgba(29,95,214,.28),transparent 34%),
-      radial-gradient(circle at 85% 80%,rgba(91,147,242,.20),transparent 34%),#08111f;
+  @media(max-width:600px){
+    .app-copyright-watermark{font-size:8px;letter-spacing:.05em;padding-top:12px}
   }
-  #loginPage.hidden{display:none}
-  .login-box{
-    width:min(430px,100%);padding:34px;border:1px solid rgba(255,255,255,.13);
-    border-radius:22px;background:rgba(18,29,48,.96);box-shadow:0 25px 80px rgba(0,0,0,.48);
-    color:#fff;backdrop-filter:blur(18px)
-  }
-  .login-logo{
-    width:68px;height:68px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;
-    border-radius:18px;background:linear-gradient(135deg,#1d5fd6,#5b93f2);font-size:25px;font-weight:800;
-    box-shadow:0 12px 30px rgba(29,95,214,.35)
-  }
-  .login-box h2{margin:0;text-align:center;font-size:27px;font-weight:800}
-  .login-subtitle{margin:8px 0 25px;text-align:center;color:#9eabc0;font-size:13px}
-  .login-field{margin-bottom:15px}
-  .login-field label{display:block;margin-bottom:7px;color:#b8c4d7;font-size:12px;font-weight:700}
-  .login-field input{
-    width:100%;padding:13px 14px;border:1px solid #34445e;border-radius:10px;outline:none;
-    background:#0f1a2b;color:#fff;font-size:14px
-  }
-  .login-field input:focus{border-color:#5b93f2;box-shadow:0 0 0 3px rgba(91,147,242,.12)}
-  #loginBtn{
-    width:100%;margin-top:8px;padding:14px;border:0;border-radius:10px;
-    background:linear-gradient(135deg,#1d5fd6,#5b93f2);color:#fff;font-size:15px;font-weight:800;cursor:pointer
-  }
-  #loginBtn:disabled{opacity:.6;cursor:wait}
-  #loginMessage{min-height:20px;margin-top:14px;text-align:center;font-size:12px;color:#f0847a}
-  #resetPasswordPage{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 15% 20%,rgba(29,95,214,.28),transparent 34%),radial-gradient(circle at 85% 80%,rgba(91,147,242,.20),transparent 34%),#08111f}
-  #resetPasswordPage.show{display:flex}
-  .reset-box{width:min(430px,100%);padding:34px;border:1px solid rgba(255,255,255,.13);border-radius:22px;background:rgba(18,29,48,.96);box-shadow:0 25px 80px rgba(0,0,0,.48);color:#fff;backdrop-filter:blur(18px)}
-  .reset-box h2{margin:0 0 8px;text-align:center}.reset-subtitle{text-align:center;color:#aebbd0;font-size:12px;margin-bottom:24px}
-  .reset-field{margin-bottom:14px}.reset-field label{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;margin-bottom:7px;color:#b8c5d8}
-  .reset-field input{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:10px;border:1px solid #34435a;background:#0d1829;color:#fff;outline:none}
-  #updatePasswordBtn{width:100%;padding:14px;border:0;border-radius:10px;background:linear-gradient(135deg,#1d5fd6,#5b93f2);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
-  #resetPasswordMessage{min-height:20px;margin-top:14px;text-align:center;font-size:12px;color:#f0847a}
-  .login-footer{margin-top:22px;text-align:center;color:#6f7e96;font-size:11px}
-  #userPanel{display:none;align-items:center;gap:8px}
-  #userEmail{color:var(--ink-soft);font-size:12px;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  @media(max-width:600px){.login-box{padding:26px 20px;border-radius:18px}}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">'+String.fromCharCode(60,47)+'script>
