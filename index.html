@@ -1383,7 +1383,6 @@
   var LOCAL_SETTINGS_KEY = 'spr_settings_v2';
 
   var ENTRY_COLUMNS = {
-    userId:'user_id',
     companyName:'company_name', supplierName:'supplier_name', supplierContact:'supplier_contact',
     invoiceDate:'invoice_date', invoiceNumber:'invoice_number', purchaseBasis:'purchase_basis',
     creditPeriodDays:'credit_period_days', grossInvoiceAmount:'gross_invoice_amount', returnedAmount:'returned_amount',
@@ -1420,7 +1419,6 @@
 
   function entryToRow(e){
     var r={};
-    if(currentUser && currentUser.id) r.user_id=currentUser.id;
     Object.keys(ENTRY_COLUMNS).forEach(function(k){
       var col=ENTRY_COLUMNS[k];
       if(k==='createdAt') {
@@ -1505,7 +1503,7 @@
         }
       }
       if(cloudBanks.length===0 && bankAccounts.length>0){
-        var bankPayload=bankAccounts.map(function(b){return {user_id:currentUser.id,bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};});
+        var bankPayload=bankAccounts.map(function(b){return {bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};});
         var bi=await supabaseClient.from('bank_accounts').insert(bankPayload).select('*');
         if(bi.error) throw bi.error;
         cloudBanks=bi.data||[];
@@ -1513,7 +1511,7 @@
       if(!settings){
         var localBalances={};
         try{localBalances=JSON.parse(localStorage.getItem(LOCAL_BALANCES_KEY)||'{}')||{};}catch(e){}
-        var si=await supabaseClient.from('app_settings').insert({user_id:currentUser.id,cash_in_hand:Number(localBalances.cashInHand)||0,bank_amount:Number(localBalances.bankAmount)||0,company_name:localStorage.getItem('spr_lastCompany')||DEFAULT_COMPANY,updated_at:new Date().toISOString()}).select('*').single();
+        var si=await supabaseClient.from('app_settings').insert({cash_in_hand:Number(localBalances.cashInHand)||0,bank_amount:Number(localBalances.bankAmount)||0,company_name:localStorage.getItem('spr_lastCompany')||DEFAULT_COMPANY,updated_at:new Date().toISOString()}).select('*').single();
         if(si.error) throw si.error;
         settings=si.data;
       }
@@ -1581,7 +1579,7 @@
 
   async function saveCloudSettings(){
     if(!supabaseClient || !currentUser) return;
-    var row={user_id:currentUser.id,cash_in_hand:Number(document.getElementById('cashInHand').value)||0,bank_amount:Number(document.getElementById('bankAmount').value)||0,company_name:localStorage.getItem('spr_lastCompany')||DEFAULT_COMPANY,updated_at:new Date().toISOString()};
+    var row={cash_in_hand:Number(document.getElementById('cashInHand').value)||0,bank_amount:Number(document.getElementById('bankAmount').value)||0,company_name:localStorage.getItem('spr_lastCompany')||DEFAULT_COMPANY,updated_at:new Date().toISOString()};
     var existing=await supabaseClient.from('app_settings').select('id').order('updated_at',{ascending:false}).limit(1).maybeSingle();
     if(existing.error) throw existing.error;
     var r;
@@ -1591,7 +1589,7 @@
   }
 
   async function upsertBankCloud(b){
-    var row={user_id:currentUser.id,bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};
+    var row={bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};
     if(b.id){ var u=await supabaseClient.from('bank_accounts').update(row).eq('id',b.id).select('*').single(); if(u.error) throw u.error; return u.data; }
     var i=await supabaseClient.from('bank_accounts').insert(row).select('*').single(); if(i.error) throw i.error; return i.data;
   }
