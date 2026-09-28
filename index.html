@@ -1404,12 +1404,29 @@
     }).join('');
   }
   function printPaymentVoucher(v){
-    var w=window.open('','_blank','width=850,height=700'); if(!w){showToast('Please allow pop-ups to print the voucher.');return;}
-    var bank=v.bank_name?('<tr><td>Bank</td><td>'+escapeHtml(v.bank_name)+'<br>Account: '+escapeHtml(v.bank_account_no||'')+'</td></tr>'):'';
-    w.document.write('<!doctype html><html><head><title>Payment Voucher '+escapeHtml(v.voucher_no)+'</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#111}h1{text-align:center}table{width:100%;border-collapse:collapse;margin-top:25px}td{border:1px solid #bbb;padding:12px}td:first-child{font-weight:bold;width:30%}.amount{font-size:24px;font-weight:bold}.sign{margin-top:70px;display:flex;justify-content:space-between}</style></head><body><h1>PAYMENT VOUCHER</h1><table>'+
-      '<tr><td>Voucher No.</td><td>'+escapeHtml(v.voucher_no||'')+'</td></tr><tr><td>Date</td><td>'+escapeHtml(v.payment_date||'')+'</td></tr><tr><td>Supplier</td><td>'+escapeHtml(v.supplier_name||'')+'</td></tr><tr><td>Invoice No.</td><td>'+escapeHtml(v.invoice_number||'')+'</td></tr><tr><td>Invoice Amount</td><td>'+fmtMoney(v.invoice_amount)+'</td></tr><tr><td>Already Paid</td><td>'+fmtMoney(v.already_paid)+'</td></tr><tr><td>Balance Before Payment</td><td>'+fmtMoney(v.balance_before)+'</td></tr><tr><td>Payment Method</td><td>'+escapeHtml(v.payment_method||'')+'</td></tr>'+bank+(v.cheque_ref?'<tr><td>Cheque / Reference</td><td>'+escapeHtml(v.cheque_ref)+'</td></tr>':'')+'<tr><td>Paid Amount</td><td class="amount">'+fmtMoney(v.amount)+'</td></tr><tr><td>Balance After Payment</td><td class="amount">'+fmtMoney(v.balance_after)+'</td></tr></table><div class="sign"><span>Paid By: '+escapeHtml(v.paid_by||'')+'</span><span>Received By: '+escapeHtml(v.received_by||'')+'</span></div><p>Remarks: '+escapeHtml(v.remarks||'')+'</p><script>window.onload=function(){window.print();}'+String.fromCharCode(60,47)+'script>
-<div class="app-copyright-watermark" aria-hidden="true">&copy; MohamedAmaan &nbsp;•&nbsp; Version 2.3 &nbsp;•&nbsp; 2026</div>
-</body></html>');w.document.close();
+    var w=window.open('','_blank','width=850,height=700');
+    if(!w){showToast('Please allow pop-ups to print the voucher.');return;}
+    var bank=v.bank_name?'<tr><td>Bank</td><td>'+escapeHtml(v.bank_name)+'<br>Account: '+escapeHtml(v.bank_account_no||'')+'</td></tr>':'';
+    var html='<!doctype html><html><head><title>Payment Voucher '+escapeHtml(v.voucher_no||'')+'</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#111}h1{text-align:center}table{width:100%;border-collapse:collapse;margin-top:25px}td{border:1px solid #bbb;padding:12px}td:first-child{font-weight:bold;width:30%}.amount{font-size:24px;font-weight:bold}.sign{margin-top:70px;display:flex;justify-content:space-between}</style></head><body>'+
+      '<h1>PAYMENT VOUCHER</h1><table>'+
+      '<tr><td>Voucher No.</td><td>'+escapeHtml(v.voucher_no||'')+'</td></tr>'+
+      '<tr><td>Date</td><td>'+escapeHtml(v.payment_date||'')+'</td></tr>'+
+      '<tr><td>Supplier</td><td>'+escapeHtml(v.supplier_name||'')+'</td></tr>'+
+      '<tr><td>Invoice No.</td><td>'+escapeHtml(v.invoice_number||'')+'</td></tr>'+
+      '<tr><td>Invoice Amount</td><td>'+fmtMoney(v.invoice_amount)+'</td></tr>'+
+      '<tr><td>Already Paid</td><td>'+fmtMoney(v.already_paid)+'</td></tr>'+
+      '<tr><td>Balance Before Payment</td><td>'+fmtMoney(v.balance_before)+'</td></tr>'+
+      '<tr><td>Payment Method</td><td>'+escapeHtml(v.payment_method||'')+'</td></tr>'+
+      bank+
+      (v.cheque_ref?'<tr><td>Cheque / Reference</td><td>'+escapeHtml(v.cheque_ref)+'</td></tr>':'')+
+      '<tr><td>Paid Amount</td><td class="amount">'+fmtMoney(v.amount)+'</td></tr>'+
+      '<tr><td>Balance After Payment</td><td class="amount">'+fmtMoney(v.balance_after)+'</td></tr>'+
+      '</table><div class="sign"><span>Paid By: '+escapeHtml(v.paid_by||'')+'</span><span>Received By: '+escapeHtml(v.received_by||'')+'</span></div>'+
+      '<p>Remarks: '+escapeHtml(v.remarks||'')+'</p></body></html>';
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(function(){w.print();},300);
   }
   async function savePaymentVoucher(){
     var invoiceId=document.getElementById('pvInvoice').value, e=entries.find(function(x){return String(x.id)===String(invoiceId);});
