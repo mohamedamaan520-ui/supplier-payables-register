@@ -534,6 +534,46 @@
 </style>
 <style id="exportPrintStyles">
 @media print { @page { size: A4 landscape; margin: 10mm; } body { background:#fff !important; color:#000 !important; } .masthead-actions, .toolbar, .balance-panel, .bank-manager, .sync-note, .drawer, .scrim, .toast, .row-actions, #emptyState { display:none !important; } .wrap { max-width:none; padding:0; } header.masthead { margin-bottom:8px; padding-bottom:8px; } .ledger-tally { grid-template-columns:repeat(8,1fr); margin-bottom:8px; } .tally-cell { padding:6px 5px; } .tally-label { font-size:7px; } .tally-value { font-size:9px; } .status-row { padding:5px 0 8px; font-size:8px; } table { min-width:0 !important; font-size:7px; } thead th { position:static; font-size:6.5px; padding:4px; } td { font-size:7px; padding:4px; } }
+
+/* ---------- Authentication screens ---------- */
+#loginPage, #resetPasswordPage{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  min-height:100vh;
+  min-height:100dvh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:var(--bg);
+}
+#loginPage.hidden, #resetPasswordPage:not(.show){display:none !important;}
+#loginPage .login-box, #resetPasswordPage .reset-box{
+  width:min(420px,100%);
+  padding:30px;
+  border:1px solid var(--rule-strong);
+  border-radius:18px;
+  background:var(--surface);
+  box-shadow:0 18px 50px rgba(20,33,58,.14);
+}
+#loginPage .login-logo, #resetPasswordPage .login-logo{
+  width:58px;height:58px;border-radius:16px;
+  display:grid;place-items:center;
+  margin:0 auto 14px;
+  background:var(--accent);color:var(--accent-ink);
+  font-size:22px;font-weight:800;
+}
+#loginPage h2, #resetPasswordPage h2{margin:0;text-align:center;font-size:23px;}
+.login-subtitle,.reset-subtitle{text-align:center;color:var(--ink-soft);font-size:13px;margin:6px 0 22px;}
+.login-field,.reset-field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;}
+.login-field label,.reset-field label{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-soft);}
+.login-field input,.reset-field input{width:100%;padding:11px 12px;border:1.5px solid var(--rule-strong);border-radius:8px;background:var(--bg);outline:none;}
+#loginBtn,#updatePasswordBtn{width:100%;padding:12px;border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-weight:800;cursor:pointer;}
+#loginBtn:disabled,#updatePasswordBtn:disabled{opacity:.6;cursor:not-allowed;}
+#loginMessage,#resetPasswordMessage{min-height:18px;margin-top:10px;text-align:center;font-size:12px;}
+.login-footer{text-align:center;color:var(--ink-faint);font-size:10px;margin-top:20px;}
+@media(max-width:480px){#loginPage,#resetPasswordPage{padding:16px;}#loginPage .login-box,#resetPasswordPage .reset-box{padding:24px 18px;}}
 </style>
 </head>
 <body>
@@ -1787,16 +1827,24 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
   var currentUser = null;
   var authInitialized = false;
 
-  function showLoginPage(message) {
+  function showLoginPage(message, success) {
     var page = document.getElementById('loginPage');
+    var reset = document.getElementById('resetPasswordPage');
+    var app = document.querySelector('.wrap');
+    if(reset) reset.classList.remove('show');
     if(page) page.classList.remove('hidden');
+    if(app) app.style.display='none';
     document.body.style.overflow='hidden';
-    if(message) showLoginMessage(message,false);
+    if(message) showLoginMessage(message,!!success);
   }
 
   function hideLoginPage() {
     var page = document.getElementById('loginPage');
+    var reset = document.getElementById('resetPasswordPage');
+    var app = document.querySelector('.wrap');
     if(page) page.classList.add('hidden');
+    if(reset) reset.classList.remove('show');
+    if(app) app.style.display='';
     document.body.style.overflow='';
   }
 
@@ -1829,9 +1877,11 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
 
   function showResetPasswordPage() {
     var page=document.getElementById('resetPasswordPage');
-    if(page) page.classList.add('show');
     var login=document.getElementById('loginPage');
+    var app=document.querySelector('.wrap');
+    if(page) page.classList.add('show');
     if(login) login.classList.add('hidden');
+    if(app) app.style.display='none';
     document.body.style.overflow='hidden';
     var p=document.getElementById('newPassword');
     if(p) setTimeout(function(){p.focus();},100);
