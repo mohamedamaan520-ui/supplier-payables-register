@@ -526,6 +526,14 @@
   }
   #loginBtn:disabled{opacity:.6;cursor:wait}
   #loginMessage{min-height:20px;margin-top:14px;text-align:center;font-size:12px;color:#f0847a}
+  #resetPasswordPage{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 15% 20%,rgba(29,95,214,.28),transparent 34%),radial-gradient(circle at 85% 80%,rgba(91,147,242,.20),transparent 34%),#08111f}
+  #resetPasswordPage.show{display:flex}
+  .reset-box{width:min(430px,100%);padding:34px;border:1px solid rgba(255,255,255,.13);border-radius:22px;background:rgba(18,29,48,.96);box-shadow:0 25px 80px rgba(0,0,0,.48);color:#fff;backdrop-filter:blur(18px)}
+  .reset-box h2{margin:0 0 8px;text-align:center}.reset-subtitle{text-align:center;color:#aebbd0;font-size:12px;margin-bottom:24px}
+  .reset-field{margin-bottom:14px}.reset-field label{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;margin-bottom:7px;color:#b8c5d8}
+  .reset-field input{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:10px;border:1px solid #34435a;background:#0d1829;color:#fff;outline:none}
+  #updatePasswordBtn{width:100%;padding:14px;border:0;border-radius:10px;background:linear-gradient(135deg,#1d5fd6,#5b93f2);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+  #resetPasswordMessage{min-height:20px;margin-top:14px;text-align:center;font-size:12px;color:#f0847a}
   .login-footer{margin-top:22px;text-align:center;color:#6f7e96;font-size:11px}
   #userPanel{display:none;align-items:center;gap:8px}
   #userEmail{color:var(--ink-soft);font-size:12px;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -575,6 +583,26 @@
   <div id="loginMessage"></div>
     </form>
     <div class="login-footer">Powered by Supabase Authentication</div>
+  </div>
+</div>
+
+<div id="resetPasswordPage">
+  <div class="reset-box">
+    <div class="login-logo">SP</div>
+    <h2>Set New Password</h2>
+    <div class="reset-subtitle">Enter your new password below.</div>
+    <form id="resetPasswordForm">
+      <div class="reset-field">
+        <label for="newPassword">NEW PASSWORD</label>
+        <input type="password" id="newPassword" minlength="6" placeholder="Enter new password" autocomplete="new-password" required>
+      </div>
+      <div class="reset-field">
+        <label for="confirmNewPassword">CONFIRM PASSWORD</label>
+        <input type="password" id="confirmNewPassword" minlength="6" placeholder="Confirm new password" autocomplete="new-password" required>
+      </div>
+      <button id="updatePasswordBtn" type="submit">UPDATE PASSWORD</button>
+      <div id="resetPasswordMessage"></div>
+    </form>
   </div>
 </div>
 
@@ -1615,6 +1643,51 @@
     }
   }
 
+  function showResetPasswordPage() {
+    var page=document.getElementById('resetPasswordPage');
+    if(page) page.classList.add('show');
+    var login=document.getElementById('loginPage');
+    if(login) login.classList.add('hidden');
+    document.body.style.overflow='hidden';
+    var p=document.getElementById('newPassword');
+    if(p) setTimeout(function(){p.focus();},100);
+  }
+
+  function hideResetPasswordPage() {
+    var page=document.getElementById('resetPasswordPage');
+    if(page) page.classList.remove('show');
+    document.body.style.overflow='';
+  }
+
+  function showResetPasswordMessage(message,success) {
+    var el=document.getElementById('resetPasswordMessage');
+    if(!el) return;
+    el.textContent=message||'';
+    el.style.color=success?'#6FBE93':'#F0847A';
+  }
+
+  async function updateNewPassword(password) {
+    var btn=document.getElementById('updatePasswordBtn');
+    if(btn){btn.disabled=true;btn.textContent='UPDATING…';}
+    showResetPasswordMessage('');
+    try{
+      var r=await supabaseClient.auth.updateUser({password:password});
+      if(r.error) throw r.error;
+      showResetPasswordMessage('Password updated successfully. You can now login.',true);
+      setTimeout(async function(){
+        await supabaseClient.auth.signOut();
+        hideResetPasswordPage();
+        document.getElementById('loginPassword').value='';
+        showLoginPage('Password updated. Please login with your new password.',true);
+      },1000);
+    }catch(err){
+      console.error('Supabase update password error:',err);
+      showResetPasswordMessage(err&&err.message?err.message:'Unable to update password.',false);
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent='UPDATE PASSWORD';}
+    }
+  }
+
   async function resetPassword(email) {
     if(!supabaseClient || !supabaseConfigured()){
       showLoginMessage('Supabase is not configured correctly.',false);
@@ -1720,6 +1793,19 @@
       });
     }
 
+    var resetForm=document.getElementById('resetPasswordForm');
+    if(resetForm && !resetForm.dataset.bound){
+      resetForm.dataset.bound='1';
+      resetForm.addEventListener('submit',function(ev){
+        ev.preventDefault();
+        var p=document.getElementById('newPassword').value;
+        var cp=document.getElementById('confirmNewPassword').value;
+        if(p.length<6){ showResetPasswordMessage('Password must be at least 6 characters.',false); return; }
+        if(p!==cp){ showResetPasswordMessage('Passwords do not match.',false); return; }
+        updateNewPassword(p);
+      });
+    }
+
     var logout=document.getElementById('logoutBtn');
     if(logout && !logout.dataset.bound){
       logout.dataset.bound='1';
@@ -1745,6 +1831,12 @@
 
     supabaseClient.auth.onAuthStateChange(function(event,session){
       setTimeout(function(){
+        if(event==='PASSWORD_RECOVERY' && session && session.user){
+          currentUser=session.user;
+          updateUserPanel();
+          showResetPasswordPage();
+          return;
+        }
         if(session && session.user){
           currentUser=session.user;
           updateUserPanel();
