@@ -492,6 +492,45 @@
     .row-actions { justify-content: flex-end; }
   }
 
+
+  /* ---------- Supabase Login ---------- */
+  #loginPage{
+    position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+    padding:20px;background:
+      radial-gradient(circle at 15% 20%,rgba(29,95,214,.28),transparent 34%),
+      radial-gradient(circle at 85% 80%,rgba(91,147,242,.20),transparent 34%),#08111f;
+  }
+  #loginPage.hidden{display:none}
+  .login-box{
+    width:min(430px,100%);padding:34px;border:1px solid rgba(255,255,255,.13);
+    border-radius:22px;background:rgba(18,29,48,.96);box-shadow:0 25px 80px rgba(0,0,0,.48);
+    color:#fff;backdrop-filter:blur(18px)
+  }
+  .login-logo{
+    width:68px;height:68px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;
+    border-radius:18px;background:linear-gradient(135deg,#1d5fd6,#5b93f2);font-size:25px;font-weight:800;
+    box-shadow:0 12px 30px rgba(29,95,214,.35)
+  }
+  .login-box h2{margin:0;text-align:center;font-size:27px;font-weight:800}
+  .login-subtitle{margin:8px 0 25px;text-align:center;color:#9eabc0;font-size:13px}
+  .login-field{margin-bottom:15px}
+  .login-field label{display:block;margin-bottom:7px;color:#b8c4d7;font-size:12px;font-weight:700}
+  .login-field input{
+    width:100%;padding:13px 14px;border:1px solid #34445e;border-radius:10px;outline:none;
+    background:#0f1a2b;color:#fff;font-size:14px
+  }
+  .login-field input:focus{border-color:#5b93f2;box-shadow:0 0 0 3px rgba(91,147,242,.12)}
+  #loginBtn{
+    width:100%;margin-top:8px;padding:14px;border:0;border-radius:10px;
+    background:linear-gradient(135deg,#1d5fd6,#5b93f2);color:#fff;font-size:15px;font-weight:800;cursor:pointer
+  }
+  #loginBtn:disabled{opacity:.6;cursor:wait}
+  #loginMessage{min-height:20px;margin-top:14px;text-align:center;font-size:12px;color:#f0847a}
+  .login-footer{margin-top:22px;text-align:center;color:#6f7e96;font-size:11px}
+  #userPanel{display:none;align-items:center;gap:8px}
+  #userEmail{color:var(--ink-soft);font-size:12px;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  @media(max-width:600px){.login-box{padding:26px 20px;border-radius:18px}}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -516,6 +555,28 @@
 </head>
 <body>
 
+
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">SP</div>
+    <h2>Supplier Payables</h2>
+    <div class="login-subtitle">Secure Management System</div>
+    <form id="loginForm" autocomplete="on">
+      <div class="login-field">
+        <label for="loginEmail">EMAIL</label>
+        <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="username" required>
+      </div>
+      <div class="login-field">
+        <label for="loginPassword">PASSWORD</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" required>
+      </div>
+      <button id="loginBtn" type="submit">LOGIN</button>
+      <div id="loginMessage"></div>
+    </form>
+    <div class="login-footer">Powered by Supabase Authentication</div>
+  </div>
+</div>
+
 <div class="wrap">
   <header class="masthead">
     <div class="masthead-top">
@@ -530,6 +591,11 @@
         <button class="btn btn-ghost btn-small" id="exportPdfBtn" type="button">PDF</button>
         <button class="btn btn-ghost btn-small" id="printA4Btn" type="button">Print A4</button>
         <button class="btn btn-ghost btn-small theme-toggle" id="themeToggleBtn" type="button" title="Switch display mode">🌙 Dark</button>
+
+        <div id="userPanel">
+          <span id="userEmail"></span>
+          <button class="btn btn-ghost btn-small" id="logoutBtn" type="button">Logout</button>
+        </div>
         <button class="btn btn-primary btn-small" id="newEntryBtn" type="button">+ Quick Entry</button>
       </div>
     </div>
@@ -1477,6 +1543,164 @@
 
   async function deleteBankCloud(id){ if(id){var r=await supabaseClient.from('bank_accounts').delete().eq('id',id); if(r.error) throw r.error;} }
 
+
+  // ---------- Supabase Authentication ----------
+  var currentUser = null;
+  var authInitialized = false;
+
+  function showLoginPage(message) {
+    var page = document.getElementById('loginPage');
+    if(page) page.classList.remove('hidden');
+    document.body.style.overflow='hidden';
+    if(message) showLoginMessage(message,false);
+  }
+
+  function hideLoginPage() {
+    var page = document.getElementById('loginPage');
+    if(page) page.classList.add('hidden');
+    document.body.style.overflow='';
+  }
+
+  function showLoginMessage(message, success) {
+    var el=document.getElementById('loginMessage');
+    if(!el) return;
+    el.textContent=message||'';
+    el.style.color=success?'#6FBE93':'#F0847A';
+  }
+
+  function setLoginLoading(loading) {
+    var btn=document.getElementById('loginBtn');
+    if(!btn) return;
+    btn.disabled=loading;
+    btn.textContent=loading?'SIGNING IN…':'LOGIN';
+  }
+
+  function updateUserPanel() {
+    var panel=document.getElementById('userPanel');
+    var email=document.getElementById('userEmail');
+    if(!panel || !email) return;
+    if(currentUser){
+      email.textContent=currentUser.email||'Authenticated user';
+      email.title=currentUser.email||'';
+      panel.style.display='flex';
+    }else{
+      panel.style.display='none';
+    }
+  }
+
+  async function loginUser(email,password) {
+    if(!supabaseClient || !supabaseConfigured()){
+      showLoginMessage('Supabase is not configured correctly.',false);
+      return;
+    }
+    setLoginLoading(true);
+    showLoginMessage('');
+    try{
+      var r=await supabaseClient.auth.signInWithPassword({email:email,password:password});
+      if(r.error) throw r.error;
+      currentUser=r.data.user;
+      updateUserPanel();
+      showLoginMessage('Login successful.',true);
+      setTimeout(function(){
+        hideLoginPage();
+        if(!authInitialized){
+          authInitialized=true;
+          initDb();
+        }else{
+          fetchCloudData();
+        }
+      },200);
+    }catch(err){
+      console.error('Supabase login error:',err);
+      showLoginMessage(err&&err.message?err.message:'Login failed.',false);
+    }finally{
+      setLoginLoading(false);
+    }
+  }
+
+  async function logoutUser() {
+    if(!supabaseClient) return;
+    try{
+      var r=await supabaseClient.auth.signOut();
+      if(r.error) throw r.error;
+      currentUser=null;
+      authInitialized=false;
+      cloudReady=false;
+      updateUserPanel();
+      showLoginMessage('');
+      document.getElementById('loginPassword').value='';
+      showLoginPage();
+    }catch(err){
+      console.error('Supabase logout error:',err);
+      showToast('Logout failed: '+(err&&err.message?err.message:'Please try again.'));
+    }
+  }
+
+  async function initAuth() {
+    if(!initSupabaseClient()){
+      showLoginPage('Supabase configuration is unavailable.');
+      return;
+    }
+
+    var form=document.getElementById('loginForm');
+    if(form && !form.dataset.bound){
+      form.dataset.bound='1';
+      form.addEventListener('submit',function(ev){
+        ev.preventDefault();
+        var email=document.getElementById('loginEmail').value.trim();
+        var password=document.getElementById('loginPassword').value;
+        if(!email || !password){
+          showLoginMessage('Please enter your email and password.',false);
+          return;
+        }
+        loginUser(email,password);
+      });
+    }
+
+    var logout=document.getElementById('logoutBtn');
+    if(logout && !logout.dataset.bound){
+      logout.dataset.bound='1';
+      logout.addEventListener('click',logoutUser);
+    }
+
+    var sessionResult=await supabaseClient.auth.getSession();
+    if(sessionResult.error){
+      showLoginPage(sessionResult.error.message||'Unable to check session.');
+      return;
+    }
+
+    var session=sessionResult.data&&sessionResult.data.session;
+    if(session && session.user){
+      currentUser=session.user;
+      updateUserPanel();
+      hideLoginPage();
+      authInitialized=true;
+      initDb();
+    }else{
+      showLoginPage();
+    }
+
+    supabaseClient.auth.onAuthStateChange(function(event,session){
+      setTimeout(function(){
+        if(session && session.user){
+          currentUser=session.user;
+          updateUserPanel();
+          hideLoginPage();
+          if(!authInitialized){
+            authInitialized=true;
+            initDb();
+          }
+        }else if(event==='SIGNED_OUT'){
+          currentUser=null;
+          authInitialized=false;
+          cloudReady=false;
+          updateUserPanel();
+          showLoginPage();
+        }
+      },0);
+    });
+  }
+
   function initDb() {
     loadLocalData();
     render();
@@ -1747,7 +1971,7 @@
     if(cloudReady&&supabaseClient&&b&&b.id){try{await deleteBankCloud(b.id);}catch(err){showToast('Bank delete failed: '+(err.message||'try again'));return;}}
     bankAccounts.splice(i,1); saveBankAccounts(); renderBankAccounts(); showToast('Bank account removed.');
   });
-  initDb();
+  initAuth();
 })();
 </script>
 </body>
