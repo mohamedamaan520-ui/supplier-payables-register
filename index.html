@@ -1382,6 +1382,7 @@
   var cloudReady = false;
   var cloudLoading = false;
   var LOCAL_SETTINGS_KEY = 'spr_settings_v2';
+var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
 
   var ENTRY_COLUMNS = {
     companyName:'company_name', supplierName:'supplier_name', supplierContact:'supplier_contact',
@@ -1497,20 +1498,31 @@
       var cloudBanks=results[1].data||[];
       var settings=results[2].data;
 
-      // First-time migration: if the cloud is empty, upload existing local data once.
-      if(cloudEntries.length===0 && entries.length>0){
-        var payload=entries.filter(function(e){return String(e.id||'').indexOf('local_')===0 || e.id;}).map(entryToRow);
-        if(payload.length){
-          var ins=await supabaseClient.from('entries').insert(payload).select('*');
-          if(ins.error) throw ins.error;
-          cloudEntries=(ins.data||[]).map(rowToEntry);
+      // Migrate device-local data only once. Never re-upload local data after
+      // the cloud has been intentionally emptied by a delete.
+      var migrationDone=false;
+      try{ migrationDone=localStorage.getItem(CLOUD_MIGRATION_KEY)==='1'; }catch(e){}
+      if(!migrationDone){
+        var didMigrate=false;
+        if(cloudEntries.length===0 && entries.length>0){
+          var payload=entries.filter(function(e){return String(e.id||'').indexOf('local_')===0 || e.id;}).map(entryToRow);
+          if(payload.length){
+            var ins=await supabaseClient.from('entries').insert(payload).select('*');
+            if(ins.error) throw ins.error;
+            cloudEntries=(ins.data||[]).map(rowToEntry);
+            didMigrate=true;
+          }
         }
-      }
-      if(cloudBanks.length===0 && bankAccounts.length>0){
-        var bankPayload=bankAccounts.map(function(b){return {bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};});
-        var bi=await supabaseClient.from('bank_accounts').insert(bankPayload).select('*');
-        if(bi.error) throw bi.error;
-        cloudBanks=bi.data||[];
+        if(cloudBanks.length===0 && bankAccounts.length>0){
+          var bankPayload=bankAccounts.map(function(b){return {bank_name:b.bankName||'',account_no:b.accountNo||'',opening_balance:Number(b.openingBalance)||0,created_at:Number(b.createdAt)||Date.now()};});
+          var bi=await supabaseClient.from('bank_accounts').insert(bankPayload).select('*');
+          if(bi.error) throw bi.error;
+          cloudBanks=bi.data||[];
+          didMigrate=true;
+        }
+        if(didMigrate || (cloudEntries.length>0 || cloudBanks.length>0)){
+          try{localStorage.setItem(CLOUD_MIGRATION_KEY,'1');}catch(e){}
+        }
       }
       if(!settings){
         var localBalances={};
@@ -1598,7 +1610,13 @@
     var i=await supabaseClient.from('bank_accounts').insert(row).select('*').single(); if(i.error) throw i.error; return i.data;
   }
 
-  async function deleteBankCloud(id){ if(id){var r=await supabaseClient.from('bank_accounts').delete().eq('id',id); if(r.error) throw r.error;} }
+  async function deleteBankCloud(id){
+    if(id){
+      var r=await supabaseClient.from('bank_accounts').delete().eq('id',id).select('id');
+      if(r.error) throw r.error;
+      if(r.data && r.data.length===0) throw new Error('Cloud delete was not applied. Check Supabase RLS DELETE policy.');
+    }
+  }
 
 
   // ---------- Supabase Authentication ----------
@@ -1974,7 +1992,9 @@
     var id=editingId;
     try{
       if(cloudReady && supabaseClient && String(id).indexOf('local_')!==0){
-        var r=await supabaseClient.from('entries').delete().eq('id',id); if(r.error) throw r.error;
+        var r=await supabaseClient.from('entries').delete().eq('id',id).select('id');
+        if(r.error) throw r.error;
+        if(r.data && r.data.length===0) throw new Error('Cloud delete was not applied. Check Supabase RLS DELETE policy.');
       }
       entries=entries.filter(function(e){return e.id!==id;});
       saveLocalData(); render(); showToast('Entry deleted.'); closeDrawer();
