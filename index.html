@@ -1379,7 +1379,9 @@
     Object.keys(ENTRY_COLUMNS).forEach(function(k){
       var col=ENTRY_COLUMNS[k];
       if(k==='createdAt') r[col]=Number(e[k])||Date.now();
-      else if(['grossInvoiceAmount','returnedAmount','paymentMade','cashReturnedAmount','supplierStatementBalance'].indexOf(k)>=0){
+      else if(['invoiceDate','paymentDate','cashReturnedDate'].indexOf(k)>=0){
+        r[col]=(e[k]===null||e[k]===''||e[k]===undefined)?null:e[k];
+      } else if(['grossInvoiceAmount','returnedAmount','paymentMade','cashReturnedAmount','supplierStatementBalance'].indexOf(k)>=0){
         r[col]=(e[k]===null||e[k]===''||e[k]===undefined)?null:Number(e[k])||0;
       } else if(k==='creditPeriodDays') r[col]=Number(e[k])||0;
       else r[col]=e[k]===undefined?'':e[k];
