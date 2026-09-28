@@ -571,7 +571,8 @@
         <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" required>
       </div>
       <button id="loginBtn" type="submit">LOGIN</button>
-      <div id="loginMessage"></div>
+      <button type="button" id="forgotPasswordBtn" style="display:block;width:100%;margin-top:12px;border:0;background:transparent;color:#8fb5ff;font-size:12px;font-weight:700;cursor:pointer">Forgot Password?</button>
+  <div id="loginMessage"></div>
     </form>
     <div class="login-footer">Powered by Supabase Authentication</div>
   </div>
@@ -1614,6 +1615,34 @@
     }
   }
 
+  async function resetPassword(email) {
+    if(!supabaseClient || !supabaseConfigured()){
+      showLoginMessage('Supabase is not configured correctly.',false);
+      return;
+    }
+    email=String(email||'').trim();
+    if(!email){
+      showLoginMessage('Enter your email address first.',false);
+      document.getElementById('loginEmail').focus();
+      return;
+    }
+    var btn=document.getElementById('forgotPasswordBtn');
+    if(btn){ btn.disabled=true; btn.textContent='SENDING…'; }
+    showLoginMessage('');
+    try{
+      var r=await supabaseClient.auth.resetPasswordForEmail(email,{
+        redirectTo:window.location.origin+window.location.pathname
+      });
+      if(r.error) throw r.error;
+      showLoginMessage('Password reset link sent. Check your email.',true);
+    }catch(err){
+      console.error('Supabase password reset error:',err);
+      showLoginMessage(err&&err.message?err.message:'Unable to send reset email.',false);
+    }finally{
+      if(btn){ btn.disabled=false; btn.textContent='Forgot Password?'; }
+    }
+  }
+
   async function loginUser(email,password) {
     if(!supabaseClient || !supabaseConfigured()){
       showLoginMessage('Supabase is not configured correctly.',false);
@@ -1680,6 +1709,14 @@
           return;
         }
         loginUser(email,password);
+      });
+    }
+
+    var forgot=document.getElementById('forgotPasswordBtn');
+    if(forgot && !forgot.dataset.bound){
+      forgot.dataset.bound='1';
+      forgot.addEventListener('click',function(){
+        resetPassword(document.getElementById('loginEmail').value.trim());
       });
     }
 
