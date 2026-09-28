@@ -2392,6 +2392,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     var el;
     el=document.getElementById('newPaymentVoucherBtn'); if(el) el.addEventListener('click',openPaymentVoucher);
     el=document.getElementById('cancelPaymentVoucherBtn'); if(el) el.addEventListener('click',closePaymentVoucher);
+    el=document.getElementById('pvSupplier'); if(el) el.addEventListener('change',function(){document.getElementById('pvInvoice').value='';document.getElementById('pvAmount').value='';invoiceVoucherOptions();fillPaymentVoucherInvoice();});
     el=document.getElementById('pvInvoice'); if(el) el.addEventListener('change',function(){document.getElementById('pvAmount').value='';fillPaymentVoucherInvoice();});
     el=document.getElementById('pvMethod'); if(el) el.addEventListener('change',updatePaymentVoucherMethod);
     el=document.getElementById('pvBank'); if(el) el.addEventListener('change',updatePaymentVoucherBankInfo);
