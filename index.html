@@ -2360,21 +2360,34 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     if(ev.ctrlKey && ev.key==='Enter' && els.drawer.classList.contains('open')){ev.preventDefault();saveEntry();}
   });
 
-  document.getElementById('newPaymentVoucherBtn').addEventListener('click',openPaymentVoucher);
-  document.getElementById('cancelPaymentVoucherBtn').addEventListener('click',closePaymentVoucher);
-  document.getElementById('pvInvoice').addEventListener('change',function(){document.getElementById('pvAmount').value='';fillPaymentVoucherInvoice();});
-  document.getElementById('pvMethod').addEventListener('change',updatePaymentVoucherMethod);
-  document.getElementById('pvBank').addEventListener('change',updatePaymentVoucherBankInfo);
-  document.getElementById('savePaymentVoucherBtn').addEventListener('click',savePaymentVoucher);
-  document.getElementById('paymentVoucherList').addEventListener('click',async function(ev){
-    var btn=ev.target.closest('[data-remove-voucher]');if(!btn)return;
-    if(!confirm('Delete this payment voucher?'))return;
-    var id=btn.getAttribute('data-remove-voucher');
-    try{
-      if(currentUser&&supabaseClient){var r=await supabaseClient.from('payment_vouchers').delete().eq('id',id).select('id');if(r.error)throw r.error;if(r.data&&r.data.length===0)throw new Error('Cloud delete was not applied. Check RLS DELETE policy.');}
-      paymentVouchers=paymentVouchers.filter(function(v){return String(v.id)!==String(id);});renderPaymentVouchers();renderBankAccounts();render();showToast('Payment voucher deleted.');
-    }catch(err){showToast('Voucher delete failed: '+(err.message||'try again'));}
-  });
+  // Payment voucher events are bound defensively so they can never block Auth initialization.
+  (function bindPaymentVoucherEvents(){
+    var el;
+    el=document.getElementById('newPaymentVoucherBtn'); if(el) el.addEventListener('click',openPaymentVoucher);
+    el=document.getElementById('cancelPaymentVoucherBtn'); if(el) el.addEventListener('click',closePaymentVoucher);
+    el=document.getElementById('pvInvoice'); if(el) el.addEventListener('change',function(){document.getElementById('pvAmount').value='';fillPaymentVoucherInvoice();});
+    el=document.getElementById('pvMethod'); if(el) el.addEventListener('change',updatePaymentVoucherMethod);
+    el=document.getElementById('pvBank'); if(el) el.addEventListener('change',updatePaymentVoucherBankInfo);
+    el=document.getElementById('savePaymentVoucherBtn'); if(el) el.addEventListener('click',savePaymentVoucher);
+    el=document.getElementById('printPaymentVoucherBtn'); if(el) el.addEventListener('click',function(){
+      var id=document.getElementById('pvInvoice')&&document.getElementById('pvInvoice').value;
+      var e=entries.find(function(x){return String(x.id)===String(id);});
+      if(!e){showToast('Select an invoice first.');return;}
+      var amount=Number(document.getElementById('pvAmount').value)||0;
+      var v={voucher_no:document.getElementById('pvVoucherNo').value,payment_date:document.getElementById('pvDate').value,supplier_name:e.supplierName||'',invoice_number:e.invoiceNumber||'',invoice_amount:paymentVoucherNet(e),already_paid:(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId),balance_before:Math.max(0,paymentVoucherNet(e)-((Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId))),amount:amount,payment_method:document.getElementById('pvMethod').value,bank_name:'',bank_account_no:'',cheque_ref:document.getElementById('pvCheque').value,paid_by:document.getElementById('pvPaidBy').value,received_by:document.getElementById('pvReceivedBy').value,remarks:document.getElementById('pvRemarks').value};
+      var b=bankAccounts[Number(document.getElementById('pvBank').value)];if(b){v.bank_name=b.bankName||'';v.bank_account_no=b.accountNo||'';}
+      printPaymentVoucher(v);
+    });
+    el=document.getElementById('paymentVoucherList'); if(el) el.addEventListener('click',async function(ev){
+      var btn=ev.target.closest('[data-remove-voucher]');if(!btn)return;
+      if(!confirm('Delete this payment voucher?'))return;
+      var id=btn.getAttribute('data-remove-voucher');
+      try{
+        if(currentUser&&supabaseClient){var r=await supabaseClient.from('payment_vouchers').delete().eq('id',id).select('id');if(r.error)throw r.error;if(r.data&&r.data.length===0)throw new Error('Cloud delete was not applied. Check RLS DELETE policy.');}
+        paymentVouchers=paymentVouchers.filter(function(v){return String(v.id)!==String(id);});renderPaymentVouchers();renderBankAccounts();render();showToast('Payment voucher deleted.');
+      }catch(err){showToast('Voucher delete failed: '+(err.message||'try again'));}
+    });
+  })();
   
   // ---------- Init ----------
   initTheme();
