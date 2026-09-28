@@ -1340,6 +1340,8 @@
     toastTimer = setTimeout(function () { els.toast.classList.remove('show'); }, 2400);
   }
 
+  // Shared-data mode: every authenticated account uses the same cloud records.
+  // Login accounts remain separate; entries, bank accounts and app settings are shared.
   // ---------- Supabase cloud wiring ----------
   // Paste your Supabase Project URL and Publishable/Anon key here.
   // IMPORTANT: never put a Supabase service_role/secret key in this file.
@@ -1452,9 +1454,9 @@
     setSyncNote('Connecting to cloud…');
     try{
       var results=await Promise.all([
-        supabaseClient.from('entries').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:true}),
-        supabaseClient.from('bank_accounts').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:true}),
-        supabaseClient.from('app_settings').select('*').eq('user_id',currentUser.id).maybeSingle()
+        supabaseClient.from('entries').select('*').order('created_at',{ascending:true}),
+        supabaseClient.from('bank_accounts').select('*').order('created_at',{ascending:true}),
+        supabaseClient.from('app_settings').select('*').order('updated_at',{ascending:false}).limit(1).maybeSingle()
       ]);
       if(results[0].error) throw results[0].error;
       if(results[1].error) throw results[1].error;
@@ -1551,7 +1553,7 @@
   async function saveCloudSettings(){
     if(!supabaseClient || !currentUser) return;
     var row={user_id:currentUser.id,cash_in_hand:Number(document.getElementById('cashInHand').value)||0,bank_amount:Number(document.getElementById('bankAmount').value)||0,company_name:localStorage.getItem('spr_lastCompany')||DEFAULT_COMPANY,updated_at:new Date().toISOString()};
-    var existing=await supabaseClient.from('app_settings').select('id').eq('user_id',currentUser.id).maybeSingle();
+    var existing=await supabaseClient.from('app_settings').select('id').order('updated_at',{ascending:false}).limit(1).maybeSingle();
     if(existing.error) throw existing.error;
     var r;
     if(existing.data){ r=await supabaseClient.from('app_settings').update(row).eq('id',existing.data.id); }
