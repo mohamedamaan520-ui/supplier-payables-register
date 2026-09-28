@@ -1374,17 +1374,33 @@
     catch(err){ supabaseClient=null; return false; }
   }
 
+  function normalizeDbDate(value){
+    if(value===null || value===undefined) return null;
+    var s=String(value).trim();
+    if(!s) return null;
+    // HTML date inputs and PostgreSQL date columns must use YYYY-MM-DD.
+    if(/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) return s;
+    // Accept an ISO datetime only when it starts with a valid date.
+    var m=s.match(/^(\\d{4}-\\d{2}-\\d{2})[T\\s]/);
+    if(m) return m[1];
+    return null;
+  }
+
   function entryToRow(e){
     var r={};
     Object.keys(ENTRY_COLUMNS).forEach(function(k){
       var col=ENTRY_COLUMNS[k];
-      if(k==='createdAt') r[col]=Number(e[k])||Date.now();
-      else if(['invoiceDate','paymentDate','cashReturnedDate'].indexOf(k)>=0){
-        r[col]=(e[k]===null||e[k]===''||e[k]===undefined)?null:e[k];
+      if(k==='createdAt') {
+        r[col]=Number(e[k])||Date.now();
+      } else if(['invoiceDate','paymentDate','cashReturnedDate'].indexOf(k)>=0) {
+        r[col]=normalizeDbDate(e[k]);
       } else if(['grossInvoiceAmount','returnedAmount','paymentMade','cashReturnedAmount','supplierStatementBalance'].indexOf(k)>=0){
         r[col]=(e[k]===null||e[k]===''||e[k]===undefined)?null:Number(e[k])||0;
-      } else if(k==='creditPeriodDays') r[col]=Number(e[k])||0;
-      else r[col]=e[k]===undefined?'':e[k];
+      } else if(k==='creditPeriodDays') {
+        r[col]=Number(e[k])||0;
+      } else {
+        r[col]=e[k]===undefined||e[k]===null?'':String(e[k]);
+      }
     });
     return r;
   }
