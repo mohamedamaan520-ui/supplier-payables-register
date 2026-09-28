@@ -581,7 +581,8 @@
       <button id="loginBtn" type="submit">LOGIN</button>
       <button type="button" id="forgotPasswordBtn" style="display:block;width:100%;margin-top:12px;border:0;background:transparent;color:#8fb5ff;font-size:12px;font-weight:700;cursor:pointer">Forgot Password?</button>
   <div id="loginMessage"></div>
-    </form>
+          <button type="button" id="createAccountBtn" style="display:block;width:100%;margin-top:8px;border:0;background:transparent;color:#8fb5ff;font-size:12px;font-weight:700;cursor:pointer">Create New Account</button>
+</form>
     <div class="login-footer">Powered by Supabase Authentication</div>
   </div>
 </div>
@@ -1745,6 +1746,35 @@
     }
   }
 
+
+  async function createNewAccount(){
+    if(!supabaseClient || !supabaseConfigured()){
+      showLoginMessage('Supabase is not configured correctly.',false); return;
+    }
+    var email=String(document.getElementById('loginEmail').value||'').trim();
+    var password=String(document.getElementById('loginPassword').value||'');
+    if(!email){ showLoginMessage('Enter the new user email address first.',false); document.getElementById('loginEmail').focus(); return; }
+    if(password.length<6){ showLoginMessage('New password must be at least 6 characters.',false); document.getElementById('loginPassword').focus(); return; }
+    var btn=document.getElementById('createAccountBtn');
+    if(btn){btn.disabled=true;btn.textContent='CREATING…';}
+    try{
+      var r=await supabaseClient.auth.signUp({email:email,password:password});
+      if(r.error) throw r.error;
+      if(r.data && r.data.session){
+        showLoginMessage('Account created successfully. Logging you in…',true);
+        currentUser=r.data.user;
+        setTimeout(function(){hideLoginPage();if(!authInitialized){authInitialized=true;initDb();}},200);
+      }else{
+        showLoginMessage('Account created. Please check your email to confirm your account, then LOGIN.',true);
+      }
+    }catch(err){
+      console.error('Supabase sign-up error:',err);
+      showLoginMessage(err&&err.message?err.message:'Unable to create account.',false);
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent='Create New Account';}
+    }
+  }
+
   async function loginUser(email,password) {
     if(!supabaseClient || !supabaseConfigured()){
       showLoginMessage('Supabase is not configured correctly.',false);
@@ -1812,6 +1842,12 @@
         }
         loginUser(email,password);
       });
+    }
+
+    var createAccount=document.getElementById('createAccountBtn');
+    if(createAccount && !createAccount.dataset.bound){
+      createAccount.dataset.bound='1';
+      createAccount.addEventListener('click',function(){ createNewAccount(); });
     }
 
     var forgot=document.getElementById('forgotPasswordBtn');
