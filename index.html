@@ -964,7 +964,7 @@
         '<button class="bank-remove" type="button" data-remove-bank="'+i+'">Remove</button></div>';
     }).join('') : '<div class="payment-impact">No bank accounts added. Add each bank and account number with its opening balance.</div>';
   }
-  async function addBankAccount(){ var b={bankName:'',accountNo:'',openingBalance:0,createdAt:Date.now()}; if(cloudReady&&supabaseClient){ try{var row=await upsertBankCloud(b); b.id=row.id; b.createdAt=Number(row.created_at)||b.createdAt; showToast('Bank account added to cloud.');}catch(err){showToast('Cloud bank save failed: '+(err.message||'try again')); return;} } bankAccounts.push(b); saveBankAccounts(); renderBankAccounts(); }
+  async function addBankAccount(){ var b={bankName:'',accountNo:'',openingBalance:0,createdAt:Date.now()}; if(currentUser && !(await ensureCloudReady())){showToast('Cloud database is not ready. Check Supabase RLS/table permissions.');return;} if(cloudReady&&supabaseClient){ try{var row=await upsertBankCloud(b); b.id=row.id; b.createdAt=Number(row.created_at)||b.createdAt; showToast('Bank account added to cloud.');}catch(err){showToast('Cloud bank save failed: '+(err.message||'try again')); return;} } bankAccounts.push(b); saveBankAccounts(); renderBankAccounts(); }
 
   function refreshSupplierOptions(){
     var dl=document.getElementById('supplierOptions'); if(!dl) return;
@@ -1711,6 +1711,13 @@
     fetchCloudData();
   }
 
+  async function ensureCloudReady(){
+    if(cloudReady && supabaseClient) return true;
+    if(!currentUser || !initSupabaseClient()) return false;
+    await fetchCloudData();
+    return !!(cloudReady && supabaseClient);
+  }
+
   async function saveEntry() {
     var draft = collectDraft();
     if (!draft.supplierName) { fieldEl('supplierName').focus(); showToast('Supplier name is required.'); return; }
@@ -1719,6 +1726,9 @@
     var btn=document.getElementById('saveBtn'); btn.disabled=true;
     var oldEditingId=editingId;
     try{
+      if(currentUser && !(await ensureCloudReady())){
+        throw new Error('Cloud database is not ready. Please check Supabase RLS/table permissions.');
+      }
       if(cloudReady && supabaseClient){
         var saved=await saveEntryToCloud(draft);
         if(oldEditingId){var idx=entries.findIndex(function(e){return e.id===oldEditingId;}); if(idx>=0) entries[idx]=saved;}
@@ -1726,12 +1736,14 @@
         saveLocalData(); render();
         showToast(oldEditingId?'Entry updated in cloud.':'Entry added to cloud.');
       }else{
+        if(currentUser) throw new Error('Cloud database is not available. Your entry was not saved only to this device.');
         if(oldEditingId){var idx2=entries.findIndex(function(e){return e.id===oldEditingId;}); if(idx2>=0) entries[idx2]=Object.assign({},entries[idx2],draft);}
         else entries.push(Object.assign({},draft,{id:'local_'+Date.now()+'_'+Math.random().toString(36).slice(2),createdAt:Date.now()}));
         saveLocalData(); render(); showToast(oldEditingId?'Entry updated locally.':'Entry saved locally.');
       }
       closeDrawer();
     }catch(err){
+      setSyncNote('☁ Cloud save failed · '+(err&&err.message?err.message:'check Supabase RLS/table permissions'));
       showToast('Cloud save failed: '+(err&&err.message?err.message:'check Supabase/RLS settings'));
     }finally{btn.disabled=false;}
   }
