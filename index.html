@@ -519,6 +519,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style id="paymentVoucherTopStyles">
+  .payment-voucher-top-btn{white-space:nowrap}
+  .payment-voucher-manager{margin:0 0 18px}
+  .payment-voucher-manager h3{margin:0}
+  .pv-findbar{display:flex;gap:8px;align-items:center;padding:0 16px 10px}
+  .pv-findbar input{flex:1;min-width:180px;border:1.5px solid var(--rule-strong);border-radius:8px;padding:9px 11px;background:var(--bg);color:var(--ink)}
+  .pv-voucher-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+  .pv-edit{border:0;background:transparent;color:var(--accent);font-weight:800;cursor:pointer;padding:8px}
+  .pv-delete{border:0;background:transparent;color:var(--danger);font-weight:800;cursor:pointer;padding:8px}
+  @media(max-width:760px){.masthead-actions .payment-voucher-top-btn{flex:0 0 auto}.pv-findbar{padding-left:10px;padding-right:10px}}
+</style>
 <style id="upgradeStyles">
   .export-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
   .btn-small{padding:8px 11px;font-size:12px}
@@ -642,6 +653,695 @@
           <button class="btn btn-ghost btn-small" id="logoutBtn" type="button">Logout</button>
         </div>
         <button class="btn btn-primary btn-small" id="newEntryBtn" type="button">+ Quick Entry</button>
+        <button class="btn btn-ghost btn-small payment-voucher-top-btn" id="newPaymentVoucherBtn" type="button">Payment Voucher</button>
+      </div>
+    </div>
+  </header>
+
+  
+
+  <section class="ledger-tally" id="tally"></section>
+
+  <section class="report-card" aria-label="Supplier reports">
+    <div class="report-row">
+      <strong>📊 Supplier Report</strong>
+      <select id="reportSupplier" aria-label="Choose supplier for report">
+        <option value="">All Suppliers</option>
+      </select>
+      <button class="btn btn-ghost btn-small" id="reportCsvBtn" type="button">CSV Report</button>
+      <button class="btn btn-ghost btn-small" id="reportExcelBtn" type="button">Excel Report</button>
+      <button class="btn btn-ghost btn-small" id="reportPdfBtn" type="button">PDF Report</button>
+      <button class="btn btn-ghost btn-small" id="reportPrintBtn" type="button">Print A4 Report</button>
+    </div>
+    <div class="quick-hint">Choose one supplier to export only that supplier's records, or choose All Suppliers for the full report.</div>
+  </section>
+
+  <section class="balance-panel" aria-label="Current funds">
+    <div class="balance-card">
+      <label for="cashInHand">Cash in hand (Rs.)</label>
+      <input type="number" id="cashInHand" min="0" step="0.01" value="0">
+      <div class="balance-help">Current physical cash available.</div>
+    </div>
+    <div class="balance-card">
+      <label for="bankAmount">Bank account amount (Rs.)</label>
+      <input type="number" id="bankAmount" min="0" step="0.01" value="0">
+      <div class="balance-help">Current bank balance available.</div>
+    </div>
+  </section>
+
+  <section class="bank-manager" aria-label="Bank accounts">
+    <div class="bank-manager-head">
+      <div><h2>Bank Accounts — Bank &amp; Account Wise</h2><p>Current balance = opening balance minus payments recorded against that bank account.</p></div>
+      <button class="btn btn-primary" id="addBankBtn" type="button">+ Add bank account</button>
+    </div>
+    <div id="bankAccountsList"></div>
+  </section>
+
+    <!DOCTYPE html>
+<html lang="en">
+<head> 
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Supplier Payables &amp; Settlement Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-alt: #EEF3FB;
+    --ink: #14213A;
+    --ink-soft: #57647D;
+    --ink-faint: #97A3B8;
+    --rule: #D7E1F0;
+    --rule-strong: #AFC2E0;
+    --accent: #1D5FD6;
+    --accent-ink: #FFFFFF;
+    --positive: #1F7A4D;
+    --warning: #B0761E;
+    --danger: #D0362C;
+    --focus: #1D5FD6;
+    --shadow-drawer: rgba(20, 33, 58, 0.16);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151F;
+      --surface: #161D2B;
+      --surface-alt: #1B2436;
+      --ink: #E9EDF6;
+      --ink-soft: #A0ACC2;
+      --ink-faint: #5C6884;
+      --rule: #2B3448;
+      --rule-strong: #3A4560;
+      --accent: #5B93F2;
+      --accent-ink: #0B1220;
+      --positive: #6FBE93;
+      --warning: #E0B368;
+      --danger: #F0847A;
+      --focus: #5B93F2;
+      --shadow-drawer: rgba(0, 0, 0, 0.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151F;
+    --surface: #161D2B;
+    --surface-alt: #1B2436;
+    --ink: #E9EDF6;
+    --ink-soft: #A0ACC2;
+    --ink-faint: #5C6884;
+    --rule: #2B3448;
+    --rule-strong: #3A4560;
+    --accent: #5B93F2;
+    --accent-ink: #0B1220;
+    --positive: #6FBE93;
+    --warning: #E0B368;
+    --danger: #F0847A;
+    --focus: #5B93F2;
+    --shadow-drawer: rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    height: auto;
+    min-height: 100%;
+  }
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 800;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .tnum { font-variant-numeric: tabular-nums; }
+  button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: var(--accent); }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 20px 80px;
+  }
+
+  /* ---------- Header ---------- */
+  header.masthead {
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+    border-bottom: 2px solid var(--accent);
+  }
+  .masthead-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .masthead-title h1 {
+    margin: 0 0 4px;
+    font-size: clamp(24px, 4vw, 34px);
+    line-height: 1.1;
+  }
+  .masthead-title .company {
+    font-size: clamp(18px, 2.6vw, 28px);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .masthead-sub {
+    margin-top: 6px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    max-width: 60ch;
+  }
+  .masthead-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 3px;
+    border: 1.5px solid transparent;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--rule-strong);
+  }
+  .btn-ghost:hover { border-color: var(--ink-soft); background: var(--surface-alt); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ---------- Stat strip ---------- */
+  .ledger-tally {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 14px;
+  }
+  .tally-cell {
+    padding: 14px 16px;
+    border-right: 1px solid var(--rule);
+  }
+  .tally-cell:nth-child(3n) { border-right: none; }
+  .tally-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tally-value {
+    font-size: 19px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif; font-weight: 700;
+  }
+  .tally-value.pos { color: var(--positive); }
+  .tally-value.neg { color: var(--danger); }
+
+  .balance-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 0 0 18px;
+  }
+  .balance-card {
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 14px 16px;
+  }
+  .balance-card label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .balance-card input {
+    width: 100%;
+    border: 1.5px solid var(--rule-strong);
+    background: var(--bg);
+    border-radius: 3px;
+    padding: 10px 12px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .balance-card .balance-help {
+    margin-top: 6px;
+    color: var(--ink-faint);
+    font-size: 11px;
+  }
+
+  .balance-panel { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:0 0 16px; }
+  .balance-card { background:linear-gradient(135deg,var(--surface),var(--surface-alt)); border:1px solid var(--rule-strong); border-radius:12px; padding:16px; box-shadow:0 6px 20px rgba(20,33,58,.07); }
+  .balance-card label { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); font-weight:800; margin-bottom:7px; }
+  .balance-card input { width:100%; border:1.5px solid var(--rule-strong); border-radius:8px; padding:11px 12px; font-size:22px; font-weight:800; background:var(--bg); }
+  .balance-help { margin-top:6px; font-size:11px; color:var(--ink-faint); }
+  .bank-manager { margin:0 0 20px; padding:18px; border:1px solid var(--rule-strong); border-radius:14px; background:linear-gradient(135deg,var(--surface),var(--surface-alt)); box-shadow:0 8px 24px rgba(20,33,58,.08); }
+  .bank-manager-head { display:flex; justify-content:space-between; gap:15px; align-items:center; margin-bottom:12px; }
+  .bank-manager h2 { margin:0 0 4px; font-size:20px; }
+  .bank-manager p { margin:0; color:var(--ink-soft); font-size:12px; }
+  .bank-account-row { display:grid; grid-template-columns:1.1fr 1.3fr .9fr .9fr auto; gap:9px; align-items:end; padding:10px; margin-top:9px; background:var(--bg); border:1px solid var(--rule); border-radius:10px; }
+  .bank-account-row label { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:800; margin-bottom:4px; }
+  .bank-account-row input { width:100%; border:1.5px solid var(--rule-strong); border-radius:7px; padding:8px; background:var(--surface); }
+  .bank-current { font-weight:800; font-size:16px; }
+  .bank-remove { border:0; background:transparent; color:var(--danger); font-weight:800; cursor:pointer; padding:8px; }
+  .payment-impact { margin-top:6px; padding:7px 9px; border-radius:8px; background:var(--surface-alt); font-size:11px; color:var(--ink-soft); }
+
+  .status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    padding: 12px 4px 24px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+  .status-row .item { display: flex; align-items: baseline; gap: 6px; }
+  .status-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 2px; }
+  .status-row b { color: var(--ink); font-size: 15px; font-family: 'Inter', sans-serif; font-weight: 700; }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .toolbar input[type="search"],
+  .toolbar select {
+    background: var(--surface);
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 3px;
+    padding: 8px 12px;
+    color: var(--ink);
+  }
+  .toolbar input[type="search"] { flex: 1 1 220px; min-width: 180px; }
+  .toolbar select { flex: 0 0 auto; }
+  .toolbar .spacer { flex: 1 1 auto; }
+
+  /* ---------- Table ---------- */
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1160px;
+  }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-alt);
+    text-align: left;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    padding: 10px 12px;
+    border-bottom: 1.5px solid var(--rule-strong);
+    white-space: nowrap;
+  }
+  thead th.num, td.num { text-align: right; }
+  tbody tr {
+    border-bottom: 1px solid var(--rule);
+  }
+  tbody tr:nth-child(even) { background: var(--surface-alt); }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+  td {
+    padding: 10px 12px;
+    font-size: 13.5px;
+    white-space: nowrap;
+    vertical-align: top;
+  }
+  td.supplier { white-space: normal; min-width: 160px; }
+  td .sub { color: var(--ink-soft); font-size: 11.5px; margin-top: 2px; }
+  .badge {
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .badge.unpaid { color: var(--ink-soft); }
+  .badge.partial { color: var(--warning); }
+  .badge.paid { color: var(--positive); }
+  .badge.refund { color: var(--danger); }
+  .row-actions { display: flex; gap: 12px; }
+  .row-actions button {
+    background: none; border: none; padding: 0;
+    font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .row-actions button:hover { color: var(--accent); }
+  .row-actions button.danger:hover { color: var(--danger); }
+  .overdue-tag { color: var(--danger); font-weight: 600; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+  .empty-state h3 { margin: 0 0 8px; color: var(--ink); }
+  .empty-state button { margin-top: 16px; }
+
+  /* ---------- Drawer ---------- */
+  .scrim {
+    position: fixed; inset: 0;
+    background: rgba(20, 24, 22, 0.4);
+    opacity: 0; pointer-events: none;
+    transition: opacity 150ms ease;
+    z-index: 40;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: min(520px, 100vw);
+    background: var(--surface);
+    box-shadow: -8px 0 28px var(--shadow-drawer);
+    transform: translateX(100%);
+    transition: transform 180ms ease;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--rule);
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    flex-shrink: 0;
+  }
+  .drawer-head h2 { margin: 0; font-size: 20px; }
+  .drawer-close {
+    background: none; border: none; font-size: 22px; line-height: 1;
+    color: var(--ink-soft); padding: 4px 8px;
+  }
+  .drawer-close:hover { color: var(--ink); }
+  .drawer-body { padding: 4px 24px 24px; overflow-y: auto; flex: 1 1 auto; }
+  .drawer-foot {
+    padding: 14px 24px;
+    border-top: 1px solid var(--rule);
+    display: flex; justify-content: flex-end; gap: 10px;
+    flex-shrink: 0;
+  }
+
+  fieldset {
+    border: none; padding: 0; margin: 22px 0 0;
+  }
+  fieldset legend {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--accent); font-weight: 700; padding: 0 0 8px;
+    border-bottom: 1px solid var(--rule);
+    width: 100%; margin-bottom: 12px;
+  }
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+  .field label .req { color: var(--danger); }
+  .field input, .field select, .field textarea {
+    background: var(--bg);
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 3px;
+    padding: 9px 10px;
+    color: var(--ink);
+  }
+  .field textarea { resize: vertical; min-height: 64px; }
+  .readout {
+    margin-top: 14px;
+    background: var(--surface-alt);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .readout .ro-item { font-size: 13px; }
+  .readout .ro-item .ro-label { color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px; }
+  .readout .ro-item .ro-val { font-family: 'Inter', sans-serif; font-weight: 700; font-weight: 600; font-size: 16px; }
+
+  .toast {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 4px;
+    font-size: 13.5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+    z-index: 60;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .sync-note { font-size: 12px; color: var(--ink-faint); }
+
+  @media (max-width: 760px) {
+    .ledger-tally { grid-template-columns: repeat(2, 1fr); }
+    .balance-panel { grid-template-columns:1fr; }
+    .bank-account-row { grid-template-columns:1fr 1fr; }
+    .bank-manager-head { align-items:flex-start; flex-direction:column; }
+    .balance-panel { grid-template-columns: 1fr; }
+    .tally-cell:nth-child(3n) { border-right: 1px solid var(--rule); }
+    .tally-cell:nth-child(2n) { border-right: none; }
+    .field-grid { grid-template-columns: 1fr; }
+
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .table-scroll { overflow-x: visible; border: none; background: transparent; }
+    tbody tr {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      margin-bottom: 10px;
+      padding: 6px 0;
+    }
+    tbody tr:nth-child(even) { background: var(--surface); }
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      white-space: normal;
+      text-align: right;
+      padding: 7px 14px;
+      border-bottom: 1px dashed var(--rule);
+    }
+    td:last-child { border-bottom: none; }
+    td::before {
+      content: attr(data-label);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-soft);
+      font-weight: 700;
+      text-align: left;
+      flex-shrink: 0;
+    }
+    td.num { text-align: right; }
+    .row-actions { justify-content: flex-end; }
+  }
+
+
+
+  /* ---------- Copyright Footer ---------- */
+  .app-copyright-watermark{
+    width:100%;
+    margin:28px 0 0;
+    padding:14px 10px 6px;
+    text-align:center;
+    pointer-events:none;
+    user-select:none;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    opacity:.7;
+    border-top:1px solid var(--rule);
+  }
+  @media(max-width:600px){
+    .app-copyright-watermark{font-size:8px;letter-spacing:.05em;padding-top:12px}
+  }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style id="upgradeStyles">
+  .export-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+  .btn-small{padding:8px 11px;font-size:12px}
+  .quick-hint{font-size:11px;color:var(--ink-soft);margin-top:7px}
+  .report-card{margin:0 0 16px;border:1px solid var(--rule);background:var(--surface);padding:12px 14px;border-radius:10px}
+  .report-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .report-row strong{font-size:13px}.report-row select{min-width:220px}
+  .theme-toggle{display:inline-flex;align-items:center;gap:5px}
+  .theme-toggle.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .bank-presets{font-size:11px;color:var(--ink-soft);margin-top:4px}
+  .shortcut-badge{display:inline-block;padding:2px 5px;border:1px solid var(--rule-strong);border-radius:4px;background:var(--surface-alt);font-size:10px}
+  @media(max-width:760px){.export-actions{width:100%}.export-actions .btn{flex:1}.report-row select{min-width:100%;flex:1}.report-row .btn{flex:1}}
+</style>
+<style id="exportPrintStyles">
+@media print { @page { size: A4 landscape; margin: 10mm; } body { background:#fff !important; color:#000 !important; } .masthead-actions, .toolbar, .balance-panel, .bank-manager, .sync-note, .drawer, .scrim, .toast, .row-actions, #emptyState { display:none !important; } .wrap { max-width:none; padding:0; } header.masthead { margin-bottom:8px; padding-bottom:8px; } .ledger-tally { grid-template-columns:repeat(8,1fr); margin-bottom:8px; } .tally-cell { padding:6px 5px; } .tally-label { font-size:7px; } .tally-value { font-size:9px; } .status-row { padding:5px 0 8px; font-size:8px; } table { min-width:0 !important; font-size:7px; } thead th { position:static; font-size:6.5px; padding:4px; } td { font-size:7px; padding:4px; } }
+
+/* ---------- Authentication screens ---------- */
+#loginPage, #resetPasswordPage{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  min-height:100vh;
+  min-height:100dvh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:var(--bg);
+}
+#loginPage.hidden, #resetPasswordPage:not(.show){display:none !important;}
+#loginPage .login-box, #resetPasswordPage .reset-box{
+  width:min(420px,100%);
+  padding:30px;
+  border:1px solid var(--rule-strong);
+  border-radius:18px;
+  background:var(--surface);
+  box-shadow:0 18px 50px rgba(20,33,58,.14);
+}
+#loginPage .login-logo, #resetPasswordPage .login-logo{
+  width:58px;height:58px;border-radius:16px;
+  display:grid;place-items:center;
+  margin:0 auto 14px;
+  background:var(--accent);color:var(--accent-ink);
+  font-size:22px;font-weight:800;
+}
+#loginPage h2, #resetPasswordPage h2{margin:0;text-align:center;font-size:23px;}
+.login-subtitle,.reset-subtitle{text-align:center;color:var(--ink-soft);font-size:13px;margin:6px 0 22px;}
+.login-field,.reset-field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;}
+.login-field label,.reset-field label{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-soft);}
+.login-field input,.reset-field input{width:100%;padding:11px 12px;border:1.5px solid var(--rule-strong);border-radius:8px;background:var(--bg);outline:none;}
+#loginBtn,#updatePasswordBtn{width:100%;padding:12px;border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-weight:800;cursor:pointer;}
+#loginBtn:disabled,#updatePasswordBtn:disabled{opacity:.6;cursor:not-allowed;}
+#loginMessage,#resetPasswordMessage{min-height:18px;margin-top:10px;text-align:center;font-size:12px;}
+.login-footer{text-align:center;color:var(--ink-faint);font-size:10px;margin-top:20px;}
+@media(max-width:480px){#loginPage,#resetPasswordPage{padding:16px;}#loginPage .login-box,#resetPasswordPage .reset-box{padding:24px 18px;}}
+</style>
+</head>
+<body>
+
+
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">SP</div>
+    <h2>Supplier Payables</h2>
+    <div class="login-subtitle">Secure Management System</div>
+    <form id="loginForm" autocomplete="on">
+      <div class="login-field">
+        <label for="loginEmail">EMAIL</label>
+        <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="username" required>
+      </div>
+      <div class="login-field">
+        <label for="loginPassword">PASSWORD</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" required>
+      </div>
+      <button id="loginBtn" type="submit">LOGIN</button>
+      <button type="button" id="forgotPasswordBtn" style="display:block;width:100%;margin-top:12px;border:0;background:transparent;color:#8fb5ff;font-size:12px;font-weight:700;cursor:pointer">Forgot Password?</button>
+  <div id="loginMessage"></div>
+          <button type="button" id="createAccountBtn" style="display:block;width:100%;margin-top:8px;border:0;background:transparent;color:#8fb5ff;font-size:12px;font-weight:700;cursor:pointer">Create New Account</button>
+</form>
+    <div class="login-footer">Powered by Supabase Authentication</div>
+  </div>
+</div>
+
+<div id="resetPasswordPage">
+  <div class="reset-box">
+    <div class="login-logo">SP</div>
+    <h2>Set New Password</h2>
+    <div class="reset-subtitle">Enter your new password below.</div>
+    <form id="resetPasswordForm">
+      <div class="reset-field">
+        <label for="newPassword">NEW PASSWORD</label>
+        <input type="password" id="newPassword" minlength="6" placeholder="Enter new password" autocomplete="new-password" required>
+      </div>
+      <div class="reset-field">
+        <label for="confirmNewPassword">CONFIRM PASSWORD</label>
+        <input type="password" id="confirmNewPassword" minlength="6" placeholder="Confirm new password" autocomplete="new-password" required>
+      </div>
+      <button id="updatePasswordBtn" type="submit">UPDATE PASSWORD</button>
+      <div id="resetPasswordMessage"></div>
+    </form>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="masthead-top">
+      <div class="masthead-title">
+        <div class="company" id="companyLabel">ZENTRA SOLUTION (PVT) LTD </div>
+        <h1>Supplier Payables &amp; Settlement Register</h1>
+        <div class="masthead-sub">Tracks cash and credit purchases, returns, notes, payments, supplier refunds and statement reconciliation.</div>
+      </div>
+      <div class="masthead-actions export-actions">
+        <button class="btn btn-ghost btn-small" id="exportBtn" type="button">CSV</button>
+        <button class="btn btn-ghost btn-small" id="exportExcelBtn" type="button">Excel</button>
+        <button class="btn btn-ghost btn-small" id="exportPdfBtn" type="button">PDF</button>
+        <button class="btn btn-ghost btn-small" id="printA4Btn" type="button">Print A4</button>
+        <button class="btn btn-ghost btn-small theme-toggle" id="themeToggleBtn" type="button" title="Switch display mode">🌙 Dark</button>
+
+        <div id="userPanel">
+          <span id="userEmail"></span>
+          <button class="btn btn-ghost btn-small" id="logoutBtn" type="button">Logout</button>
+        </div>
+        <button class="btn btn-primary btn-small" id="newEntryBtn" type="button">+ Quick Entry</button>
+        <button class="btn btn-ghost btn-small payment-voucher-top-btn" id="newPaymentVoucherBtn" type="button">Payment Voucher</button>
       </div>
     </div>
   </header>
@@ -1376,6 +2076,7 @@
   }
   function resetPaymentVoucherForm(){
     editingVoucherId=null;
+    document.getElementById('savePaymentVoucherBtn').textContent='Save Payment Voucher';
     paymentVoucherSuppliers();
     document.getElementById('pvSupplier').value='';
     invoiceVoucherOptions();
@@ -1389,20 +2090,64 @@
     document.getElementById('paymentVoucherPanel').style.display='';
     document.getElementById('paymentVoucherPanel').scrollIntoView({behavior:'smooth',block:'start'});
   }
-  function closePaymentVoucher(){document.getElementById('paymentVoucherPanel').style.display='none';editingVoucherId=null;}
+  function closePaymentVoucher(){document.getElementById('paymentVoucherPanel').style.display='none';editingVoucherId=null;document.getElementById('savePaymentVoucherBtn').textContent='Save Payment Voucher';}
   function renderPaymentVouchers(){
     var box=document.getElementById('paymentVoucherList'); if(!box)return;
-    if(!paymentVouchers.length){box.innerHTML='<div class="payment-impact">No payment vouchers created yet.</div>';return;}
-    box.innerHTML=paymentVouchers.slice().reverse().map(function(v){
+    var searchEl=document.getElementById('paymentVoucherSearch');
+    var q=searchEl?String(searchEl.value||'').trim().toLowerCase():'';
+    var rows=paymentVouchers.slice().reverse().filter(function(v){
+      if(!q)return true;
+      return [v.voucher_no,v.payment_date,v.supplier_name,v.invoice_number,v.payment_method,v.bank_name,v.cheque_ref,v.paid_by,v.received_by,v.remarks]
+        .some(function(x){return String(x||'').toLowerCase().indexOf(q)>=0;});
+    });
+    if(!paymentVouchers.length){
+      box.innerHTML='<div class="payment-impact">No payment vouchers created yet.</div>';return;
+    }
+    if(!rows.length){
+      box.innerHTML='<div class="payment-impact">No payment vouchers found for "'+escapeHtml(q)+'".</div>';return;
+    }
+    box.innerHTML=rows.map(function(v){
       return '<div class="bank-account-row" style="grid-template-columns:1fr 1fr 2fr 1fr 1fr auto;align-items:center;">'+
         '<div><label>Voucher</label><strong>'+escapeHtml(v.voucher_no||'')+'</strong></div>'+
         '<div><label>Date</label>'+escapeHtml(v.payment_date||'')+'</div>'+
         '<div><label>Supplier / Invoice</label>'+escapeHtml((v.supplier_name||'')+' / '+(v.invoice_number||''))+'</div>'+
         '<div><label>Method</label>'+escapeHtml(v.payment_method||'')+'</div>'+
         '<div><label>Amount</label><strong>'+fmtMoney(v.amount)+'</strong></div>'+
-        '<button class="bank-remove" type="button" data-remove-voucher="'+escapeHtml(String(v.id))+'">Delete</button></div>';
+        '<div class="pv-voucher-actions">'+
+          '<button class="pv-edit" type="button" data-edit-voucher="'+escapeHtml(String(v.id))+'">Edit</button>'+
+          '<button class="pv-delete" type="button" data-remove-voucher="'+escapeHtml(String(v.id))+'">Delete</button>'+
+        '</div></div>';
     }).join('');
   }
+
+  function editPaymentVoucher(id){
+    var v=paymentVouchers.find(function(x){return String(x.id)===String(id);});
+    if(!v){showToast('Payment voucher not found.');return;}
+    editingVoucherId=v.id;
+    paymentVoucherSuppliers();
+    document.getElementById('pvVoucherNo').value=v.voucher_no||'';
+    document.getElementById('pvDate').value=v.payment_date||'';
+    document.getElementById('pvSupplier').value=v.supplier_name||'';
+    invoiceVoucherOptions();
+    document.getElementById('pvInvoice').value=String(v.entry_id||'');
+    fillPaymentVoucherInvoice();
+    document.getElementById('pvAmount').value=Number(v.amount||0).toFixed(2);
+    document.getElementById('pvMethod').value=v.payment_method||'';
+    updatePaymentVoucherMethod();
+    if(v.bank_name){
+      var bi=bankAccounts.findIndex(function(b){return String(b.bankName||'')===String(v.bank_name||'') && String(b.accountNo||'')===String(v.bank_account_no||'');});
+      if(bi>=0) document.getElementById('pvBank').value=String(bi);
+      updatePaymentVoucherBankInfo();
+    }
+    document.getElementById('pvCheque').value=v.cheque_ref||'';
+    document.getElementById('pvPaidBy').value=v.paid_by||'';
+    document.getElementById('pvReceivedBy').value=v.received_by||'';
+    document.getElementById('pvRemarks').value=v.remarks||'';
+    document.getElementById('paymentVoucherPanel').style.display='';
+    document.getElementById('savePaymentVoucherBtn').textContent='Update Payment Voucher';
+    document.getElementById('paymentVoucherPanel').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
   function printPaymentVoucher(v){
     var w=window.open('', '_blank', 'width=850,height=700');
     if(!w){
@@ -2481,15 +3226,20 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
       var b=bankAccounts[Number(document.getElementById('pvBank').value)];if(b){v.bank_name=b.bankName||'';v.bank_account_no=b.accountNo||'';}
       printPaymentVoucher(v);
     });
+    el=document.getElementById('paymentVoucherSearch'); if(el) el.addEventListener('input',renderPaymentVouchers);
+    el=document.getElementById('clearPaymentVoucherSearch'); if(el) el.addEventListener('click',function(){var s=document.getElementById('paymentVoucherSearch');if(s)s.value='';renderPaymentVouchers();});
     el=document.getElementById('paymentVoucherList'); if(el) el.addEventListener('click',async function(ev){
+      var editBtn=ev.target.closest('[data-edit-voucher]');
+      if(editBtn){editPaymentVoucher(editBtn.getAttribute('data-edit-voucher'));return;}
       var btn=ev.target.closest('[data-remove-voucher]');if(!btn)return;
       if(!confirm('Delete this payment voucher?'))return;
       var id=btn.getAttribute('data-remove-voucher');
       try{
         if(currentUser&&supabaseClient){var r=await supabaseClient.from('payment_vouchers').delete().eq('id',id).select('id');if(r.error)throw r.error;if(r.data&&r.data.length===0)throw new Error('Cloud delete was not applied. Check RLS DELETE policy.');}
-        paymentVouchers=paymentVouchers.filter(function(v){return String(v.id)!==String(id);});renderPaymentVouchers();renderBankAccounts();render();showToast('Payment voucher deleted.');
+        paymentVouchers=paymentVouchers.filter(function(v){return String(v.id)!==String(id);});
+        renderPaymentVouchers();renderBankAccounts();render();showToast('Payment voucher deleted.');
       }catch(err){showToast('Voucher delete failed: '+(err.message||'try again'));}
-    });
+    });;
   })();
   
   // ---------- Init ----------
