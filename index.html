@@ -1471,11 +1471,9 @@ header.masthead{position:relative;}
         <div class="field"><label>Payment Date</label><input type="date" id="pvDate"></div>
         <div class="pv-supplier-search-wrap">
           <label for="pvSupplierSearch">1. Search Supplier</label>
-          <input id="pvSupplierSearch" type="search" placeholder="Type supplier name to search..." autocomplete="off">
-          <div style="margin-top:8px;" class="field">
-            <label for="pvSupplier">Select Supplier</label>
-            <select id="pvSupplier"><option value="">— Select supplier —</option></select>
-          </div>
+          <input id="pvSupplierSearch" type="search" placeholder="Type supplier name..." autocomplete="off">
+          <div id="pvSupplierResults" style="margin-top:8px;"></div>
+          <input type="hidden" id="pvSupplier">
         </div>
         <div class="pv-selection-note" id="pvInvoiceSelectionNote">Select a supplier to load that supplier's invoices only.</div>
         <div id="pvSupplierDetails" style="display:none;grid-column:span 2;">
@@ -2107,22 +2105,29 @@ header.masthead{position:relative;}
     if(current) sel.value=current;
   }
   function filterPaymentVoucherSuppliers(){
-    var sel=document.getElementById('pvSupplier'), search=document.getElementById('pvSupplierSearch');
-    if(!sel) return;
+    var sel=document.getElementById('pvSupplier'), search=document.getElementById('pvSupplierSearch'), box=document.getElementById('pvSupplierResults');
+    if(!sel||!box) return;
     var q=search?String(search.value||'').trim().toLowerCase():'';
-    var current=sel.value, seen={}, vals=[];
+    var seen={}, vals=[];
     entries.forEach(function(e){
       var n=String(e.supplierName||'').trim(), k=n.toLowerCase();
-      if(!n||seen[k]) return;
-      if(q && k.indexOf(q)===-1) return;
+      if(!n||seen[k]||(q && k.indexOf(q)===-1)) return;
       seen[k]=1; vals.push(n);
     });
     vals.sort(function(a,b){return a.localeCompare(b);});
-    sel.innerHTML='<option value="">— Select supplier —</option>'+vals.map(function(v){
-      return '<option value="'+escapeHtml(v)+'">'+escapeHtml(v)+'</option>';
-    }).join('');
-    if(current && vals.some(function(v){return v.toLowerCase()===String(current).toLowerCase();})) sel.value=current;
-    else sel.value='';
+    if(!q){ box.innerHTML=''; return; }
+    box.innerHTML=vals.slice(0,12).map(function(v){
+      return '<button type="button" class="btn btn-ghost btn-small pv-supplier-result" data-supplier="'+escapeHtml(v)+'" style="display:block;width:100%;text-align:left;margin-top:5px;">'+escapeHtml(v)+'</button>';
+    }).join('') || '<div style="font-size:12px;color:var(--ink-soft);padding:8px;">No supplier found.</div>';
+    Array.from(box.querySelectorAll('.pv-supplier-result')).forEach(function(b){
+      b.addEventListener('click',function(){
+        var name=b.getAttribute('data-supplier')||'';
+        sel.value=name;
+        search.value=name;
+        box.innerHTML='';
+        var evt=new Event('change'); sel.dispatchEvent(evt);
+      });
+    });
     invoiceVoucherOptions();
     fillPaymentVoucherInvoice();
   }
