@@ -516,6 +516,13 @@
     .app-copyright-watermark{font-size:8px;letter-spacing:.05em;padding-top:12px}
   }
 
+
+/* Payment Voucher supplier tap/dropdown */
+.pv-supplier-search-wrap{position:relative;}
+.pv-supplier-dropdown{max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:var(--card,#fff);box-shadow:0 10px 28px rgba(0,0,0,.12);padding:5px;position:relative;z-index:50;}
+.pv-supplier-result{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:10px 12px;margin:2px 0;border:0;border-radius:9px;background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit;touch-action:manipulation;}
+.pv-supplier-result:hover,.pv-supplier-result:focus{background:var(--surface,#f2f4f7);outline:none;}
+.pv-supplier-result-icon{width:24px;text-align:center;flex:0 0 24px;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2169,21 +2176,26 @@ header.masthead{position:relative;}
       seen[k]=1; vals.push(n);
     });
     vals.sort(function(a,b){return a.localeCompare(b);});
-    if(!q){
-      box.innerHTML='';
+    var shown=vals.slice(0,20);
+    if(!shown.length){
+      box.innerHTML=q?'<div style="font-size:12px;color:var(--ink-soft);padding:10px;">No supplier found.</div>':'';
       return;
     }
-    box.innerHTML=vals.slice(0,12).map(function(v){
-      return '<button type="button" class="btn btn-ghost btn-small pv-supplier-result" data-supplier="'+escapeHtml(v)+'" style="display:block;width:100%;text-align:left;margin-top:5px;">'+escapeHtml(v)+'</button>';
-    }).join('') || '<div style="font-size:12px;color:var(--ink-soft);padding:8px;">No supplier found.</div>';
+    box.innerHTML='<div class="pv-supplier-dropdown">'+shown.map(function(v){
+      return '<button type="button" class="pv-supplier-result" data-supplier="'+escapeHtml(v)+'">'+
+        '<span class="pv-supplier-result-icon">👤</span><span>'+escapeHtml(v)+'</span></button>';
+    }).join('')+'</div>';
     Array.from(box.querySelectorAll('.pv-supplier-result')).forEach(function(b){
-      b.addEventListener('click',function(){
+      var choose=function(ev){
+        if(ev) ev.preventDefault();
         var name=b.getAttribute('data-supplier')||'';
         sel.value=name;
-        search.value=name;
+        if(search) search.value=name;
         box.innerHTML='';
-        var evt=new Event('change'); sel.dispatchEvent(evt);
-      });
+        sel.dispatchEvent(new Event('change'));
+      };
+      b.addEventListener('click',choose);
+      b.addEventListener('touchend',choose,{passive:false});
     });
   }
 
@@ -3655,6 +3667,8 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     el=document.getElementById('cancelPaymentVoucherBtnTop'); if(el) el.addEventListener('click',closePaymentVoucher);
     el=document.getElementById('pvSupplierSearch'); if(el) {
       el.addEventListener('input',filterPaymentVoucherSuppliers);
+      el.addEventListener('focus',filterPaymentVoucherSuppliers);
+      el.addEventListener('click',function(){ filterPaymentVoucherSuppliers(); });
       el.addEventListener('keydown',function(ev){
         if(ev.key==='ArrowDown'){
           var box=document.getElementById('pvSupplierResults');
