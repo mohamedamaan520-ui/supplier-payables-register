@@ -606,6 +606,16 @@
 .profile-note{font-size:11px;color:var(--ink-faint);margin-top:6px;line-height:1.4;}
 .profile-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
 @media(max-width:600px){.profile-card{padding:18px}.profile-actions{flex-wrap:wrap}.profile-actions .btn{flex:1;justify-content:center;}}
+
+/* ---------- Top-right user controls ---------- */
+header.masthead{position:relative;}
+#userPanel{position:absolute;top:0;right:0;display:flex;align-items:center;gap:7px;z-index:10;}
+#userPanel .profile-trigger{width:40px;height:40px;}
+@media(max-width:700px){
+  #userPanel{top:0;right:0;}
+  .masthead-title{padding-right:110px;}
+  .masthead-actions{padding-top:8px;}
+}
 </style>
 </head>
 <body>
