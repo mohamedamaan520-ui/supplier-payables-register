@@ -521,6 +521,77 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style id="paymentVoucherModalStyles">
+  /* Payment Voucher — separate full-screen workspace */
+  #paymentVoucherPanel{
+    position:fixed !important;
+    inset:0 !important;
+    z-index:900 !important;
+    display:none;
+    overflow-y:auto;
+    padding:24px !important;
+    background:rgba(15,23,42,.58);
+    backdrop-filter:blur(6px);
+  }
+  #paymentVoucherPanel .pv-modal-card{
+    width:min(1050px,100%);
+    min-height:calc(100vh - 48px);
+    margin:0 auto;
+    padding:22px;
+    border:1px solid var(--rule-strong);
+    border-radius:18px;
+    background:var(--surface);
+    box-shadow:0 24px 70px rgba(0,0,0,.28);
+  }
+  #paymentVoucherPanel .pv-modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding-bottom:14px;
+    margin-bottom:16px;
+    border-bottom:1px solid var(--rule);
+  }
+  #paymentVoucherPanel .pv-modal-head h2{margin:0;font-size:24px}
+  #paymentVoucherPanel .pv-modal-sub{margin:4px 0 0;color:var(--ink-soft);font-size:12px}
+  .pv-supplier-search-wrap{
+    grid-column:1/-1;
+    padding:12px;
+    border:1px solid var(--rule);
+    border-radius:12px;
+    background:var(--surface-alt);
+  }
+  .pv-supplier-search-wrap label{
+    display:block;
+    margin-bottom:6px;
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--ink-soft);
+  }
+  #pvSupplierSearch{
+    width:100%;
+    padding:11px 12px;
+    border:1.5px solid var(--rule-strong);
+    border-radius:8px;
+    background:var(--bg);
+  }
+  #pvSupplierSearch:focus{border-color:var(--accent)}
+  .pv-selection-note{
+    grid-column:1/-1;
+    padding:9px 11px;
+    border-radius:9px;
+    background:var(--surface-alt);
+    color:var(--ink-soft);
+    font-size:12px;
+  }
+  @media(max-width:760px){
+    #paymentVoucherPanel{padding:8px !important}
+    #paymentVoucherPanel .pv-modal-card{min-height:calc(100vh - 16px);padding:14px;border-radius:14px}
+    #paymentVoucherPanel .pv-modal-head h2{font-size:20px}
+  }
+</style>
 <style id="paymentVoucherTopStyles">
   .payment-voucher-top-btn{white-space:nowrap}
   .payment-voucher-manager{margin:0 0 18px}
@@ -1386,11 +1457,27 @@ header.masthead{position:relative;}
   </section>
 
     <section class="payment-voucher-manager" aria-label="Payment vouchers" style="margin-top:18px;">
-    <div id="paymentVoucherPanel" style="display:none;margin-top:12px;padding:16px;border:1px solid rgba(255,255,255,.10);border-radius:14px;">
+    <div id="paymentVoucherPanel" style="display:none;">
+      <div class="pv-modal-card">
+        <div class="pv-modal-head">
+          <div>
+            <h2>Payment Voucher</h2>
+            <div class="pv-modal-sub">Select a supplier first. Only that supplier's invoices will be shown.</div>
+          </div>
+          <button class="btn btn-ghost btn-small" id="cancelPaymentVoucherBtnTop" type="button">✕ Close</button>
+        </div>
       <div class="field-grid">
         <div class="field"><label>Voucher No.</label><input id="pvVoucherNo" readonly></div>
         <div class="field"><label>Payment Date</label><input type="date" id="pvDate"></div>
-        <div class="field" style="grid-column:span 2;"><label>1. Select Supplier</label><select id="pvSupplier"><option value="">— Select supplier —</option></select></div>
+        <div class="pv-supplier-search-wrap">
+          <label for="pvSupplierSearch">1. Search Supplier</label>
+          <input id="pvSupplierSearch" type="search" placeholder="Type supplier name to search..." autocomplete="off">
+          <div style="margin-top:8px;" class="field">
+            <label for="pvSupplier">Select Supplier</label>
+            <select id="pvSupplier"><option value="">— Select supplier —</option></select>
+          </div>
+        </div>
+        <div class="pv-selection-note" id="pvInvoiceSelectionNote">Select a supplier to load that supplier's invoices only.</div>
         <div id="pvSupplierDetails" style="display:none;grid-column:span 2;">
           <div class="field-grid" style="margin-top:0;">
             <div class="field"><label>Supplier Name</label><input id="pvSupplierName" readonly></div>
@@ -1417,6 +1504,7 @@ header.masthead{position:relative;}
         <button class="btn btn-ghost" id="cancelPaymentVoucherBtn" type="button">Close</button>
         <button class="btn btn-ghost" id="printPaymentVoucherBtn" type="button">Print</button>
         <button class="btn btn-primary" id="savePaymentVoucherBtn" type="button">Save Payment Voucher</button>
+      </div>
       </div>
     </div>
     <div class="pv-findbar">
@@ -2018,23 +2106,55 @@ header.masthead{position:relative;}
     }).join('');
     if(current) sel.value=current;
   }
+  function filterPaymentVoucherSuppliers(){
+    var sel=document.getElementById('pvSupplier'), search=document.getElementById('pvSupplierSearch');
+    if(!sel) return;
+    var q=search?String(search.value||'').trim().toLowerCase():'';
+    var current=sel.value, seen={}, vals=[];
+    entries.forEach(function(e){
+      var n=String(e.supplierName||'').trim(), k=n.toLowerCase();
+      if(!n||seen[k]) return;
+      if(q && k.indexOf(q)===-1) return;
+      seen[k]=1; vals.push(n);
+    });
+    vals.sort(function(a,b){return a.localeCompare(b);});
+    sel.innerHTML='<option value="">— Select supplier —</option>'+vals.map(function(v){
+      return '<option value="'+escapeHtml(v)+'">'+escapeHtml(v)+'</option>';
+    }).join('');
+    if(current && vals.some(function(v){return v.toLowerCase()===String(current).toLowerCase();})) sel.value=current;
+    else sel.value='';
+    invoiceVoucherOptions();
+    fillPaymentVoucherInvoice();
+  }
   function invoiceVoucherOptions(){
     var sel=document.getElementById('pvInvoice'), supplier=document.getElementById('pvSupplier');
     if(!sel) return;
     var current=sel.value, supplierName=supplier?String(supplier.value||'').trim().toLowerCase():'';
     var opts=['<option value="">— Select invoice —</option>'];
+    var note=document.getElementById('pvInvoiceSelectionNote');
+
+    /* Never show invoices until a supplier has actually been selected. */
+    if(!supplierName){
+      sel.innerHTML=opts.join('');
+      if(note) note.textContent='Select a supplier to load that supplier\'s invoices only.';
+      return;
+    }
+
+    var count=0;
     entries.slice().sort(function(a,b){
       return String(a.invoiceNumber||'').localeCompare(String(b.invoiceNumber||''));
     }).forEach(function(e){
       if(!e.id) return;
-      if(supplierName && String(e.supplierName||'').trim().toLowerCase()!==supplierName) return;
+      if(String(e.supplierName||'').trim().toLowerCase()!==supplierName) return;
       var paid=(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId);
       var balance=Math.max(0,paymentVoucherNet(e)-paid);
       var label=(e.invoiceNumber||'(No invoice #)')+' — Balance '+fmtMoney(balance);
       opts.push('<option value="'+escapeHtml(String(e.id))+'">'+escapeHtml(label)+'</option>');
+      count++;
     });
     sel.innerHTML=opts.join('');
     if(current && Array.from(sel.options).some(function(o){return o.value===current;})) sel.value=current;
+    if(note) note.textContent=count ? (count+' invoice(s) found for the selected supplier. Only these invoices are available.') : 'No invoices found for the selected supplier.';
   }
   function fillPaymentVoucherInvoice(){
     var id=document.getElementById('pvInvoice').value, e=entries.find(function(x){return String(x.id)===String(id);});
@@ -2083,6 +2203,7 @@ header.masthead{position:relative;}
     editingVoucherId=null;
     document.getElementById('savePaymentVoucherBtn').textContent='Save Payment Voucher';
     paymentVoucherSuppliers();
+    var pvSearch=document.getElementById('pvSupplierSearch'); if(pvSearch) pvSearch.value='';
     document.getElementById('pvSupplier').value='';
     invoiceVoucherOptions();
     document.getElementById('pvVoucherNo').value='PV-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-6);
@@ -2092,10 +2213,19 @@ header.masthead{position:relative;}
   }
   function openPaymentVoucher(){
     resetPaymentVoucherForm();
-    document.getElementById('paymentVoucherPanel').style.display='';
-    document.getElementById('paymentVoucherPanel').scrollIntoView({behavior:'smooth',block:'start'});
+    document.getElementById('paymentVoucherPanel').style.display='block';
+    document.body.style.overflow='hidden';
+    setTimeout(function(){
+      var s=document.getElementById('pvSupplierSearch');
+      if(s) s.focus();
+    },50);
   }
-  function closePaymentVoucher(){document.getElementById('paymentVoucherPanel').style.display='none';editingVoucherId=null;document.getElementById('savePaymentVoucherBtn').textContent='Save Payment Voucher';}
+  function closePaymentVoucher(){
+    document.getElementById('paymentVoucherPanel').style.display='none';
+    editingVoucherId=null;
+    document.getElementById('savePaymentVoucherBtn').textContent='Save Payment Voucher';
+    document.body.style.overflow='';
+  }
   function renderPaymentVouchers(){
     var box=document.getElementById('paymentVoucherList'); if(!box)return;
     var searchEl=document.getElementById('paymentVoucherSearch');
@@ -2133,6 +2263,7 @@ header.masthead{position:relative;}
     document.getElementById('pvVoucherNo').value=v.voucher_no||'';
     document.getElementById('pvDate').value=v.payment_date||'';
     document.getElementById('pvSupplier').value=v.supplier_name||'';
+    var pvSearch=document.getElementById('pvSupplierSearch'); if(pvSearch) pvSearch.value=v.supplier_name||'';
     invoiceVoucherOptions();
     document.getElementById('pvInvoice').value=String(v.entry_id||'');
     fillPaymentVoucherInvoice();
@@ -3333,6 +3464,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
   document.getElementById('themeToggleBtn').addEventListener('click', function(){ var dark=document.documentElement.getAttribute('data-theme')==='dark'; setTheme(dark?'light':'dark'); });
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape' && els.drawer.classList.contains('open')) closeDrawer();
+    if (ev.key === 'Escape' && document.getElementById('paymentVoucherPanel')?.style.display === 'block') closePaymentVoucher();
   });
 
   els.tableBody.addEventListener('click', function (ev) {
@@ -3371,12 +3503,15 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     var el;
     el=document.getElementById('newPaymentVoucherBtn'); if(el) el.addEventListener('click',openPaymentVoucher);
     el=document.getElementById('cancelPaymentVoucherBtn'); if(el) el.addEventListener('click',closePaymentVoucher);
+    el=document.getElementById('cancelPaymentVoucherBtnTop'); if(el) el.addEventListener('click',closePaymentVoucher);
+    el=document.getElementById('pvSupplierSearch'); if(el) el.addEventListener('input',filterPaymentVoucherSuppliers);
     el=document.getElementById('pvSupplier'); if(el) el.addEventListener('change',function(){
       var name=String(el.value||'').trim().toLowerCase();
       var e=entries.find(function(x){return String(x.supplierName||'').trim().toLowerCase()===name;});
       var d=document.getElementById('pvSupplierDetails'); if(d) d.style.display=e?'block':'none';
       var sn=document.getElementById('pvSupplierName'); if(sn) sn.value=e?e.supplierName||'':'';
       var sc=document.getElementById('pvSupplierContact'); if(sc) sc.value=e?e.supplierContact||'':'';
+      var search=document.getElementById('pvSupplierSearch'); if(search) search.value=e?e.supplierName||'':'';
       document.getElementById('pvInvoice').value='';document.getElementById('pvAmount').value='';invoiceVoucherOptions();fillPaymentVoucherInvoice();
     });
     el=document.getElementById('pvInvoice'); if(el) el.addEventListener('change',function(){document.getElementById('pvAmount').value='';fillPaymentVoucherInvoice();});
