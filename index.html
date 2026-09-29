@@ -3653,7 +3653,32 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     el=document.getElementById('newPaymentVoucherBtn'); if(el) el.addEventListener('click',openPaymentVoucher);
     el=document.getElementById('cancelPaymentVoucherBtn'); if(el) el.addEventListener('click',closePaymentVoucher);
     el=document.getElementById('cancelPaymentVoucherBtnTop'); if(el) el.addEventListener('click',closePaymentVoucher);
-    el=document.getElementById('pvSupplierSearch'); if(el) el.addEventListener('input',filterPaymentVoucherSuppliers);
+    el=document.getElementById('pvSupplierSearch'); if(el) {
+      el.addEventListener('input',filterPaymentVoucherSuppliers);
+      el.addEventListener('keydown',function(ev){
+        if(ev.key==='ArrowDown'){
+          var box=document.getElementById('pvSupplierResults');
+          var first=box&&box.querySelector('.pv-supplier-result');
+          if(first){ev.preventDefault();first.focus();}
+        }
+      });
+    }
+    el=document.getElementById('pvSupplierResults'); if(el) el.addEventListener('keydown',function(ev){
+      var items=Array.from(el.querySelectorAll('.pv-supplier-result'));
+      var cur=document.activeElement, idx=items.indexOf(cur);
+      if(!items.length) return;
+      if(ev.key==='ArrowDown'){
+        ev.preventDefault();
+        items[Math.min(idx+1,items.length-1)].focus();
+      }else if(ev.key==='ArrowUp'){
+        ev.preventDefault();
+        if(idx<=0){
+          var search=document.getElementById('pvSupplierSearch'); if(search) search.focus();
+        }else{
+          items[idx-1].focus();
+        }
+      }
+    });
     el=document.getElementById('pvSupplier'); if(el) el.addEventListener('change',function(){
       var name=String(el.value||'').trim().toLowerCase();
       var e=entries.find(function(x){return String(x.supplierName||'').trim().toLowerCase()===name;});
