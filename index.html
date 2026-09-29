@@ -619,7 +619,7 @@
     <div class="login-logo">SP</div>
     <h2>Set New Password</h2>
     <div class="reset-subtitle">Enter your new password below.</div>
-    <form id="resetPasswordForm">
+    <form id="resetPasswordForm" autocomplete="on">\n      <input type="email" id="resetPasswordEmail" name="username" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
       <div class="reset-field">
         <label for="newPassword">NEW PASSWORD</label>
         <input type="password" id="newPassword" minlength="6" placeholder="Enter new password" autocomplete="new-password" required>
@@ -1215,10 +1215,7 @@
   }
 
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style id="upgradeStyles">
   .export-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
   .btn-small{padding:8px 11px;font-size:12px}
@@ -2819,6 +2816,10 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
   }
 
   async function initAuth() {
+    if(!window.supabase || !window.supabase.createClient){
+      showLoginPage('Unable to load the secure login service. Please refresh the page.');
+      return;
+    }
     if(!initSupabaseClient()){
       showLoginPage('Supabase configuration is unavailable.');
       return;
