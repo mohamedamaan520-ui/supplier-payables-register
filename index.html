@@ -754,6 +754,59 @@ header.masthead{position:relative;}
 .profile-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
 .profile-avatar-upload{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;}
 .profile-avatar-remove{font-size:11px;color:var(--ink-soft);cursor:pointer;background:none;border:0;padding:4px;}
+
+/* ---------- 3D Robot Battle Login Background ---------- */
+#loginPage{
+  overflow:hidden !important;
+  isolation:isolate;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255,80,170,.24), transparent 34%),
+    radial-gradient(circle at 18% 65%, rgba(0,190,255,.20), transparent 32%),
+    radial-gradient(circle at 84% 68%, rgba(255,40,70,.20), transparent 32%),
+    linear-gradient(135deg,#050711 0%,#0b1020 48%,#160812 100%) !important;
+}
+#loginPage::before{
+  content:"";position:absolute;inset:-20%;z-index:-3;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 78px,rgba(90,180,255,.08) 79px 80px),
+    repeating-linear-gradient(0deg,transparent 0 78px,rgba(255,70,130,.06) 79px 80px);
+  transform:perspective(700px) rotateX(58deg) translateY(18%);
+  transform-origin:center bottom;
+  animation:battleGrid 7s linear infinite;
+}
+#loginPage::after{
+  content:"";position:absolute;inset:0;z-index:-4;
+  background:
+    radial-gradient(ellipse at 30% 52%,rgba(0,210,255,.16),transparent 22%),
+    radial-gradient(ellipse at 70% 48%,rgba(255,35,75,.16),transparent 22%);
+  animation:battleFlash 3.8s ease-in-out infinite;
+}
+#loginPage .login-box{position:relative;z-index:20;backdrop-filter:blur(16px) saturate(130%);background:rgba(8,12,25,.72)!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:0 25px 80px rgba(0,0,0,.55),0 0 45px rgba(255,60,150,.16)!important;}
+.robot-battle{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;perspective:1100px;}
+.robot{position:absolute;width:190px;height:360px;bottom:7%;filter:drop-shadow(0 0 18px rgba(0,210,255,.45));transform-style:preserve-3d;animation:robotFloat 3.8s ease-in-out infinite;}
+.robot.left{left:5%;transform:rotateY(18deg) rotateZ(-3deg);}.robot.right{right:5%;transform:scaleX(-1) rotateY(18deg) rotateZ(-3deg);filter:drop-shadow(0 0 20px rgba(255,50,90,.48));animation-delay:-1.7s;}
+.robot .head{position:absolute;width:72px;height:62px;left:59px;top:8px;border:3px solid #79eaff;background:linear-gradient(145deg,#162c48,#050b16);clip-path:polygon(15% 0,85% 0,100% 35%,86% 100%,14% 100%,0 35%);box-shadow:inset 0 0 16px #00bfff,0 0 12px #00bfff;}
+.robot.right .head{border-color:#ff6a82;box-shadow:inset 0 0 16px #ff244d,0 0 12px #ff244d;}
+.robot .visor{position:absolute;left:12px;right:12px;top:25px;height:9px;background:#aef6ff;box-shadow:0 0 12px #00d9ff;clip-path:polygon(0 35%,100% 0,88% 100%,12% 100%);}
+.robot.right .visor{background:#ff9aaa;box-shadow:0 0 12px #ff244d;}
+.robot .body{position:absolute;left:39px;top:72px;width:112px;height:145px;border:3px solid #6689ad;background:linear-gradient(135deg,#243b59,#080d18 55%,#17233a);clip-path:polygon(13% 0,87% 0,100% 22%,89% 100%,11% 100%,0 22%);box-shadow:inset 0 0 28px rgba(0,210,255,.22);}
+.robot.right .body{border-color:#a35c6a;box-shadow:inset 0 0 28px rgba(255,35,75,.24);}
+.robot .core{position:absolute;left:39px;top:102px;width:112px;height:48px;background:linear-gradient(90deg,transparent,rgba(0,220,255,.35),transparent);border-top:2px solid #66edff;border-bottom:2px solid #66edff;transform:skewY(-5deg);box-shadow:0 0 18px rgba(0,220,255,.35);}
+.robot.right .core{border-color:#ff5c78;box-shadow:0 0 18px rgba(255,35,75,.35);}
+.robot .arm{position:absolute;width:42px;height:145px;top:76px;background:linear-gradient(135deg,#2c4564,#080c16);border:3px solid #5e84ad;clip-path:polygon(18% 0,82% 0,100% 12%,84% 100%,16% 100%,0 12%);}
+.robot .arm.a{left:0;transform:rotate(11deg);}.robot .arm.b{right:0;transform:rotate(-28deg);}
+.robot.right .arm{border-color:#a55e6c;}
+.robot .leg{position:absolute;width:48px;height:145px;top:207px;background:linear-gradient(135deg,#263e5c,#070b14);border:3px solid #587b9e;clip-path:polygon(10% 0,90% 0,100% 16%,78% 100%,22% 100%,0 16%);}
+.robot .leg.a{left:43px;transform:rotate(3deg)}.robot .leg.b{right:43px;transform:rotate(-3deg)}
+.robot.right .leg{border-color:#965666;}
+.battle-blade{position:absolute;width:230px;height:5px;top:42%;left:50%;background:linear-gradient(90deg,transparent,#bffaff,#fff,#ff91a5,transparent);box-shadow:0 0 18px #fff,0 0 35px #ff3970;transform:translateX(-50%) rotate(-12deg);animation:bladeStrike 2.8s ease-in-out infinite;}
+.battle-sparks{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.9) 0 1px,transparent 2px);background-size:83px 67px;opacity:.28;animation:sparks 2.2s linear infinite;}
+@keyframes robotFloat{0%,100%{translate:0 0 rotateX(0)}50%{translate:0 -13px rotateX(2deg)}}
+@keyframes bladeStrike{0%,100%{opacity:.15;transform:translateX(-50%) rotate(-12deg) scaleX(.35)}45%,55%{opacity:1;transform:translateX(-50%) rotate(-12deg) scaleX(1.15)}}
+@keyframes battleGrid{to{transform:perspective(700px) rotateX(58deg) translateY(25%) translateX(80px)}}
+@keyframes battleFlash{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes sparks{to{background-position:83px 134px}}
+@media(max-width:700px){.robot{transform:scale(.62)!important;bottom:-2%}.robot.left{left:-32px}.robot.right{right:-32px}.battle-blade{width:150px}}
 </style>
 
 <style id="loginRose3DStyles">
@@ -938,7 +991,19 @@ header.masthead{position:relative;}
 <body>
 
 
-<div id="loginPage"><div class="rose-petal" style="left:7%;animation-duration:11s;animation-delay:-2s"></div>
+<div id="loginPage">
+  <div class="robot-battle" aria-hidden="true">
+    <div class="battle-sparks"></div>
+    <div class="robot left">
+      <div class="head"><div class="visor"></div></div><div class="body"><div class="core"></div></div>
+      <div class="arm a"></div><div class="arm b"></div><div class="leg a"></div><div class="leg b"></div>
+    </div>
+    <div class="robot right">
+      <div class="head"><div class="visor"></div></div><div class="body"><div class="core"></div></div>
+      <div class="arm a"></div><div class="arm b"></div><div class="leg a"></div><div class="leg b"></div>
+    </div>
+    <div class="battle-blade"></div>
+  </div><div class="rose-petal" style="left:7%;animation-duration:11s;animation-delay:-2s"></div>
 <div class="rose-petal" style="left:18%;animation-duration:14s;animation-delay:-8s;transform:rotate(45deg)"></div>
 <div class="rose-petal" style="left:31%;animation-duration:12s;animation-delay:-5s"></div>
 <div class="rose-petal" style="left:68%;animation-duration:15s;animation-delay:-10s"></div>
