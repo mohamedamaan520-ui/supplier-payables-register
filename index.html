@@ -3889,11 +3889,58 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
   }
 
   function printSupplierReport() {
-    var rows=reportRows(), supplier=selectedReportSupplier()||'All Suppliers'; var w=window.open('','_blank'); if(!w){showToast('Please allow pop-ups to print the report.');return;}
-    var body=rows.map(function(e){var c=e._c;return '<tr><td>'+e._no+'</td><td>'+escapeHtml(e.supplierName||'')+'</td><td>'+escapeHtml(e.invoiceNumber||'')+'</td><td>'+escapeHtml(fmtDateDisplay(e.invoiceDate))+'</td><td>'+escapeHtml(e.purchaseBasis||'')+'</td><td>'+escapeHtml(fmtDateDisplay(c.dueDateStr))+'</td><td>'+escapeHtml(fmtMoney(e.grossInvoiceAmount))+'</td><td>'+escapeHtml(fmtMoney(e.returnedAmount))+'</td><td>'+escapeHtml(fmtMoney(c.netPayable))+'</td><td>'+escapeHtml(fmtMoney(e.paymentMade))+'</td><td>'+escapeHtml(fmtMoney(c.outstanding))+'</td><td>'+escapeHtml(c.status)+'</td><td>'+escapeHtml(e.reconciliationStatus||'Pending')+'</td></tr>';}).join('');
-    var html='<!doctype html><html><head><title>Supplier Report</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;color:#111}h1{font-size:18px;margin:0 0 4px}p{font-size:10px;margin:0 0 10px}table{width:100%;border-collapse:collapse;font-size:8px}th,td{border:1px solid #999;padding:4px;text-align:left}th{background:#eee}
-</style></head><body><h1>Supplier Payables Report</h1><p>'+escapeHtml(supplier)+' | Generated: '+escapeHtml(new Date().toLocaleString())+'</p><table><thead><tr><th>No.</th><th>Supplier</th><th>Invoice</th><th>Date</th><th>Basis</th><th>Due Date</th><th>Gross</th><th>Returns</th><th>Net</th><th>Paid</th><th>Outstanding</th><th>Status</th><th>Recon.</th></tr></thead><tbody>'+body+'</tbody></table></body></html>';
-    w.document.write(html); w.document.close(); w.focus(); setTimeout(function(){w.print();},300);
+    var rows=reportRows();
+    var supplier=selectedReportSupplier()||'All Suppliers';
+    var w=window.open('','_blank');
+    if(!w){showToast('Please allow pop-ups to print the report.');return;}
+
+    var body=rows.map(function(e){
+      var c=e._c;
+      return [
+        '<tr>',
+        '<td>',e._no,'</td>',
+        '<td>',escapeHtml(e.supplierName||''),'</td>',
+        '<td>',escapeHtml(e.invoiceNumber||''),'</td>',
+        '<td>',escapeHtml(fmtDateDisplay(e.invoiceDate)),'</td>',
+        '<td>',escapeHtml(e.purchaseBasis||''),'</td>',
+        '<td>',escapeHtml(fmtDateDisplay(c.dueDateStr)),'</td>',
+        '<td>',escapeHtml(fmtMoney(e.grossInvoiceAmount)),'</td>',
+        '<td>',escapeHtml(fmtMoney(e.returnedAmount)),'</td>',
+        '<td>',escapeHtml(fmtMoney(c.netPayable)),'</td>',
+        '<td>',escapeHtml(fmtMoney(e.paymentMade)),'</td>',
+        '<td>',escapeHtml(fmtMoney(c.outstanding)),'</td>',
+        '<td>',escapeHtml(c.status||''),'</td>',
+        '<td>',escapeHtml(e.reconciliationStatus||'Pending'),'</td>',
+        '</tr>'
+      ].join('');
+    }).join('');
+
+    var html=[
+      '<!doctype html>',
+      '<html><head><title>Supplier Report</title>',
+      '<style>',
+      '@page{size:A4 landscape;margin:8mm}',
+      'body{font-family:Arial,sans-serif;color:#111}',
+      'h1{font-size:18px;margin:0 0 4px}',
+      'p{font-size:10px;margin:0 0 10px}',
+      'table{width:100%;border-collapse:collapse;font-size:8px}',
+      'th,td{border:1px solid #999;padding:4px;text-align:left}',
+      'th{background:#eee}',
+      '</style></head><body>',
+      '<h1>Supplier Payables Report</h1>',
+      '<p>',escapeHtml(supplier),' | Generated: ',escapeHtml(new Date().toLocaleString()),'</p>',
+      '<table><thead><tr>',
+      '<th>No.</th><th>Supplier</th><th>Invoice</th><th>Date</th><th>Basis</th><th>Due Date</th>',
+      '<th>Gross</th><th>Returns</th><th>Net</th><th>Paid</th><th>Outstanding</th><th>Status</th><th>Recon.</th>',
+      '</tr></thead><tbody>',body,'</tbody></table>',
+      '</body></html>'
+    ].join('');
+
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(function(){w.print();},300);
   }
 
   function refreshReportSupplierOptions(){
