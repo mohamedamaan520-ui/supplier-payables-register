@@ -587,6 +587,25 @@
 #loginMessage,#resetPasswordMessage{min-height:18px;margin-top:10px;text-align:center;font-size:12px;}
 .login-footer{text-align:center;color:var(--ink-faint);font-size:10px;margin-top:20px;}
 @media(max-width:480px){#loginPage,#resetPasswordPage{padding:16px;}#loginPage .login-box,#resetPasswordPage .reset-box{padding:24px 18px;}}
+
+/* ---------- User profile ---------- */
+#userPanel{display:flex;align-items:center;gap:7px;}
+.profile-trigger{width:38px;height:38px;padding:0;border:1.5px solid var(--rule-strong);border-radius:50%;background:var(--surface-alt);color:var(--ink);display:grid;place-items:center;font-size:18px;font-weight:800;cursor:pointer;}
+.profile-trigger:hover{border-color:var(--accent);background:var(--accent);color:var(--accent-ink);}
+.profile-modal{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.55);}
+.profile-modal.open{display:flex;}
+.profile-card{width:min(430px,100%);background:var(--surface);border:1px solid var(--rule-strong);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.28);}
+.profile-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.profile-avatar{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-size:22px;font-weight:800;}
+.profile-title{font-size:19px;font-weight:800;}
+.profile-sub{font-size:11px;color:var(--ink-soft);margin-top:3px;word-break:break-all;}
+.profile-row{padding:11px 0;border-top:1px solid var(--rule);}
+.profile-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:800;margin-bottom:5px;}
+.profile-value{font-size:14px;font-weight:600;word-break:break-all;}
+.profile-password{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.profile-note{font-size:11px;color:var(--ink-faint);margin-top:6px;line-height:1.4;}
+.profile-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+@media(max-width:600px){.profile-card{padding:18px}.profile-actions{flex-wrap:wrap}.profile-actions .btn{flex:1;justify-content:center;}}
 </style>
 </head>
 <body>
@@ -636,6 +655,33 @@
   </div>
 </div>
 
+<div class="profile-modal" id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+  <div class="profile-card">
+    <div class="profile-head">
+      <div class="profile-avatar" id="profileAvatar">👤</div>
+      <div>
+        <div class="profile-title" id="profileTitle">User Profile</div>
+        <div class="profile-sub" id="profileEmail">Authenticated user</div>
+      </div>
+    </div>
+    <div class="profile-row">
+      <div class="profile-label">Email</div>
+      <div class="profile-value" id="profileEmailValue">—</div>
+    </div>
+    <div class="profile-row">
+      <div class="profile-label">Password</div>
+      <div class="profile-password">
+        <div class="profile-value">••••••••</div>
+        <button class="btn btn-ghost btn-small" id="profileChangePasswordBtn" type="button">Change Password</button>
+      </div>
+      <div class="profile-note">For security, Supabase does not provide the current password to the webpage, so the actual password cannot be displayed. You can change it here.</div>
+    </div>
+    <div class="profile-actions">
+      <button class="btn btn-ghost" id="profileCloseBtn" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
   <header class="masthead">
     <div class="masthead-top">
@@ -652,7 +698,7 @@
         <button class="btn btn-ghost btn-small theme-toggle" id="themeToggleBtn" type="button" title="Switch display mode">🌙 Dark</button>
 
         <div id="userPanel">
-          <span id="userEmail"></span>
+          <button class="profile-trigger" id="profileBtn" type="button" title="Open profile" aria-label="Open profile">👤</button>
           <button class="btn btn-ghost btn-small" id="logoutBtn" type="button">Logout</button>
         </div>
         <button class="btn btn-primary btn-small" id="newEntryBtn" type="button">+ Quick Entry</button>
@@ -2582,15 +2628,40 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
 
   function updateUserPanel() {
     var panel=document.getElementById('userPanel');
-    var email=document.getElementById('userEmail');
-    if(!panel || !email) return;
-    if(currentUser){
-      email.textContent=currentUser.email||'Authenticated user';
-      email.title=currentUser.email||'';
-      panel.style.display='flex';
-    }else{
-      panel.style.display='none';
+    if(!panel) return;
+    var email=currentUser&&currentUser.email?currentUser.email:'Authenticated user';
+    var ev=document.getElementById('profileEmail');
+    var ev2=document.getElementById('profileEmailValue');
+    var avatar=document.getElementById('profileAvatar');
+    if(ev) ev.textContent=email;
+    if(ev2) ev2.textContent=email;
+    if(avatar){
+      var first=String(email||'U').trim().charAt(0).toUpperCase()||'U';
+      avatar.textContent=first;
     }
+    panel.style.display=currentUser?'flex':'none';
+  }
+
+  function openProfileModal(){
+    var modal=document.getElementById('profileModal');
+    if(!modal || !currentUser) return;
+    updateUserPanel();
+    modal.classList.add('open');
+  }
+
+  function closeProfileModal(){
+    var modal=document.getElementById('profileModal');
+    if(modal) modal.classList.remove('open');
+  }
+
+  function startProfilePasswordChange(){
+    closeProfileModal();
+    var p=document.getElementById('newPassword');
+    var cp=document.getElementById('confirmNewPassword');
+    if(p) p.value='';
+    if(cp) cp.value='';
+    showResetPasswordPage();
+    showResetPasswordMessage('Enter a new password for this account.',true);
   }
 
   function showResetPasswordPage() {
@@ -2823,6 +2894,29 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
         if(p.length<6){ showResetPasswordMessage('Password must be at least 6 characters.',false); return; }
         if(p!==cp){ showResetPasswordMessage('Passwords do not match.',false); return; }
         updateNewPassword(p);
+      });
+    }
+
+    var profile=document.getElementById('profileBtn');
+    if(profile && !profile.dataset.bound){
+      profile.dataset.bound='1';
+      profile.addEventListener('click',openProfileModal);
+    }
+    var profileClose=document.getElementById('profileCloseBtn');
+    if(profileClose && !profileClose.dataset.bound){
+      profileClose.dataset.bound='1';
+      profileClose.addEventListener('click',closeProfileModal);
+    }
+    var profileChange=document.getElementById('profileChangePasswordBtn');
+    if(profileChange && !profileChange.dataset.bound){
+      profileChange.dataset.bound='1';
+      profileChange.addEventListener('click',startProfilePasswordChange);
+    }
+    var profileModal=document.getElementById('profileModal');
+    if(profileModal && !profileModal.dataset.bound){
+      profileModal.dataset.bound='1';
+      profileModal.addEventListener('click',function(ev){
+        if(ev.target===profileModal) closeProfileModal();
       });
     }
 
