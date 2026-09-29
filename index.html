@@ -2215,63 +2215,74 @@ header.masthead{position:relative;}
     var sel=document.getElementById('pvInvoice'), supplier=document.getElementById('pvSupplier');
     var list=document.getElementById('pvInvoiceList');
     if(!sel) return;
-    var current=sel.value, supplierName=supplier?String(supplier.value||'').trim().toLowerCase():'';
+
+    var current=sel.value;
+    var supplierName=supplier?String(supplier.value||'').trim().toLowerCase():'';
     var note=document.getElementById('pvInvoiceSelectionNote');
     var opts=['<option value="">— Select invoice —</option>'];
 
     if(!supplierName){
       sel.innerHTML=opts.join('');
-      if(list) list.innerHTML='<div class="pv-no-invoice">Select a supplier first. Only that supplier\'s unpaid/outstanding invoices will appear here.</div>';
+      if(list) list.innerHTML='<div class="pv-no-invoice">Select a supplier first. Only that supplier\'s invoices will appear here.</div>';
       if(note) note.textContent='Select a supplier to load that supplier\'s invoices only.';
       return;
     }
 
+    // IMPORTANT: show every invoice belonging to the selected supplier.
+    // The balance is calculated separately, so an invoice cannot disappear
+    // just because another payment field is stored differently.
     var items=[];
     entries.slice().sort(function(a,b){
-      return String(a.invoiceDate||'').localeCompare(String(b.invoiceDate||'')) || String(a.invoiceNumber||'').localeCompare(String(b.invoiceNumber||''));
+      return String(a.invoiceDate||'').localeCompare(String(b.invoiceDate||'')) ||
+             String(a.invoiceNumber||'').localeCompare(String(b.invoiceNumber||''));
     }).forEach(function(e){
       if(e.id==null || String(e.id)==='') return;
-      if(String(e.supplierName||'').trim().toLowerCase()!==supplierName) return;
+      var en=String(e.supplierName||'').trim().toLowerCase();
+      if(en!==supplierName) return;
 
-      // Use the same outstanding-balance calculation as the main Supplier Register.
-      // This keeps Payment Voucher in sync with the balance shown in the main table,
-      // including normal payments and previous payment vouchers.
       var c=computeEntry(e);
       var balance=Number(c.outstanding)||0;
+      var total=Math.max(0,(Number(e.grossInvoiceAmount)||0)-(Number(e.returnedAmount)||0));
 
-      // When editing an existing voucher, temporarily add that voucher back so the
-      // invoice remains selectable for correction.
-      if(editingVoucherId){
-        balance += Number(voucherPaidForEntry(e.id,'')-voucherPaidForEntry(e.id,editingVoucherId))||0;
-      }
+      items.push({
+        e:e,
+        total:total,
+        balance:balance,
+        outstanding:balance>0.004
+      });
 
-      if(balance<=0.004) return;
-
-      var total=paymentVoucherNet(e);
-      var paid=Math.max(0,total-balance);
-      items.push({e:e,total:total,paid:paid,balance:balance});
-      opts.push('<option value="'+escapeHtml(String(e.id))+'">'+escapeHtml((e.invoiceNumber||'(No invoice #)')+' — Balance '+fmtMoney(balance))+'</option>');
+      opts.push(
+        '<option value="'+escapeHtml(String(e.id))+'">'+
+        escapeHtml((e.invoiceNumber||'(No invoice #)')+' — Balance '+fmtMoney(Math.max(0,balance)))+
+        '</option>'
+      );
     });
 
     sel.innerHTML=opts.join('');
-    if(current && Array.from(sel.options).some(function(o){return o.value===current;})) sel.value=current;
+
+    if(current && Array.from(sel.options).some(function(o){return o.value===current;})){
+      sel.value=current;
+    }
 
     if(list){
       if(!items.length){
-        list.innerHTML='<div class="pv-no-invoice">No outstanding invoices are available for this supplier.</div>';
+        list.innerHTML='<div class="pv-no-invoice">No invoices found for this supplier.</div>';
       }else{
         list.innerHTML=items.map(function(x){
           var e=x.e, id=String(e.id);
           var selected=id===String(sel.value||'');
-          return '<button type="button" class="pv-invoice-card'+(selected?' selected':'')+'" data-pv-invoice="'+escapeHtml(id)+'">'+
+          var balance=Math.max(0,x.balance);
+          var payable=x.outstanding;
+          return '<button type="button" class="pv-invoice-card'+(selected?' selected':'')+'" data-pv-invoice="'+escapeHtml(id)+'"'+
+            (payable?'':' disabled style="opacity:.58;cursor:not-allowed"')+'>'+
             '<div><span class="pv-ic-label">Invoice</span><span class="pv-ic-value">'+escapeHtml(e.invoiceNumber||'(No invoice #)')+'</span></div>'+
             '<div><span class="pv-ic-label">Invoice Date</span><span class="pv-ic-value">'+escapeHtml(fmtDateDisplay(e.invoiceDate)||'')+'</span></div>'+
-            
-            '<div><span class="pv-ic-label">Outstanding Balance</span><span class="pv-ic-balance">'+fmtMoney(x.balance)+'</span></div>'+
-            '<div><span class="btn btn-primary btn-small pv-pay-btn">'+(selected?'Selected':'Pay this invoice')+'</span></div>'+
+            '<div><span class="pv-ic-label">'+(payable?'Outstanding Balance':'Status')+'</span><span class="pv-ic-balance">'+(payable?fmtMoney(balance):'PAID / SETTLED')+'</span></div>'+
+            '<div><span class="btn '+(payable?'btn-primary':'btn-ghost')+' btn-small pv-pay-btn">'+(payable?(selected?'Selected':'Pay this invoice'):'Settled')+'</span></div>'+
             '</button>';
         }).join('');
-        Array.from(list.querySelectorAll('[data-pv-invoice]')).forEach(function(card){
+
+        Array.from(list.querySelectorAll('[data-pv-invoice]:not([disabled])')).forEach(function(card){
           card.addEventListener('click',function(){
             sel.value=card.getAttribute('data-pv-invoice')||'';
             fillPaymentVoucherInvoice();
@@ -2281,8 +2292,15 @@ header.masthead{position:relative;}
         });
       }
     }
-    if(note) note.textContent=items.length ? (items.length+' outstanding invoice(s) for the selected supplier. Select an invoice to make a payment.') : 'No outstanding invoices for the selected supplier.';
+
+    var outstandingCount=items.filter(function(x){return x.outstanding;}).length;
+    if(note){
+      note.textContent=items.length ?
+        (items.length+' invoice(s) for the selected supplier. '+outstandingCount+' outstanding invoice(s) available for payment.') :
+        'No invoices found for this supplier.';
+    }
   }
+
 
   function fillPaymentVoucherInvoice(){
     var id=document.getElementById('pvInvoice').value, e=entries.find(function(x){return String(x.id)===String(id);});
