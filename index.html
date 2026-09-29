@@ -2232,10 +2232,10 @@ header.masthead{position:relative;}
     }).forEach(function(e){
       if(!e.id) return;
       if(String(e.supplierName||'').trim().toLowerCase()!==supplierName) return;
-      var paid=(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId);
       var total=paymentVoucherNet(e);
+      var paid=(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId);
       var balance=Math.max(0,total-paid);
-      if(balance<=0) return;
+      if(balance<=0.004) return;
       items.push({e:e,total:total,paid:paid,balance:balance});
       opts.push('<option value="'+escapeHtml(String(e.id))+'">'+escapeHtml((e.invoiceNumber||'(No invoice #)')+' — Balance '+fmtMoney(balance))+'</option>');
     });
@@ -2253,7 +2253,7 @@ header.masthead{position:relative;}
           return '<button type="button" class="pv-invoice-card'+(selected?' selected':'')+'" data-pv-invoice="'+escapeHtml(id)+'">'+
             '<div><span class="pv-ic-label">Invoice</span><span class="pv-ic-value">'+escapeHtml(e.invoiceNumber||'(No invoice #)')+'</span></div>'+
             '<div><span class="pv-ic-label">Invoice Date</span><span class="pv-ic-value">'+escapeHtml(fmtDateDisplay(e.invoiceDate)||'')+'</span></div>'+
-            '<div><span class="pv-ic-label">Net Payable</span><span class="pv-ic-value">'+fmtMoney(x.total)+'</span></div>'+
+            
             '<div><span class="pv-ic-label">Outstanding Balance</span><span class="pv-ic-balance">'+fmtMoney(x.balance)+'</span></div>'+
             '<div><span class="btn btn-primary btn-small pv-pay-btn">'+(selected?'Selected':'Pay this invoice')+'</span></div>'+
             '</button>';
