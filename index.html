@@ -2230,12 +2230,25 @@ header.masthead{position:relative;}
     entries.slice().sort(function(a,b){
       return String(a.invoiceDate||'').localeCompare(String(b.invoiceDate||'')) || String(a.invoiceNumber||'').localeCompare(String(b.invoiceNumber||''));
     }).forEach(function(e){
-      if(!e.id) return;
+      if(e.id==null || String(e.id)==='') return;
       if(String(e.supplierName||'').trim().toLowerCase()!==supplierName) return;
-      var total=paymentVoucherNet(e);
-      var paid=(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId);
-      var balance=Math.max(0,total-paid);
+
+      // Use the same outstanding-balance calculation as the main Supplier Register.
+      // This keeps Payment Voucher in sync with the balance shown in the main table,
+      // including normal payments and previous payment vouchers.
+      var c=computeEntry(e);
+      var balance=Number(c.outstanding)||0;
+
+      // When editing an existing voucher, temporarily add that voucher back so the
+      // invoice remains selectable for correction.
+      if(editingVoucherId){
+        balance += Number(voucherPaidForEntry(e.id,'')-voucherPaidForEntry(e.id,editingVoucherId))||0;
+      }
+
       if(balance<=0.004) return;
+
+      var total=paymentVoucherNet(e);
+      var paid=Math.max(0,total-balance);
       items.push({e:e,total:total,paid:paid,balance:balance});
       opts.push('<option value="'+escapeHtml(String(e.id))+'">'+escapeHtml((e.invoiceNumber||'(No invoice #)')+' — Balance '+fmtMoney(balance))+'</option>');
     });
