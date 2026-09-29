@@ -2529,6 +2529,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
       }
       saveLocalData();
       cloudReady=true;
+      await loadProfileCloud();
       renderBankAccounts();
       render();
       setSyncNote('☁ Synced to Supabase · '+entries.length+' '+(entries.length===1?'entry':'entries'));
@@ -2647,6 +2648,33 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     btn.textContent=loading?'SIGNING IN…':'LOGIN';
   }
 
+  async function loadProfileCloud(){
+    if(!supabaseClient || !currentUser) return;
+    try{
+      var r=await supabaseClient.from('user_profiles').select('profile_photo').eq('user_id',currentUser.id).maybeSingle();
+      if(r.error) return;
+      var photo=r.data&&r.data.profile_photo?r.data.profile_photo:'';
+      if(photo){
+        try{localStorage.setItem(profileAvatarKey(),photo);}catch(ignore){}
+      }else{
+        try{localStorage.removeItem(profileAvatarKey());}catch(ignore){}
+      }
+      loadProfileAvatar();
+    }catch(ignore){}
+  }
+
+  async function saveProfilePhotoCloud(photo){
+    if(!supabaseClient || !currentUser) return false;
+    var r=await supabaseClient.from('user_profiles').upsert({
+      user_id:currentUser.id,
+      email:currentUser.email||'',
+      profile_photo:photo||'',
+      updated_at:new Date().toISOString()
+    },{onConflict:'user_id'}).select('user_id').single();
+    if(r.error) throw r.error;
+    return true;
+  }
+
   function profileAvatarKey(){
     return 'spr_profile_avatar_'+String(currentUser&&currentUser.email||'guest').trim().toLowerCase();
   }
@@ -2693,7 +2721,11 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
         try{
           localStorage.setItem(profileAvatarKey(),data);
           loadProfileAvatar();
-          showToast('Profile photo updated.');
+          saveProfilePhotoCloud(data).then(function(){
+            showToast('Profile photo updated and saved to cloud.');
+          }).catch(function(err){
+            showToast('Photo saved on this device, but cloud save failed.');
+          });
         }catch(err){
           showToast('Unable to save the profile photo in this browser.');
         }
@@ -2707,7 +2739,15 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
   function removeProfileImage(){
     try{localStorage.removeItem(profileAvatarKey());}catch(ignore){}
     loadProfileAvatar();
-    showToast('Profile photo removed.');
+    if(supabaseClient && currentUser){
+      saveProfilePhotoCloud('').then(function(){
+        showToast('Profile photo removed from cloud.');
+      }).catch(function(){
+        showToast('Profile photo removed on this device.');
+      });
+    }else{
+      showToast('Profile photo removed.');
+    }
   }
 
   function openProfileModal(){
