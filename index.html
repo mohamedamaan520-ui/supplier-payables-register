@@ -992,17 +992,11 @@ header.masthead{position:relative;}
 
 
 <div id="loginPage">
-  <div class="robot-battle" aria-hidden="true">
-    <div class="battle-sparks"></div>
-    <div class="robot left">
-      <div class="head"><div class="visor"></div></div><div class="body"><div class="core"></div></div>
-      <div class="arm a"></div><div class="arm b"></div><div class="leg a"></div><div class="leg b"></div>
-    </div>
-    <div class="robot right">
-      <div class="head"><div class="visor"></div></div><div class="body"><div class="core"></div></div>
-      <div class="arm a"></div><div class="arm b"></div><div class="leg a"></div><div class="leg b"></div>
-    </div>
-    <div class="battle-blade"></div>
+  <div class="login-corporate-scene" aria-hidden="true">
+    <div class="corp-ring"></div><div class="corp-ring r2"></div>
+    <div class="corp-core"></div>
+    <div class="corp-orb o1"></div><div class="corp-orb o2"></div><div class="corp-orb o3"></div>
+    <div class="corp-line l1"></div><div class="corp-line l2"></div>
   </div><div class="rose-petal" style="left:7%;animation-duration:11s;animation-delay:-2s"></div>
 <div class="rose-petal" style="left:18%;animation-duration:14s;animation-delay:-8s;transform:rotate(45deg)"></div>
 <div class="rose-petal" style="left:31%;animation-duration:12s;animation-delay:-5s"></div>
@@ -3855,7 +3849,48 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
   function printSupplierReport() {
     var rows=reportRows(), supplier=selectedReportSupplier()||'All Suppliers'; var w=window.open('','_blank'); if(!w){showToast('Please allow pop-ups to print the report.');return;}
     var body=rows.map(function(e){var c=e._c;return '<tr><td>'+e._no+'</td><td>'+escapeHtml(e.supplierName||'')+'</td><td>'+escapeHtml(e.invoiceNumber||'')+'</td><td>'+escapeHtml(fmtDateDisplay(e.invoiceDate))+'</td><td>'+escapeHtml(e.purchaseBasis||'')+'</td><td>'+escapeHtml(fmtDateDisplay(c.dueDateStr))+'</td><td>'+escapeHtml(fmtMoney(e.grossInvoiceAmount))+'</td><td>'+escapeHtml(fmtMoney(e.returnedAmount))+'</td><td>'+escapeHtml(fmtMoney(c.netPayable))+'</td><td>'+escapeHtml(fmtMoney(e.paymentMade))+'</td><td>'+escapeHtml(fmtMoney(c.outstanding))+'</td><td>'+escapeHtml(c.status)+'</td><td>'+escapeHtml(e.reconciliationStatus||'Pending')+'</td></tr>';}).join('');
-    var html='<!doctype html><html><head><title>Supplier Report</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;color:#111}h1{font-size:18px;margin:0 0 4px}p{font-size:10px;margin:0 0 10px}table{width:100%;border-collapse:collapse;font-size:8px}th,td{border:1px solid #999;padding:4px;text-align:left}th{background:#eee}</style></head><body><h1>Supplier Payables Report</h1><p>'+escapeHtml(supplier)+' | Generated: '+escapeHtml(new Date().toLocaleString())+'</p><table><thead><tr><th>No.</th><th>Supplier</th><th>Invoice</th><th>Date</th><th>Basis</th><th>Due Date</th><th>Gross</th><th>Returns</th><th>Net</th><th>Paid</th><th>Outstanding</th><th>Status</th><th>Recon.</th></tr></thead><tbody>'+body+'</tbody></table></body></html>';
+    var html='<!doctype html><html><head><title>Supplier Report</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;color:#111}h1{font-size:18px;margin:0 0 4px}p{font-size:10px;margin:0 0 10px}table{width:100%;border-collapse:collapse;font-size:8px}th,td{border:1px solid #999;padding:4px;text-align:left}th{background:#eee}
+/* ---------- Professional 3D Corporate Login Animation ---------- */
+#loginPage{
+  overflow:hidden!important;
+  isolation:isolate;
+  background:
+    radial-gradient(circle at 18% 25%,rgba(45,135,255,.20),transparent 30%),
+    radial-gradient(circle at 82% 72%,rgba(120,70,255,.18),transparent 32%),
+    linear-gradient(135deg,#050914 0%,#0a1222 52%,#10162a 100%)!important;
+}
+#loginPage::before{
+  content:"";position:absolute;inset:-30%;z-index:-5;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(70,180,255,.12),transparent 22%),
+    conic-gradient(from 0deg,transparent 0 35%,rgba(70,150,255,.08) 42%,transparent 50% 70%,rgba(150,100,255,.07) 78%,transparent 86%);
+  animation:corpRotate 18s linear infinite;
+}
+#loginPage::after{
+  content:"";position:absolute;inset:0;z-index:-6;
+  background:
+    linear-gradient(115deg,transparent 35%,rgba(255,255,255,.035) 50%,transparent 65%),
+    repeating-linear-gradient(90deg,transparent 0 119px,rgba(120,180,255,.035) 120px 121px);
+  animation:corpSweep 9s ease-in-out infinite;
+}
+.login-corporate-scene{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none;perspective:1000px;}
+.corp-ring{position:absolute;left:50%;top:50%;width:min(68vw,700px);height:min(68vw,700px);border:1px solid rgba(100,190,255,.13);border-radius:50%;transform:translate(-50%,-50%) rotateX(68deg);box-shadow:0 0 70px rgba(40,150,255,.08),inset 0 0 70px rgba(100,120,255,.06);animation:ringSpin 16s linear infinite;}
+.corp-ring.r2{width:min(48vw,500px);height:min(48vw,500px);border-color:rgba(170,120,255,.14);animation-duration:11s;animation-direction:reverse;}
+.corp-orb{position:absolute;border-radius:50%;background:radial-gradient(circle at 30% 25%,#dff8ff 0 5%,#61d5ff 18%,#2878ff 48%,#101d4a 72%,transparent 73%);filter:drop-shadow(0 0 18px rgba(60,180,255,.65));}
+.corp-orb.o1{width:32px;height:32px;left:12%;top:27%;animation:orb1 7s ease-in-out infinite;}
+.corp-orb.o2{width:22px;height:22px;right:15%;top:23%;background:radial-gradient(circle at 30% 25%,#fff 0 5%,#c39cff 20%,#704cff 50%,#171340 72%,transparent 73%);filter:drop-shadow(0 0 16px rgba(140,90,255,.7));animation:orb2 8s ease-in-out infinite;}
+.corp-orb.o3{width:18px;height:18px;right:24%;bottom:20%;animation:orb3 6s ease-in-out infinite;}
+.corp-line{position:absolute;height:1px;background:linear-gradient(90deg,transparent,rgba(90,200,255,.5),transparent);transform-origin:left center;opacity:.55;}
+.corp-line.l1{width:38%;left:4%;top:38%;transform:rotate(13deg);animation:linePulse 4s infinite;}
+.corp-line.l2{width:32%;right:4%;top:62%;transform:rotate(-16deg);animation:linePulse 5s .7s infinite;}
+.corp-core{position:absolute;left:50%;top:50%;width:180px;height:180px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(120,220,255,.13),rgba(80,120,255,.04) 45%,transparent 70%);box-shadow:0 0 80px rgba(60,170,255,.12);animation:corePulse 4s ease-in-out infinite;}
+#loginPage .login-box{z-index:20;background:rgba(7,13,27,.76)!important;border:1px solid rgba(150,210,255,.22)!important;box-shadow:0 25px 80px rgba(0,0,0,.52),0 0 45px rgba(50,150,255,.10)!important;backdrop-filter:blur(18px) saturate(135%);}
+@keyframes corpRotate{to{transform:rotate(360deg)}}@keyframes corpSweep{0%,100%{transform:translateX(-5%);opacity:.45}50%{transform:translateX(5%);opacity:1}}
+@keyframes ringSpin{to{transform:translate(-50%,-50%) rotateX(68deg) rotateZ(360deg)}}@keyframes corePulse{0%,100%{scale:.9;opacity:.55}50%{scale:1.18;opacity:1}}
+@keyframes orb1{0%,100%{translate:0 0}50%{translate:45px -28px}}@keyframes orb2{0%,100%{translate:0 0}50%{translate:-38px 34px}}@keyframes orb3{0%,100%{translate:0 0}50%{translate:-25px -20px}}
+@keyframes linePulse{0%,100%{opacity:.2}50%{opacity:.8}}
+@media(max-width:700px){.corp-ring{width:110vw;height:110vw}.corp-ring.r2{width:75vw;height:75vw}.corp-core{width:120px;height:120px}.corp-orb.o1{left:4%}.corp-orb.o2{right:5%}}
+</style></head><body><h1>Supplier Payables Report</h1><p>'+escapeHtml(supplier)+' | Generated: '+escapeHtml(new Date().toLocaleString())+'</p><table><thead><tr><th>No.</th><th>Supplier</th><th>Invoice</th><th>Date</th><th>Basis</th><th>Due Date</th><th>Gross</th><th>Returns</th><th>Net</th><th>Paid</th><th>Outstanding</th><th>Status</th><th>Recon.</th></tr></thead><tbody>'+body+'</tbody></table></body></html>';
     w.document.write(html); w.document.close(); w.focus(); setTimeout(function(){w.print();},300);
   }
 
