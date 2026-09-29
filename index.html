@@ -522,7 +522,7 @@
 .pv-supplier-dropdown{max-height:280px;overflow-y:auto;border:1px solid var(--rule-strong);border-radius:12px;background:var(--surface);color:var(--ink);box-shadow:0 10px 28px rgba(0,0,0,.12);padding:5px;position:relative;z-index:50;}
 .pv-supplier-result{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:10px 12px;margin:2px 0;border:0;border-radius:9px;background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit;touch-action:manipulation;}
 .pv-supplier-result:hover,.pv-supplier-result:focus{background:var(--surface-alt);color:var(--ink);outline:none;}
-.pv-supplier-result-icon{width:24px;text-align:center;flex:0 0 24px;}
+.pv-supplier-result-icon{width:24px;text-align:center;flex:0 0 24px;}\n.pv-supplier-dropdown{background:var(--surface);color:var(--ink);}\n.pv-supplier-result:hover,.pv-supplier-result:focus{background:var(--surface-alt);color:var(--ink);}\n.pv-supplier-match{font-weight:900;color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--surface));border-radius:3px;padding:0 1px;}
 
 /* Supplier search results: text only, matching letters highlighted */
 .pv-supplier-result{display:block;width:100%;min-height:42px;padding:10px 12px;margin:2px 0;border:0;border-radius:9px;background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit;font-weight:600;touch-action:manipulation;}
@@ -1546,7 +1546,7 @@ header.masthead{position:relative;}
         <div class="field"><label>Payment Date</label><input type="date" id="pvDate"></div>
         <div class="pv-supplier-search-wrap">
           <label for="pvSupplierSearch">1. Search Supplier</label>
-          <input id="pvSupplierSearch" type="search" placeholder="Type supplier name..." autocomplete="off">
+          <input id="pvSupplierSearch" type="search" placeholder="Type supplier name..." autocomplete="new-password" autocorrect="off" autocapitalize="words" spellcheck="false">
           <div id="pvSupplierResults" style="margin-top:8px;"></div>
           <input type="hidden" id="pvSupplier">
         </div>
@@ -2324,6 +2324,14 @@ header.masthead{position:relative;}
     var current=(Number(b.openingBalance)||0)-(bankPaymentsByAccount()[String(b.accountNo||'')]||0);
     box.innerHTML='<strong>'+escapeHtml(b.bankName||'Bank')+'</strong> · Account: '+escapeHtml(b.accountNo||'')+' · Current balance: <strong>'+fmtMoney(current)+'</strong>';
   }
+  function nextPaymentVoucherNumber(){
+    var max=0;
+    paymentVouchers.forEach(function(v){
+      var m=String(v.voucher_no||'').trim().match(/^PV(\\d+)$/i);
+      if(m) max=Math.max(max,Number(m[1])||0);
+    });
+    return 'PV'+String(max+1).padStart(3,'0');
+  }
   function resetPaymentVoucherForm(){
     editingVoucherId=null;
     document.getElementById('savePaymentVoucherBtn').textContent='Save Payment Voucher';
@@ -2331,7 +2339,7 @@ header.masthead{position:relative;}
     var pvSearch=document.getElementById('pvSupplierSearch'); if(pvSearch) pvSearch.value='';
     document.getElementById('pvSupplier').value='';
     invoiceVoucherOptions();
-    document.getElementById('pvVoucherNo').value='PV-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-6);
+    document.getElementById('pvVoucherNo').value=nextPaymentVoucherNumber();
     document.getElementById('pvDate').value=fmtDateUTC(todayUTC());
     ['pvInvoice','pvSupplier','pvInvoiceAmount','pvAlreadyPaid','pvBalance','pvAmount','pvCheque','pvPaidBy','pvReceivedBy','pvRemarks'].forEach(function(id){var x=document.getElementById(id);if(x)x.value='';});
     document.getElementById('pvMethod').value=''; document.getElementById('pvBank').value=''; updatePaymentVoucherMethod();
@@ -3706,11 +3714,14 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
       }
     });
     el=document.getElementById('pvSupplier'); if(el) el.addEventListener('change',function(){
-      var name=String(el.value||'').trim().toLowerCase();
-      var e=entries.find(function(x){return String(x.supplierName||'').trim().toLowerCase()===name;});
+      var name=String(el.value||'').trim();
+      var e=entries.find(function(x){return String(x.supplierName||'').trim().toLowerCase()===name.toLowerCase();});
       var sn=document.getElementById('pvSupplierName'); if(sn) sn.value=e?e.supplierName||'':'';
-      var search=document.getElementById('pvSupplierSearch'); if(search) search.value=e?e.supplierName||'':'';
-      document.getElementById('pvInvoice').value='';document.getElementById('pvAmount').value='';invoiceVoucherOptions();fillPaymentVoucherInvoice();
+      var search=document.getElementById('pvSupplierSearch'); if(search) search.value=e?e.supplierName||'':name;
+      var inv=document.getElementById('pvInvoice'); if(inv) inv.value='';
+      var amt=document.getElementById('pvAmount'); if(amt) amt.value='';
+      invoiceVoucherOptions();
+      fillPaymentVoucherInvoice();
     });
     el=document.getElementById('pvInvoice'); if(el) el.addEventListener('change',function(){document.getElementById('pvAmount').value='';fillPaymentVoucherInvoice();});
     el=document.getElementById('pvMethod'); if(el) el.addEventListener('change',updatePaymentVoucherMethod);
