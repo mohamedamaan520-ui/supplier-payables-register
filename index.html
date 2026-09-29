@@ -1511,21 +1511,12 @@ header.masthead{position:relative;}
           <input type="hidden" id="pvSupplier">
         </div>
         <div class="pv-selection-note" id="pvInvoiceSelectionNote">Select a supplier to load that supplier's invoices only.</div>
-        <div id="pvSupplierDetails" style="display:none;grid-column:span 2;">
-          <div class="field-grid" style="margin-top:0;">
-            <div class="field"><label>Supplier Name</label><input id="pvSupplierName" readonly></div>
-            <div class="field"><label>Supplier Contact</label><input id="pvSupplierContact" readonly></div>
-          </div>
-        </div>
+        <div class="field"><label>Supplier Name</label><input id="pvSupplierName" readonly></div>
         <div class="pv-invoice-section" style="grid-column:1/-1;">
   <label class="pv-invoice-title">2. Supplier Invoices — Outstanding Payment</label>
   <div id="pvInvoiceList" class="pv-invoice-list"></div>
   <select id="pvInvoice" style="display:none;"><option value="">— Select invoice —</option></select>
 </div>
-        <div class="field"><label>Gross Amount</label><input id="pvGrossAmount" readonly></div>
-        <div class="field"><label>Net Payable</label><input id="pvInvoiceAmount" readonly></div>
-        <div class="field"><label>Already Paid</label><input id="pvAlreadyPaid" readonly></div>
-        <div class="field"><label>Outstanding</label><input id="pvBalance" readonly></div>
         <div class="field"><label>Payment Amount</label><input type="number" id="pvAmount" min="0" step="0.01"></div>
         <div class="field"><label>Payment Method</label><select id="pvMethod">
           <option value="">— Select —</option><option value="Cash">Cash</option><option value="Bank">Bank</option><option value="Card">Card</option><option value="Cheque (CQ)">Cheque (CQ)</option>
@@ -1546,6 +1537,7 @@ header.masthead{position:relative;}
     </div>
     <div class="pv-findbar">
       <input type="search" id="paymentVoucherSearch" placeholder="Find voucher no, supplier, invoice..." aria-label="Find payment voucher">
+      <input type="date" id="paymentVoucherDateFilter" aria-label="Filter payment vouchers by date" title="View payment vouchers by date">
       <button class="btn btn-ghost btn-small" id="clearPaymentVoucherSearch" type="button">Clear</button>
     </div>
     <div id="paymentVoucherList" style="padding:12px 16px;"></div>
@@ -2307,12 +2299,24 @@ header.masthead{position:relative;}
     editingVoucherId=null;
     document.getElementById('savePaymentVoucherBtn').textContent='Save Payment Voucher';
     document.body.style.overflow='';
+    var s=document.getElementById('pvSupplierSearch'); if(s) s.value='';
+    var sr=document.getElementById('pvSupplierResults'); if(sr) sr.innerHTML='';
+    var supplier=document.getElementById('pvSupplier'); if(supplier) supplier.value='';
+    var invoice=document.getElementById('pvInvoice'); if(invoice) invoice.value='';
+    var list=document.getElementById('pvInvoiceList'); if(list) list.innerHTML='';
+    var name=document.getElementById('pvSupplierName'); if(name) name.value='';
   }
   function renderPaymentVouchers(){
     var box=document.getElementById('paymentVoucherList'); if(!box)return;
     var searchEl=document.getElementById('paymentVoucherSearch');
+    var dateEl=document.getElementById('paymentVoucherDateFilter');
     var q=searchEl?String(searchEl.value||'').trim().toLowerCase():'';
-    var rows=paymentVouchers.slice().reverse().filter(function(v){
+    var dateFilter=dateEl?String(dateEl.value||'').trim():'';
+    var rows=paymentVouchers.slice().sort(function(a,b){
+      return String(b.payment_date||'').localeCompare(String(a.payment_date||'')) ||
+             String(b.voucher_no||'').localeCompare(String(a.voucher_no||''));
+    }).filter(function(v){
+      if(dateFilter && String(v.payment_date||'')!==dateFilter) return false;
       if(!q)return true;
       return [v.voucher_no,v.payment_date,v.supplier_name,v.invoice_number,v.payment_method,v.bank_name,v.cheque_ref,v.paid_by,v.received_by,v.remarks]
         .some(function(x){return String(x||'').toLowerCase().indexOf(q)>=0;});
@@ -2321,19 +2325,16 @@ header.masthead{position:relative;}
       box.innerHTML='<div class="payment-impact">No payment vouchers created yet.</div>';return;
     }
     if(!rows.length){
-      box.innerHTML='<div class="payment-impact">No payment vouchers found for "'+escapeHtml(q)+'".</div>';return;
+      box.innerHTML='<div class="payment-impact">No payment vouchers found for the selected search/date.</div>';return;
     }
     box.innerHTML=rows.map(function(v){
-      return '<div class="bank-account-row" style="grid-template-columns:1fr 1fr 2fr 1fr 1fr auto;align-items:center;">'+
+      return '<div class="bank-account-row pv-history-row" style="grid-template-columns:1fr 1.1fr 2fr 1fr 1fr;align-items:center;">'+
         '<div><label>Voucher</label><strong>'+escapeHtml(v.voucher_no||'')+'</strong></div>'+
         '<div><label>Date</label>'+escapeHtml(v.payment_date||'')+'</div>'+
         '<div><label>Supplier / Invoice</label>'+escapeHtml((v.supplier_name||'')+' / '+(v.invoice_number||''))+'</div>'+
         '<div><label>Method</label>'+escapeHtml(v.payment_method||'')+'</div>'+
-        '<div><label>Amount</label><strong>'+fmtMoney(v.amount)+'</strong></div>'+
-        '<div class="pv-voucher-actions">'+
-          '<button class="pv-edit" type="button" data-edit-voucher="'+escapeHtml(String(v.id))+'">Edit</button>'+
-          '<button class="pv-delete" type="button" data-remove-voucher="'+escapeHtml(String(v.id))+'">Delete</button>'+
-        '</div></div>';
+        '<div><label>Paid Amount</label><strong>'+fmtMoney(v.amount)+'</strong></div>'+
+        '</div>';
     }).join('');
   }
 
@@ -3590,9 +3591,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     el=document.getElementById('pvSupplier'); if(el) el.addEventListener('change',function(){
       var name=String(el.value||'').trim().toLowerCase();
       var e=entries.find(function(x){return String(x.supplierName||'').trim().toLowerCase()===name;});
-      var d=document.getElementById('pvSupplierDetails'); if(d) d.style.display=e?'block':'none';
       var sn=document.getElementById('pvSupplierName'); if(sn) sn.value=e?e.supplierName||'':'';
-      var sc=document.getElementById('pvSupplierContact'); if(sc) sc.value=e?e.supplierContact||'':'';
       var search=document.getElementById('pvSupplierSearch'); if(search) search.value=e?e.supplierName||'':'';
       document.getElementById('pvInvoice').value='';document.getElementById('pvAmount').value='';invoiceVoucherOptions();fillPaymentVoucherInvoice();
     });
@@ -3610,19 +3609,14 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
       printPaymentVoucher(v);
     });
     el=document.getElementById('paymentVoucherSearch'); if(el) el.addEventListener('input',renderPaymentVouchers);
-    el=document.getElementById('clearPaymentVoucherSearch'); if(el) el.addEventListener('click',function(){var s=document.getElementById('paymentVoucherSearch');if(s)s.value='';renderPaymentVouchers();});
-    el=document.getElementById('paymentVoucherList'); if(el) el.addEventListener('click',async function(ev){
-      var editBtn=ev.target.closest('[data-edit-voucher]');
-      if(editBtn){editPaymentVoucher(editBtn.getAttribute('data-edit-voucher'));return;}
-      var btn=ev.target.closest('[data-remove-voucher]');if(!btn)return;
-      if(!confirm('Delete this payment voucher?'))return;
-      var id=btn.getAttribute('data-remove-voucher');
-      try{
-        if(currentUser&&supabaseClient){var r=await supabaseClient.from('payment_vouchers').delete().eq('id',id).select('id');if(r.error)throw r.error;if(r.data&&r.data.length===0)throw new Error('Cloud delete was not applied. Check RLS DELETE policy.');}
-        paymentVouchers=paymentVouchers.filter(function(v){return String(v.id)!==String(id);});
-        renderPaymentVouchers();renderBankAccounts();render();showToast('Payment voucher deleted.');
-      }catch(err){showToast('Voucher delete failed: '+(err.message||'try again'));}
-    });;
+    el=document.getElementById('paymentVoucherDateFilter'); if(el) el.addEventListener('change',renderPaymentVouchers);
+    el=document.getElementById('clearPaymentVoucherSearch'); if(el) el.addEventListener('click',function(){
+      var s=document.getElementById('paymentVoucherSearch');if(s)s.value='';
+      var d=document.getElementById('paymentVoucherDateFilter');if(d)d.value='';
+      renderPaymentVouchers();
+    });
+    el=document.getElementById('paymentVoucherList'); if(el) el.addEventListener('click',function(){});
+
   })();
   
   // ---------- Init ----------
