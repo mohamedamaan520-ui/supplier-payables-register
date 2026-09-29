@@ -755,11 +755,195 @@ header.masthead{position:relative;}
 .profile-avatar-upload{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;}
 .profile-avatar-remove{font-size:11px;color:var(--ink-soft);cursor:pointer;background:none;border:0;padding:4px;}
 </style>
+
+<style id="loginRose3DStyles">
+/* ===== ROSE 3D LOGIN DESIGN ===== */
+#loginPage{
+  overflow:hidden !important;
+  isolation:isolate;
+  background:
+    radial-gradient(circle at 18% 20%,rgba(255,105,160,.22),transparent 30%),
+    radial-gradient(circle at 82% 78%,rgba(177,76,255,.20),transparent 32%),
+    linear-gradient(135deg,#170819 0%,#35102d 42%,#120817 100%) !important;
+}
+#loginPage::before{
+  content:"";
+  position:absolute;
+  inset:-20%;
+  z-index:-3;
+  background:
+    radial-gradient(circle at 50% 45%,rgba(255,70,145,.13),transparent 22%),
+    conic-gradient(from 90deg at 50% 50%,rgba(255,80,150,.10),transparent 25%,rgba(170,70,255,.10),transparent 55%,rgba(255,80,150,.10));
+  animation:roseAura 12s linear infinite;
+}
+#loginPage::after{
+  content:"";
+  position:absolute;
+  width:520px;height:520px;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,75,145,.16),rgba(255,75,145,.04) 42%,transparent 70%);
+  filter:blur(12px);
+  animation:rosePulse 4s ease-in-out infinite;
+  z-index:-2;
+}
+#loginPage .login-box{
+  position:relative;
+  overflow:hidden;
+  width:min(430px,100%);
+  padding:34px 30px 28px;
+  border:1px solid rgba(255,190,220,.30);
+  border-radius:28px;
+  background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.055));
+  box-shadow:
+    0 35px 90px rgba(0,0,0,.52),
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 0 45px rgba(255,54,140,.16);
+  backdrop-filter:blur(22px) saturate(140%);
+  -webkit-backdrop-filter:blur(22px) saturate(140%);
+  transform-style:preserve-3d;
+  animation:loginFloat 5s ease-in-out infinite;
+}
+#loginPage .login-box::before{
+  content:"";
+  position:absolute;
+  width:190px;height:190px;
+  left:-70px;top:-80px;
+  border-radius:50%;
+  background:radial-gradient(circle at 65% 65%,rgba(255,125,180,.42),transparent 68%);
+  filter:blur(2px);
+  animation:roseOrb 7s ease-in-out infinite;
+  pointer-events:none;
+}
+#loginPage .login-box::after{
+  content:"";
+  position:absolute;
+  width:150px;height:150px;
+  right:-70px;bottom:-75px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(186,95,255,.30),transparent 68%);
+  pointer-events:none;
+}
+#loginPage .login-logo{
+  position:relative;
+  width:86px;height:86px;
+  margin:0 auto 17px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 38% 30%,#ffd0e4 0 7%,transparent 8%),
+    radial-gradient(ellipse at 50% 25%,#ff9bc5 0 18%,transparent 19%),
+    radial-gradient(ellipse at 28% 48%,#ff5f9f 0 24%,transparent 25%),
+    radial-gradient(ellipse at 72% 48%,#ff4f95 0 24%,transparent 25%),
+    radial-gradient(ellipse at 50% 72%,#c92870 0 34%,#7b174f 62%,#35102d 63%);
+  border:1px solid rgba(255,220,235,.45);
+  box-shadow:0 12px 35px rgba(255,42,130,.42),inset 0 4px 12px rgba(255,255,255,.38);
+  color:transparent;
+  transform:translateZ(35px);
+  animation:rose3d 6s ease-in-out infinite;
+}
+#loginPage .login-logo::before,
+#loginPage .login-logo::after{
+  content:"";
+  position:absolute;
+  border-radius:55% 45% 55% 45%;
+  background:linear-gradient(135deg,rgba(255,205,225,.85),rgba(238,44,121,.20));
+  filter:drop-shadow(0 5px 8px rgba(0,0,0,.18));
+}
+#loginPage .login-logo::before{
+  width:30px;height:48px;left:8px;top:18px;
+  transform:rotate(-38deg);
+}
+#loginPage .login-logo::after{
+  width:30px;height:48px;right:8px;top:18px;
+  transform:rotate(38deg);
+}
+#loginPage h2{
+  position:relative;
+  color:#fff !important;
+  text-shadow:0 3px 18px rgba(255,76,151,.32);
+  font-size:25px !important;
+  letter-spacing:.01em;
+}
+#loginPage .login-subtitle{
+  color:rgba(255,220,235,.76) !important;
+  margin-bottom:24px;
+}
+#loginPage .login-field label{
+  color:rgba(255,215,232,.78) !important;
+}
+#loginPage .login-field input{
+  color:#fff !important;
+  background:rgba(255,255,255,.085) !important;
+  border:1px solid rgba(255,205,225,.27) !important;
+  border-radius:12px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 20px rgba(0,0,0,.12);
+}
+#loginPage .login-field input::placeholder{color:rgba(255,220,235,.48)}
+#loginPage .login-field input:focus{
+  border-color:#ff78ae !important;
+  box-shadow:0 0 0 3px rgba(255,75,145,.14),0 8px 25px rgba(0,0,0,.16);
+}
+#loginPage #loginBtn{
+  position:relative;
+  overflow:hidden;
+  border-radius:12px !important;
+  background:linear-gradient(135deg,#ff4f96,#c92b76 55%,#9d215f) !important;
+  box-shadow:0 12px 28px rgba(255,55,137,.34),inset 0 1px 0 rgba(255,255,255,.25);
+  transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+#loginPage #loginBtn:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.08);
+  box-shadow:0 16px 34px rgba(255,55,137,.46);
+}
+#loginPage #forgotPasswordBtn,
+#loginPage #createAccountBtn{
+  color:#ffb3d1 !important;
+}
+#loginPage .login-footer{
+  color:rgba(255,210,230,.45) !important;
+}
+#loginPage .rose-petal{
+  position:absolute;
+  width:22px;height:13px;
+  border-radius:100% 0 100% 0;
+  background:linear-gradient(135deg,#ff9fc4,#c92870);
+  box-shadow:0 4px 14px rgba(255,70,145,.28);
+  opacity:.55;
+  pointer-events:none;
+  z-index:-1;
+  animation:petalFall linear infinite;
+}
+@keyframes roseAura{to{transform:rotate(360deg)}}
+@keyframes rosePulse{0%,100%{transform:translate(-50%,-50%) scale(.9);opacity:.65}50%{transform:translate(-50%,-50%) scale(1.12);opacity:1}}
+@keyframes loginFloat{0%,100%{transform:perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)}50%{transform:perspective(1000px) rotateX(1.5deg) rotateY(-1.5deg) translateY(-7px)}}
+@keyframes rose3d{0%,100%{transform:translateZ(35px) rotateY(-8deg) rotateZ(-2deg)}50%{transform:translateZ(35px) rotateY(8deg) rotateZ(2deg)}}
+@keyframes roseOrb{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(35px,28px) scale(1.12)}}
+@keyframes petalFall{
+  0%{transform:translate3d(0,-12vh,0) rotate(0deg) scale(.75);opacity:0}
+  12%{opacity:.55}
+  50%{transform:translate3d(55px,52vh,0) rotate(180deg) scale(1)}
+  100%{transform:translate3d(-45px,112vh,0) rotate(360deg) scale(.7);opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+  #loginPage::before,#loginPage::after,#loginPage .login-box,#loginPage .login-logo{animation:none !important}
+}
+@media(max-width:480px){
+  #loginPage .login-box{padding:30px 20px 24px;border-radius:22px}
+  #loginPage .login-logo{width:76px;height:76px}
+}
+</style>
 </head>
 <body>
 
 
-<div id="loginPage">
+<div id="loginPage"><div class="rose-petal" style="left:7%;animation-duration:11s;animation-delay:-2s"></div>
+<div class="rose-petal" style="left:18%;animation-duration:14s;animation-delay:-8s;transform:rotate(45deg)"></div>
+<div class="rose-petal" style="left:31%;animation-duration:12s;animation-delay:-5s"></div>
+<div class="rose-petal" style="left:68%;animation-duration:15s;animation-delay:-10s"></div>
+<div class="rose-petal" style="left:82%;animation-duration:10s;animation-delay:-4s"></div>
+<div class="rose-petal" style="left:92%;animation-duration:13s;animation-delay:-7s"></div>
   <div class="login-box">
     <div class="login-logo">SP</div>
     <h2>Supplier Payables</h2>
