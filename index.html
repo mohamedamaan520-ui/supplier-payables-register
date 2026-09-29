@@ -2873,7 +2873,15 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
 
     var sessionResult=await supabaseClient.auth.getSession();
     if(sessionResult.error){
-      showLoginPage(sessionResult.error.message||'Unable to check session.');
+      // A stale/invalid refresh token can remain in browser storage after
+      // password changes, sign-out, or session expiry. Clear only the local
+      // Supabase session so the user can sign in again cleanly.
+      try{ await supabaseClient.auth.signOut({scope:'local'}); }catch(ignore){}
+      currentUser=null;
+      authInitialized=false;
+      cloudReady=false;
+      updateUserPanel();
+      showLoginPage('Your session expired. Please login again.');
       return;
     }
 
