@@ -586,6 +586,41 @@
     color:var(--ink-soft);
     font-size:12px;
   }
+  .pv-invoice-section{grid-column:1/-1}
+  .pv-invoice-title{
+    display:block;
+    margin:0 0 8px;
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--ink-soft);
+  }
+  .pv-invoice-list{display:flex;flex-direction:column;gap:8px}
+  .pv-invoice-card{
+    width:100%;
+    display:grid;
+    grid-template-columns:1.5fr 1fr 1fr 1.2fr auto;
+    gap:10px;
+    align-items:center;
+    padding:12px 14px;
+    border:1.5px solid var(--rule);
+    border-radius:10px;
+    background:var(--surface);
+    text-align:left;
+    transition:border-color 120ms ease,background-color 120ms ease,box-shadow 120ms ease;
+  }
+  .pv-invoice-card:hover{border-color:var(--accent);background:var(--surface-alt)}
+  .pv-invoice-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(29,95,214,.12);background:var(--surface-alt)}
+  .pv-invoice-card .pv-ic-label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:700;margin-bottom:2px}
+  .pv-invoice-card .pv-ic-value{font-size:13px;font-weight:700}
+  .pv-invoice-card .pv-ic-balance{font-size:16px;font-weight:800;color:var(--danger)}
+  .pv-invoice-card .pv-pay-btn{white-space:nowrap}
+  .pv-no-invoice{padding:12px;border:1px dashed var(--rule-strong);border-radius:10px;color:var(--ink-soft);font-size:12px;background:var(--surface-alt)}
+  @media(max-width:760px){
+    .pv-invoice-card{grid-template-columns:1fr 1fr}
+    .pv-invoice-card .pv-pay-btn{grid-column:1/-1;width:100%}
+  }
   @media(max-width:760px){
     #paymentVoucherPanel{padding:8px !important}
     #paymentVoucherPanel .pv-modal-card{min-height:calc(100vh - 16px);padding:14px;border-radius:14px}
@@ -1482,7 +1517,11 @@ header.masthead{position:relative;}
             <div class="field"><label>Supplier Contact</label><input id="pvSupplierContact" readonly></div>
           </div>
         </div>
-        <div class="field" style="grid-column:span 2;"><label>2. Select Invoice</label><select id="pvInvoice"><option value="">— Select invoice —</option></select></div>
+        <div class="pv-invoice-section" style="grid-column:1/-1;">
+  <label class="pv-invoice-title">2. Supplier Invoices — Outstanding Payment</label>
+  <div id="pvInvoiceList" class="pv-invoice-list"></div>
+  <select id="pvInvoice" style="display:none;"><option value="">— Select invoice —</option></select>
+</div>
         <div class="field"><label>Gross Amount</label><input id="pvGrossAmount" readonly></div>
         <div class="field"><label>Net Payable</label><input id="pvInvoiceAmount" readonly></div>
         <div class="field"><label>Already Paid</label><input id="pvAlreadyPaid" readonly></div>
@@ -2115,7 +2154,10 @@ header.masthead{position:relative;}
       seen[k]=1; vals.push(n);
     });
     vals.sort(function(a,b){return a.localeCompare(b);});
-    if(!q){ box.innerHTML=''; return; }
+    if(!q){
+      box.innerHTML='';
+      return;
+    }
     box.innerHTML=vals.slice(0,12).map(function(v){
       return '<button type="button" class="btn btn-ghost btn-small pv-supplier-result" data-supplier="'+escapeHtml(v)+'" style="display:block;width:100%;text-align:left;margin-top:5px;">'+escapeHtml(v)+'</button>';
     }).join('') || '<div style="font-size:12px;color:var(--ink-soft);padding:8px;">No supplier found.</div>';
@@ -2128,39 +2170,68 @@ header.masthead{position:relative;}
         var evt=new Event('change'); sel.dispatchEvent(evt);
       });
     });
-    invoiceVoucherOptions();
-    fillPaymentVoucherInvoice();
   }
+
   function invoiceVoucherOptions(){
     var sel=document.getElementById('pvInvoice'), supplier=document.getElementById('pvSupplier');
+    var list=document.getElementById('pvInvoiceList');
     if(!sel) return;
     var current=sel.value, supplierName=supplier?String(supplier.value||'').trim().toLowerCase():'';
-    var opts=['<option value="">— Select invoice —</option>'];
     var note=document.getElementById('pvInvoiceSelectionNote');
+    var opts=['<option value="">— Select invoice —</option>'];
 
-    /* Never show invoices until a supplier has actually been selected. */
     if(!supplierName){
       sel.innerHTML=opts.join('');
+      if(list) list.innerHTML='<div class="pv-no-invoice">Select a supplier first. Only that supplier\'s unpaid/outstanding invoices will appear here.</div>';
       if(note) note.textContent='Select a supplier to load that supplier\'s invoices only.';
       return;
     }
 
-    var count=0;
+    var items=[];
     entries.slice().sort(function(a,b){
-      return String(a.invoiceNumber||'').localeCompare(String(b.invoiceNumber||''));
+      return String(a.invoiceDate||'').localeCompare(String(b.invoiceDate||'')) || String(a.invoiceNumber||'').localeCompare(String(b.invoiceNumber||''));
     }).forEach(function(e){
       if(!e.id) return;
       if(String(e.supplierName||'').trim().toLowerCase()!==supplierName) return;
       var paid=(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId);
-      var balance=Math.max(0,paymentVoucherNet(e)-paid);
-      var label=(e.invoiceNumber||'(No invoice #)')+' — Balance '+fmtMoney(balance);
-      opts.push('<option value="'+escapeHtml(String(e.id))+'">'+escapeHtml(label)+'</option>');
-      count++;
+      var total=paymentVoucherNet(e);
+      var balance=Math.max(0,total-paid);
+      if(balance<=0) return;
+      items.push({e:e,total:total,paid:paid,balance:balance});
+      opts.push('<option value="'+escapeHtml(String(e.id))+'">'+escapeHtml((e.invoiceNumber||'(No invoice #)')+' — Balance '+fmtMoney(balance))+'</option>');
     });
+
     sel.innerHTML=opts.join('');
     if(current && Array.from(sel.options).some(function(o){return o.value===current;})) sel.value=current;
-    if(note) note.textContent=count ? (count+' invoice(s) found for the selected supplier. Only these invoices are available.') : 'No invoices found for the selected supplier.';
+
+    if(list){
+      if(!items.length){
+        list.innerHTML='<div class="pv-no-invoice">No outstanding invoices are available for this supplier.</div>';
+      }else{
+        list.innerHTML=items.map(function(x){
+          var e=x.e, id=String(e.id);
+          var selected=id===String(sel.value||'');
+          return '<button type="button" class="pv-invoice-card'+(selected?' selected':'')+'" data-pv-invoice="'+escapeHtml(id)+'">'+
+            '<div><span class="pv-ic-label">Invoice</span><span class="pv-ic-value">'+escapeHtml(e.invoiceNumber||'(No invoice #)')+'</span></div>'+
+            '<div><span class="pv-ic-label">Invoice Date</span><span class="pv-ic-value">'+escapeHtml(fmtDateDisplay(e.invoiceDate)||'')+'</span></div>'+
+            '<div><span class="pv-ic-label">Net Payable</span><span class="pv-ic-value">'+fmtMoney(x.total)+'</span></div>'+
+            '<div><span class="pv-ic-label">Outstanding Balance</span><span class="pv-ic-balance">'+fmtMoney(x.balance)+'</span></div>'+
+            '<div><span class="btn btn-primary btn-small pv-pay-btn">'+(selected?'Selected':'Pay this invoice')+'</span></div>'+
+            '</button>';
+        }).join('');
+        Array.from(list.querySelectorAll('[data-pv-invoice]')).forEach(function(card){
+          card.addEventListener('click',function(){
+            sel.value=card.getAttribute('data-pv-invoice')||'';
+            fillPaymentVoucherInvoice();
+            invoiceVoucherOptions();
+            sel.dispatchEvent(new Event('change'));
+          });
+        });
+      }
+    }
+    if(note) note.textContent=items.length ? (items.length+' outstanding invoice(s) for the selected supplier. Select an invoice to make a payment.') : 'No outstanding invoices for the selected supplier.';
   }
+
   function fillPaymentVoucherInvoice(){
     var id=document.getElementById('pvInvoice').value, e=entries.find(function(x){return String(x.id)===String(id);});
     var gross=e?(Number(e.grossInvoiceAmount)||0):0;
@@ -2172,12 +2243,18 @@ header.masthead{position:relative;}
     if(supDetails) supDetails.style.display=e?'block':'none';
     var supName=document.getElementById('pvSupplierName'); if(supName) supName.value=e?e.supplierName||'':'';
     var supContact=document.getElementById('pvSupplierContact'); if(supContact) supContact.value=e?e.supplierContact||'':'';
+    var search=document.getElementById('pvSupplierSearch'); if(search) search.value=e?e.supplierName||'':search.value;
     document.getElementById('pvGrossAmount').value=e?gross.toFixed(2):'';
     document.getElementById('pvInvoiceAmount').value=e?total.toFixed(2):'';
     document.getElementById('pvAlreadyPaid').value=e?already.toFixed(2):'';
     document.getElementById('pvBalance').value=e?balance.toFixed(2):'';
-    if(e) document.getElementById('pvAmount').value=balance>0?balance.toFixed(2):'';
+    var amount=document.getElementById('pvAmount');
+    if(amount){
+      amount.value=e&&balance>0?balance.toFixed(2):'';
+      amount.max=e&&balance>0?balance.toFixed(2):'';
+    }
   }
+
   function renderPaymentVoucherBankOptions(){
     var sel=document.getElementById('pvBank'); if(!sel) return;
     sel.innerHTML='<option value="">— Select bank account —</option>'+bankAccounts.map(function(b,i){
