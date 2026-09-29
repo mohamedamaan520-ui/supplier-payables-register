@@ -1,4 +1,61 @@
-<!DOCTYPE html>
+  function bindPaymentVoucherEvents(){
+    var el;
+    el=document.getElementById('newPaymentVoucherBtn'); if(el) el.addEventListener('click',openPaymentVoucher);
+    el=document.getElementById('cancelPaymentVoucherBtn'); if(el) el.addEventListener('click',closePaymentVoucher);
+    el=document.getElementById('cancelPaymentVoucherBtnTop'); if(el) el.addEventListener('click',closePaymentVoucher);
+    el=document.getElementById('pvNewBtn'); if(el) el.addEventListener('click',function(){
+      resetPaymentVoucherForm();
+      var h=document.getElementById('pvHistoryArea'); if(h) h.style.display='none';
+      var d=document.getElementById('pvDeleteBtn'); if(d) d.disabled=true;
+      setTimeout(function(){var x=document.getElementById('pvSupplierSearch');if(x)x.focus();},30);
+    });
+    el=document.getElementById('pvFindBtn'); if(el) el.addEventListener('click',function(){
+      var h=document.getElementById('pvHistoryArea'); if(!h)return;
+      h.style.display=h.style.display==='none'?'':'none';
+      if(h.style.display!=='none'){
+        renderPaymentVouchers();
+        setTimeout(function(){var d=document.getElementById('pvHistoryDate');if(d)d.focus();},30);
+      }
+    });
+    el=document.getElementById('pvDeleteBtn'); if(el) el.addEventListener('click',function(){
+      if(editingVoucherId) deletePaymentVoucher(editingVoucherId);
+      else showToast('Open an old payment voucher first.');
+    });
+    el=document.getElementById('pvHistoryDate'); if(el) el.addEventListener('change',renderPaymentVouchers);
+    el=document.getElementById('pvHistorySearch'); if(el) el.addEventListener('input',renderPaymentVouchers);
+    el=document.getElementById('pvHistoryClearBtn'); if(el) el.addEventListener('click',function(){
+      var d=document.getElementById('pvHistoryDate');if(d)d.value='';
+      var q=document.getElementById('pvHistorySearch');if(q)q.value='';
+      renderPaymentVouchers();
+    });
+    el=document.getElementById('pvHistoryList'); if(el) el.addEventListener('click',function(ev){
+      var edit=ev.target.closest('[data-pv-edit]');
+      var del=ev.target.closest('[data-pv-delete]');
+      if(edit){editPaymentVoucher(edit.getAttribute('data-pv-edit'));var d=document.getElementById('pvDeleteBtn');if(d)d.disabled=false;return;}
+      if(del){deletePaymentVoucher(del.getAttribute('data-pv-delete'));return;}
+    });
+    el=document.getElementById('pvSupplierSearch'); if(el) el.addEventListener('input',filterPaymentVoucherSuppliers);
+    el=document.getElementById('pvSupplier'); if(el) el.addEventListener('change',function(){
+      var name=String(el.value||'').trim().toLowerCase();
+      var e=entries.find(function(x){return String(x.supplierName||'').trim().toLowerCase()===name;});
+      var sn=document.getElementById('pvSupplierName'); if(sn) sn.value=e?e.supplierName||'':'';
+      var search=document.getElementById('pvSupplierSearch'); if(search) search.value=e?e.supplierName||'':'';
+      document.getElementById('pvInvoice').value='';document.getElementById('pvAmount').value='';invoiceVoucherOptions();fillPaymentVoucherInvoice();
+    });
+    el=document.getElementById('pvInvoice'); if(el) el.addEventListener('change',function(){document.getElementById('pvAmount').value='';fillPaymentVoucherInvoice();});
+    el=document.getElementById('pvMethod'); if(el) el.addEventListener('change',updatePaymentVoucherMethod);
+    el=document.getElementById('pvBank'); if(el) el.addEventListener('change',updatePaymentVoucherBankInfo);
+    el=document.getElementById('savePaymentVoucherBtn'); if(el) el.addEventListener('click',savePaymentVoucher);
+    el=document.getElementById('printPaymentVoucherBtn'); if(el) el.addEventListener('click',function(){
+      var id=document.getElementById('pvInvoice')&&document.getElementById('pvInvoice').value;
+      var e=entries.find(function(x){return String(x.id)===String(id);});
+      if(!e){showToast('Select an invoice first.');return;}
+      var amount=Number(document.getElementById('pvAmount').value)||0;
+      var v={voucher_no:document.getElementById('pvVoucherNo').value,payment_date:document.getElementById('pvDate').value,supplier_name:e.supplierName||'',invoice_number:e.invoiceNumber||'',invoice_amount:paymentVoucherNet(e),already_paid:(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId),balance_before:Math.max(0,paymentVoucherNet(e)-((Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId))),amount:amount,payment_method:document.getElementById('pvMethod').value,bank_name:'',bank_account_no:'',cheque_ref:document.getElementById('pvCheque').value,paid_by:document.getElementById('pvPaidBy').value,received_by:document.getElementById('pvReceivedBy').value,remarks:document.getElementById('pvRemarks').value};
+      var b=bankAccounts[Number(document.getElementById('pvBank').value)];if(b){v.bank_name=b.bankName||'';v.bank_account_no=b.accountNo||'';}
+      printPaymentVoucher(v);
+    });
+  }<!DOCTYPE html>
 <html lang="en">
 <head> 
   
@@ -628,6 +685,20 @@
   }
 </style>
 <style id="paymentVoucherTopStyles">
+  .pv-top-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .pv-history-area{margin:0 0 18px;padding:12px;border:1px solid var(--rule);border-radius:12px;background:var(--surface-alt)}
+  .pv-history-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .pv-history-tools strong{font-size:13px;margin-right:auto}
+  .pv-history-tools input{padding:8px 10px;border:1.5px solid var(--rule-strong);border-radius:7px;background:var(--bg);color:var(--ink)}
+  .pv-history-list{display:flex;flex-direction:column;gap:8px}
+  .pv-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid var(--rule);border-radius:10px;background:var(--surface)}
+  .pv-history-main{display:grid;grid-template-columns:1fr 1fr 2fr 1fr 1fr;gap:12px;align-items:center;flex:1}
+  .pv-history-main label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:700;margin-bottom:2px}
+  .pv-history-main div{font-size:12px}
+  .pv-history-actions{display:flex;gap:6px}
+  .pv-history-actions .danger{color:var(--danger)}
+  .pv-history-empty{padding:14px;text-align:center;color:var(--ink-soft);font-size:12px;border:1px dashed var(--rule-strong);border-radius:9px}
+  @media(max-width:760px){.pv-top-actions{width:100%;justify-content:flex-start}.pv-history-main{grid-template-columns:1fr 1fr}.pv-history-row{align-items:stretch;flex-direction:column}.pv-history-actions{width:100%}.pv-history-actions button{flex:1}}
   .payment-voucher-top-btn{white-space:nowrap}
   .payment-voucher-manager{margin:0 0 18px}
   .payment-voucher-manager h3{margin:0}
@@ -1497,9 +1568,23 @@ header.masthead{position:relative;}
         <div class="pv-modal-head">
           <div>
             <h2>Payment Voucher</h2>
-            <div class="pv-modal-sub">Select a supplier first. Only that supplier's invoices will be shown.</div>
+            <div class="pv-modal-sub">Create a new payment, find old vouchers by date, edit or delete an existing voucher.</div>
           </div>
-          <button class="btn btn-ghost btn-small" id="cancelPaymentVoucherBtnTop" type="button">✕ Close</button>
+          <div class="pv-top-actions">
+            <button class="btn btn-ghost btn-small" id="pvFindBtn" type="button">🔎 Find</button>
+            <button class="btn btn-ghost btn-small" id="pvDeleteBtn" type="button" disabled>🗑 Delete</button>
+            <button class="btn btn-primary btn-small" id="pvNewBtn" type="button">＋ New Payment</button>
+            <button class="btn btn-ghost btn-small" id="cancelPaymentVoucherBtnTop" type="button">✕ Close</button>
+          </div>
+        </div>
+        <div id="pvHistoryArea" class="pv-history-area" style="display:none;">
+          <div class="pv-history-tools">
+            <strong>Find Payment Vouchers</strong>
+            <input type="date" id="pvHistoryDate" aria-label="Find payment vouchers by date">
+            <input type="search" id="pvHistorySearch" placeholder="Search voucher, supplier, invoice..." aria-label="Search payment vouchers">
+            <button class="btn btn-ghost btn-small" id="pvHistoryClearBtn" type="button">Clear</button>
+          </div>
+          <div id="pvHistoryList" class="pv-history-list"></div>
         </div>
       <div class="field-grid">
         <div class="field"><label>Voucher No.</label><input id="pvVoucherNo" readonly></div>
@@ -1535,12 +1620,7 @@ header.masthead{position:relative;}
       </div>
       </div>
     </div>
-    <div class="pv-findbar">
-      <input type="search" id="paymentVoucherSearch" placeholder="Find voucher no, supplier, invoice..." aria-label="Find payment voucher">
-      <input type="date" id="paymentVoucherDateFilter" aria-label="Filter payment vouchers by date" title="View payment vouchers by date">
-      <button class="btn btn-ghost btn-small" id="clearPaymentVoucherSearch" type="button">Clear</button>
-    </div>
-    <div id="paymentVoucherList" style="padding:12px 16px;"></div>
+
   </section>
   <div class="status-row" id="statusRow"></div>
 
@@ -2236,10 +2316,14 @@ header.masthead{position:relative;}
     var supName=document.getElementById('pvSupplierName'); if(supName) supName.value=e?e.supplierName||'':'';
     var supContact=document.getElementById('pvSupplierContact'); if(supContact) supContact.value=e?e.supplierContact||'':'';
     var search=document.getElementById('pvSupplierSearch'); if(search) search.value=e?e.supplierName||'':search.value;
-    document.getElementById('pvGrossAmount').value=e?gross.toFixed(2):'';
-    document.getElementById('pvInvoiceAmount').value=e?total.toFixed(2):'';
-    document.getElementById('pvAlreadyPaid').value=e?already.toFixed(2):'';
-    document.getElementById('pvBalance').value=e?balance.toFixed(2):'';
+    ['pvGrossAmount','pvInvoiceAmount','pvAlreadyPaid','pvBalance'].forEach(function(id){
+      var x=document.getElementById(id); if(x) x.value=e?(
+        id==='pvGrossAmount'?gross.toFixed(2):
+        id==='pvInvoiceAmount'?total.toFixed(2):
+        id==='pvAlreadyPaid'?already.toFixed(2):
+        balance.toFixed(2)
+      ):'';
+    });
     var amount=document.getElementById('pvAmount');
     if(amount){
       amount.value=e&&balance>0?balance.toFixed(2):'';
@@ -2305,11 +2389,15 @@ header.masthead{position:relative;}
     var invoice=document.getElementById('pvInvoice'); if(invoice) invoice.value='';
     var list=document.getElementById('pvInvoiceList'); if(list) list.innerHTML='';
     var name=document.getElementById('pvSupplierName'); if(name) name.value='';
+    var history=document.getElementById('pvHistoryArea'); if(history) history.style.display='none';
+    var hd=document.getElementById('pvHistoryDate'); if(hd) hd.value='';
+    var hs=document.getElementById('pvHistorySearch'); if(hs) hs.value='';
+    var del=document.getElementById('pvDeleteBtn'); if(del) del.disabled=true;
   }
   function renderPaymentVouchers(){
-    var box=document.getElementById('paymentVoucherList'); if(!box)return;
-    var searchEl=document.getElementById('paymentVoucherSearch');
-    var dateEl=document.getElementById('paymentVoucherDateFilter');
+    var box=document.getElementById('pvHistoryList'); if(!box)return;
+    var searchEl=document.getElementById('pvHistorySearch');
+    var dateEl=document.getElementById('pvHistoryDate');
     var q=searchEl?String(searchEl.value||'').trim().toLowerCase():'';
     var dateFilter=dateEl?String(dateEl.value||'').trim():'';
     var rows=paymentVouchers.slice().sort(function(a,b){
@@ -2321,20 +2409,28 @@ header.masthead{position:relative;}
       return [v.voucher_no,v.payment_date,v.supplier_name,v.invoice_number,v.payment_method,v.bank_name,v.cheque_ref,v.paid_by,v.received_by,v.remarks]
         .some(function(x){return String(x||'').toLowerCase().indexOf(q)>=0;});
     });
-    if(!paymentVouchers.length){
-      box.innerHTML='<div class="payment-impact">No payment vouchers created yet.</div>';return;
+    if(!dateFilter && !q){
+      box.innerHTML='<div class="pv-history-empty">Choose a date or type a search to find old payment vouchers.</div>';
+      return;
     }
     if(!rows.length){
-      box.innerHTML='<div class="payment-impact">No payment vouchers found for the selected search/date.</div>';return;
+      box.innerHTML='<div class="pv-history-empty">No payment vouchers found for the selected date/search.</div>';
+      return;
     }
     box.innerHTML=rows.map(function(v){
-      return '<div class="bank-account-row pv-history-row" style="grid-template-columns:1fr 1.1fr 2fr 1fr 1fr;align-items:center;">'+
-        '<div><label>Voucher</label><strong>'+escapeHtml(v.voucher_no||'')+'</strong></div>'+
-        '<div><label>Date</label>'+escapeHtml(v.payment_date||'')+'</div>'+
-        '<div><label>Supplier / Invoice</label>'+escapeHtml((v.supplier_name||'')+' / '+(v.invoice_number||''))+'</div>'+
-        '<div><label>Method</label>'+escapeHtml(v.payment_method||'')+'</div>'+
-        '<div><label>Paid Amount</label><strong>'+fmtMoney(v.amount)+'</strong></div>'+
-        '</div>';
+      return '<div class="pv-history-row">'+
+        '<div class="pv-history-main">'+
+          '<div><label>Voucher</label><strong>'+escapeHtml(v.voucher_no||'')+'</strong></div>'+
+          '<div><label>Date</label>'+escapeHtml(v.payment_date||'')+'</div>'+
+          '<div><label>Supplier / Invoice</label><strong>'+escapeHtml((v.supplier_name||'')+' / '+(v.invoice_number||''))+'</strong></div>'+
+          '<div><label>Method</label>'+escapeHtml(v.payment_method||'')+'</div>'+
+          '<div><label>Paid Amount</label><strong>'+fmtMoney(v.amount)+'</strong></div>'+
+        '</div>'+
+        '<div class="pv-history-actions">'+
+          '<button class="btn btn-ghost btn-small" type="button" data-pv-edit="'+escapeHtml(v.id)+'">Edit</button>'+
+          '<button class="btn btn-ghost btn-small danger" type="button" data-pv-delete="'+escapeHtml(v.id)+'">Delete</button>'+
+        '</div>'+
+      '</div>';
     }).join('');
   }
 
@@ -2364,6 +2460,8 @@ header.masthead{position:relative;}
     document.getElementById('pvRemarks').value=v.remarks||'';
     document.getElementById('paymentVoucherPanel').style.display='';
     document.getElementById('savePaymentVoucherBtn').textContent='Update Payment Voucher';
+    var del=document.getElementById('pvDeleteBtn'); if(del) del.disabled=false;
+    var history=document.getElementById('pvHistoryArea'); if(history) history.style.display='none';
     document.getElementById('paymentVoucherPanel').scrollIntoView({behavior:'smooth',block:'start'});
   }
 
@@ -2430,6 +2528,31 @@ header.masthead{position:relative;}
       renderPaymentVouchers();renderBankAccounts();render();saveLocalData();closePaymentVoucher();showToast('Payment voucher saved.');
     }catch(err){showToast('Payment voucher save failed: '+(err.message||'check Supabase table/RLS'));}finally{btn.disabled=false;}
   }
+  async function deletePaymentVoucher(id){
+    var target=paymentVouchers.find(function(x){return String(x.id)===String(id);});
+    if(!target){showToast('Payment voucher not found.');return;}
+    editPaymentVoucher(id);
+    if(!confirm('Delete payment voucher '+String(target.voucher_no||'')+'? This cannot be undone.')) return;
+    try{
+      if(currentUser && supabaseClient && String(id).indexOf('local_')!==0){
+        var r=await supabaseClient.from('payment_vouchers').delete().eq('id',id).select('id');
+        if(r.error) throw r.error;
+        if(r.data && r.data.length===0) throw new Error('Cloud delete was not applied. Check Supabase RLS DELETE policy.');
+      }
+      paymentVouchers=paymentVouchers.filter(function(x){return String(x.id)!==String(id);});
+      saveLocalData();
+      editingVoucherId=null;
+      document.getElementById('pvDeleteBtn').disabled=true;
+      renderPaymentVouchers();
+      renderBankAccounts();
+      render();
+      resetPaymentVoucherForm();
+      showToast('Payment voucher deleted.');
+    }catch(err){
+      showToast('Payment voucher delete failed: '+(err.message||'check Supabase RLS'));
+    }
+  }
+
   async function loadPaymentVouchers(){
     if(!supabaseClient||!currentUser)return;
     var r=await supabaseClient.from('payment_vouchers').select('*').order('created_at',{ascending:true});
