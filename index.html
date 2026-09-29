@@ -521,7 +521,7 @@
 .pv-supplier-search-wrap{position:relative;}
 .pv-supplier-dropdown{max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:var(--card,#fff);box-shadow:0 10px 28px rgba(0,0,0,.12);padding:5px;position:relative;z-index:50;}
 .pv-supplier-result{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:10px 12px;margin:2px 0;border:0;border-radius:9px;background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit;touch-action:manipulation;}
-.pv-supplier-result:hover,.pv-supplier-result:focus{background:var(--surface,#f2f4f7);outline:none;}
+.pv-supplier-result:hover,.pv-supplier-result:focus{background:var(--surface-alt);color:var(--ink);outline:none;}
 .pv-supplier-result-icon{width:24px;text-align:center;flex:0 0 24px;}
 
 /* Supplier search results: text only, matching letters highlighted */
@@ -1551,7 +1551,6 @@ header.masthead{position:relative;}
           <input type="hidden" id="pvSupplier">
         </div>
         <div class="pv-selection-note" id="pvInvoiceSelectionNote">Select a supplier to load that supplier's invoices only.</div>
-        <div class="field"><label>Supplier Name</label><input id="pvSupplierName" readonly></div>
         <div class="pv-invoice-section" style="grid-column:1/-1;">
   <label class="pv-invoice-title">2. Supplier Invoices — Outstanding Payment</label>
   <div id="pvInvoiceList" class="pv-invoice-list"></div>
@@ -2190,8 +2189,13 @@ header.masthead{position:relative;}
       box.innerHTML='<div style="font-size:12px;color:var(--ink-soft);padding:10px;">No supplier found.</div>';
       return;
     }
+    function highlightSupplier(name, query){
+      var low=String(name||"").toLowerCase(), ql=String(query||"").toLowerCase(), idx=ql?low.indexOf(ql):-1;
+      if(idx<0) return escapeHtml(name);
+      return escapeHtml(name.slice(0,idx))+'<span class="pv-supplier-match">'+escapeHtml(name.slice(idx,idx+query.length))+'</span>'+escapeHtml(name.slice(idx+query.length));
+    }
     box.innerHTML='<div class="pv-supplier-dropdown">'+shown.map(function(v){
-      return '<button type="button" class="pv-supplier-result" data-supplier="'+escapeHtml(v)+'">'+escapeHtml(v)+'</button>';
+      return '<button type="button" class="pv-supplier-result" data-supplier="'+escapeHtml(v)+'">'+highlightSupplier(v,q)+'</button>';
     }).join('')+'</div>';
     Array.from(box.querySelectorAll('.pv-supplier-result')).forEach(function(b){
       var choose=function(ev){
