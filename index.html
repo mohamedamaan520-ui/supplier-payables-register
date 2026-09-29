@@ -519,15 +519,15 @@
 
 /* Payment Voucher supplier tap/dropdown */
 .pv-supplier-search-wrap{position:relative;}
-.pv-supplier-dropdown{max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:var(--card,#fff);box-shadow:0 10px 28px rgba(0,0,0,.12);padding:5px;position:relative;z-index:50;}
+.pv-supplier-dropdown{max-height:280px;overflow-y:auto;border:1px solid var(--rule-strong);border-radius:12px;background:var(--surface);color:var(--ink);box-shadow:0 10px 28px rgba(0,0,0,.12);padding:5px;position:relative;z-index:50;}
 .pv-supplier-result{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:10px 12px;margin:2px 0;border:0;border-radius:9px;background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit;touch-action:manipulation;}
 .pv-supplier-result:hover,.pv-supplier-result:focus{background:var(--surface-alt);color:var(--ink);outline:none;}
 .pv-supplier-result-icon{width:24px;text-align:center;flex:0 0 24px;}
 
 /* Supplier search results: text only, matching letters highlighted */
 .pv-supplier-result{display:block;width:100%;min-height:42px;padding:10px 12px;margin:2px 0;border:0;border-radius:9px;background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit;font-weight:600;touch-action:manipulation;}
-.pv-supplier-result:hover,.pv-supplier-result:focus{background:var(--surface,#f2f4f7);outline:none;}
-.pv-supplier-match{font-weight:900;color:var(--accent,#2563eb);}
+.pv-supplier-result:hover,.pv-supplier-result:focus{background:var(--surface-alt);color:var(--ink);outline:none;}
+.pv-supplier-match{font-weight:900;color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--surface));border-radius:3px;padding:0 1px;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2277,7 +2277,7 @@ header.masthead{position:relative;}
     var total=e?paymentVoucherNet(e):0;
     var already=e?(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId):0;
     var balance=e?Math.max(0,total-already):0;
-    document.getElementById('pvSupplier').value=e?e.supplierName||'':'';
+    if(e) document.getElementById('pvSupplier').value=e.supplierName||'';
     var supDetails=document.getElementById('pvSupplierDetails');
     if(supDetails) supDetails.style.display=e?'block':'none';
     var supName=document.getElementById('pvSupplierName'); if(supName) supName.value=e?e.supplierName||'':'';
