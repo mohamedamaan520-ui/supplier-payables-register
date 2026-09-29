@@ -1362,7 +1362,6 @@
   </section>
 
     <section class="payment-voucher-manager" aria-label="Payment vouchers" style="margin-top:18px;">
-    <button class="btn btn-primary" id="newPaymentVoucherBtn" type="button" style="width:100%;font-size:16px;padding:14px 18px;">Payment Voucher</button>
     <div id="paymentVoucherPanel" style="display:none;margin-top:12px;padding:16px;border:1px solid rgba(255,255,255,.10);border-radius:14px;">
       <div class="field-grid">
         <div class="field"><label>Voucher No.</label><input id="pvVoucherNo" readonly></div>
@@ -1395,6 +1394,10 @@
         <button class="btn btn-ghost" id="printPaymentVoucherBtn" type="button">Print</button>
         <button class="btn btn-primary" id="savePaymentVoucherBtn" type="button">Save Payment Voucher</button>
       </div>
+    </div>
+    <div class="pv-findbar">
+      <input type="search" id="paymentVoucherSearch" placeholder="Find voucher no, supplier, invoice..." aria-label="Find payment voucher">
+      <button class="btn btn-ghost btn-small" id="clearPaymentVoucherSearch" type="button">Clear</button>
     </div>
     <div id="paymentVoucherList" style="padding:12px 16px;"></div>
   </section>
