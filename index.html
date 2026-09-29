@@ -3063,6 +3063,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     if(session && session.user){
       currentUser=session.user;
       updateUserPanel();
+      loadProfileCloud();
       hideLoginPage();
       authInitialized=true;
       initDb();
@@ -3081,6 +3082,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
         if(session && session.user){
           currentUser=session.user;
           updateUserPanel();
+          loadProfileCloud();
           hideLoginPage();
           if(!authInitialized){
             authInitialized=true;
@@ -3104,6 +3106,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
       setSyncNote('Supabase not configured · saved on this device.');
       return;
     }
+    loadProfileCloud();
     fetchCloudData();
   }
 
