@@ -2652,7 +2652,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     if(!supabaseClient || !currentUser) return;
     try{
       var r=await supabaseClient.from('user_profiles').select('profile_photo').eq('user_id',currentUser.id).maybeSingle();
-      if(r.error) return;
+      if(r.error){ console.warn('Profile cloud load failed:',r.error.message); return; }
       var photo=r.data&&r.data.profile_photo?r.data.profile_photo:'';
       if(photo){
         try{localStorage.setItem(profileAvatarKey(),photo);}catch(ignore){}
@@ -2660,17 +2660,18 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
         try{localStorage.removeItem(profileAvatarKey());}catch(ignore){}
       }
       loadProfileAvatar();
-    }catch(ignore){}
+    }catch(err){ console.warn('Profile cloud load failed:',err); }
   }
 
   async function saveProfilePhotoCloud(photo){
-    if(!supabaseClient || !currentUser) return false;
-    var r=await supabaseClient.from('user_profiles').upsert({
+    if(!supabaseClient || !currentUser) throw new Error('Not signed in');
+    var payload={
       user_id:currentUser.id,
       email:currentUser.email||'',
       profile_photo:photo||'',
       updated_at:new Date().toISOString()
-    },{onConflict:'user_id'}).select('user_id').single();
+    };
+    var r=await supabaseClient.from('user_profiles').upsert(payload,{onConflict:'user_id'});
     if(r.error) throw r.error;
     return true;
   }
