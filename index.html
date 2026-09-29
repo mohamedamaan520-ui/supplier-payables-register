@@ -2190,23 +2190,8 @@ header.masthead{position:relative;}
       box.innerHTML='<div style="font-size:12px;color:var(--ink-soft);padding:10px;">No supplier found.</div>';
       return;
     }
-    function highlightSupplier(name){
-      var safe=escapeHtml(name);
-      if(!q) return safe;
-      var re=new RegExp('('+q.replace(/[.*+?^{}()|[\\]\\\\]/g,'\\\\var shown=vals.slice(0,20);
-    if(!shown.length){
-      box.innerHTML=q?'<div style="font-size:12px;color:var(--ink-soft);padding:10px;">No supplier found.</div>':'';
-      return;
-    }
     box.innerHTML='<div class="pv-supplier-dropdown">'+shown.map(function(v){
-      return '<button type="button" class="pv-supplier-result" data-supplier="'+escapeHtml(v)+'">'+
-        '<span class="pv-supplier-result-icon">👤</span><span>'+escapeHtml(v)+'</span></button>';
-    }).join('')+'</div>';')+')','ig');
-      return safe.replace(re,'<span class="pv-supplier-match">$1</span>');
-    }
-    box.innerHTML='<div class="pv-supplier-dropdown">'+shown.map(function(v){
-      return '<button type="button" class="pv-supplier-result" data-supplier="'+escapeHtml(v)+'">'+
-        highlightSupplier(v)+'</button>';
+      return '<button type="button" class="pv-supplier-result" data-supplier="'+escapeHtml(v)+'">'+escapeHtml(v)+'</button>';
     }).join('')+'</div>';
     Array.from(box.querySelectorAll('.pv-supplier-result')).forEach(function(b){
       var choose=function(ev){
