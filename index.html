@@ -2698,6 +2698,10 @@ header.masthead{position:relative;}
         sel.value=name;
         if(search) search.value=name;
         box.innerHTML='';
+        sel.value=name;
+        invoiceVoucherOptions();
+        updatePaymentVoucherCredit();
+        updatePaymentVoucherSidebar();
         sel.dispatchEvent(new Event('change'));
       };
       b.addEventListener('click',choose);
@@ -2711,6 +2715,11 @@ header.masthead{position:relative;}
     if(!sel||!list) return;
     var current=sel.value;
     var supplierName=supplier?String(supplier.value||'').trim().replace(/\s+/g,' ').toLowerCase():'';
+    if(!supplierName){
+      var searchBox=document.getElementById('pvSupplierSearch');
+      supplierName=searchBox?String(searchBox.value||'').trim().replace(/\s+/g,' ').toLowerCase():'';
+      if(supplier && supplierName) supplier.value=String(searchBox.value||'').trim();
+    }
     var note=document.getElementById('pvInvoiceSelectionNote');
     var opts=['<option value="">— Select invoice —</option>'];
 
@@ -2729,8 +2738,12 @@ header.masthead{position:relative;}
     }).forEach(function(e){
       var entrySupplier=String(e.supplierName||'').trim().replace(/\s+/g,' ').toLowerCase();
       if(!entrySupplier || entrySupplier!==supplierName) return;
+      var grossRaw=Number(e.grossInvoiceAmount)||0;
+      var returnedRaw=Number(e.returnedAmount)||0;
+      var baseOutstanding=(grossRaw-returnedRaw)-(Number(e.paymentMade)||0)-voucherPaidForEntry(e.id,editingVoucherId);
       var c=computeEntry(e);
-      var balance=Math.max(0,Number(c.outstanding)||0);
+      var balance=Math.max(0,Number(baseOutstanding));
+      if(!isFinite(balance)) balance=Math.max(0,Number(c.outstanding)||0);
       var gross=Math.max(0,(Number(e.grossInvoiceAmount)||0));
       var returned=Math.max(0,(Number(e.returnedAmount)||0));
       var net=Math.max(0,gross-returned);
