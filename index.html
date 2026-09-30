@@ -2727,7 +2727,6 @@ header.masthead{position:relative;}
       return String(a.invoiceDate||'').localeCompare(String(b.invoiceDate||'')) ||
              String(a.invoiceNumber||'').localeCompare(String(b.invoiceNumber||''));
     }).forEach(function(e){
-      if(e.id==null || String(e.id)==='') return;
       if(String(e.supplierName||'').trim().toLowerCase()!==supplierName) return;
       var c=computeEntry(e);
       var balance=Math.max(0,Number(c.outstanding)||0);
@@ -2735,8 +2734,9 @@ header.masthead{position:relative;}
       var returned=Math.max(0,(Number(e.returnedAmount)||0));
       var net=Math.max(0,gross-returned);
       var paid=Math.max(0,net-balance);
-      items.push({e:e,gross:gross,balance:balance,paid:paid,payable:balance>0.004});
-      opts.push('<option value="'+escapeHtml(String(e.id))+'">'+escapeHtml((e.invoiceNumber||'(No invoice #)')+' — '+fmtMoney(balance))+'</option>');
+      var entryKey=(e.id!=null && String(e.id)!=='')?String(e.id):String(entries.indexOf(e));
+      items.push({e:e,key:entryKey,gross:gross,balance:balance,paid:paid,payable:balance>0.004});
+      opts.push('<option value="'+escapeHtml(entryKey)+'">'+escapeHtml((e.invoiceNumber||'(No bill #)')+' — '+fmtMoney(balance))+'</option>');
     });
     sel.innerHTML=opts.join('');
     if(current && Array.from(sel.options).some(function(o){return o.value===current;})) sel.value=current;
@@ -2747,7 +2747,7 @@ header.masthead{position:relative;}
     }else{
       items.forEach(function(x){totalGross+=x.gross;totalBalance+=x.balance;});
       var rows=items.map(function(x){
-        var e=x.e,id=String(e.id),selected=id===String(sel.value||''),payment=selected?Math.min(x.balance,Number((document.getElementById('pvAmount')||{}).value)||x.balance):0;
+        var e=x.e,id=x.key,selected=id===String(sel.value||''),payment=selected?Math.min(x.balance,Number((document.getElementById('pvAmount')||{}).value)||x.balance):0;
         if(selected) totalPayment=payment;
         var settled=!x.payable;
         return '<tr class="'+(selected?'selected ':'')+(settled?'settled':'')+'" data-pv-invoice="'+escapeHtml(id)+'">'+
@@ -2764,6 +2764,10 @@ header.masthead{position:relative;}
         if(row.classList.contains('settled')) return;
         row.addEventListener('click',function(){
           sel.value=row.getAttribute('data-pv-invoice')||'';
+          var chosen=items.find(function(x){return String(x.key)===String(sel.value);});
+          if(chosen && (chosen.e.id==null || String(chosen.e.id)==='')){
+            document.getElementById('pvSupplier').value=chosen.e.supplierName||'';
+          }
           fillPaymentVoucherInvoice();
           invoiceVoucherOptions();
         });
@@ -2778,6 +2782,7 @@ header.masthead{position:relative;}
 
   function fillPaymentVoucherInvoice(){
     var id=document.getElementById('pvInvoice').value, e=entries.find(function(x){return String(x.id)===String(id);});
+    if(!e && id!=='') e=entries[Number(id)];
     var gross=e?(Number(e.grossInvoiceAmount)||0):0;
     var total=e?paymentVoucherNet(e):0;
     var already=e?(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId):0;
