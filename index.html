@@ -716,7 +716,7 @@
 .pv-main-pane,.pv-side-pane{min-width:0}
 .pv-form-head{font-size:25px;font-weight:900;color:#8a3737;margin:2px 0 8px 8px;text-shadow:0 1px #fff}
 .pv-header-grid{
-  display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:7px;margin-bottom:7px
+  display:grid;grid-template-columns:minmax(620px,2.5fr) minmax(220px,1fr) minmax(180px,1fr) minmax(180px,1fr);gap:7px;margin-bottom:7px
 }
 .pv-classic-field{display:flex;align-items:center;min-height:34px}
 .pv-classic-field label{width:92px;font-weight:800;font-size:13px;padding-left:8px}
@@ -725,10 +725,10 @@
   background:#f9fbfd;color:#17283c;font-size:14px;font-weight:700;box-shadow:inset 0 1px 2px rgba(0,0,0,.08)
 }
 .pv-classic-field input:focus,.pv-classic-field select:focus{outline:1px solid #2e78ca;border-color:#2e78ca}
-.pv-supplier-field{position:relative}
-.pv-supplier-field #pvSupplierSearch{width:100%;height:32px;border:1px solid #879ab0;border-radius:2px;background:#f9fbfd;padding:4px 8px;font-size:14px;font-weight:800}
-.pv-supplier-field .pv-supplier-result{display:block;width:100%;box-sizing:border-box;background:#fff!important;border:0!important;border-bottom:1px solid #d2dbe4!important;color:#17283c!important;text-align:left;padding:9px 11px!important;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.pv-supplier-field .pv-supplier-result:hover{background:#dcecff!important}.pv-supplier-match{font-weight:900;color:#165fb7;background:#fff3a6}
-.pv-supplier-field .pv-supplier-dropdown{position:absolute;left:92px;right:0;top:58px;z-index:20}
+.pv-supplier-field{position:relative;min-width:620px}
+.pv-supplier-field #pvSupplierSearch{width:100%;height:42px;min-width:0;box-sizing:border-box;border:2px solid #879ab0;border-radius:3px;background:#fff;padding:6px 10px;font-size:15px;font-weight:800;color:#17283c}
+.pv-supplier-field .pv-supplier-result{display:block;width:100%;box-sizing:border-box;background:#fff!important;border:0!important;border-bottom:1px solid #d2dbe4!important;color:#17283c!important;text-align:left;padding:11px 13px!important;font-size:15px;font-weight:800;white-space:nowrap;overflow:visible;text-overflow:clip;cursor:pointer}.pv-supplier-field .pv-supplier-result:hover{background:#dcecff!important}.pv-supplier-match{font-weight:900;color:#165fb7;background:#fff3a6}
+.pv-supplier-field .pv-supplier-dropdown{position:absolute;left:92px;right:0;top:66px;width:auto;min-width:620px;z-index:1000;background:#fff;border:1px solid #879ab0;box-shadow:0 8px 18px rgba(0,0,0,.25);max-height:320px;overflow-y:auto;overflow-x:visible}
 .pv-credit-note{
   margin:7px 0 9px 0;padding:6px 10px;text-align:center;border:1px solid #a79a4c;
   background:linear-gradient(#fff9a9,#eee16b);color:#6a5b17;font-weight:800;font-size:14px;
@@ -791,7 +791,7 @@
 @media(max-width:700px){
   #paymentVoucherPanel{padding:0!important}
   #paymentVoucherPanel .pv-modal-card{width:100%;min-height:100vh}
-  .pv-classic-body{padding:6px}.pv-header-grid{grid-template-columns:1fr}.pv-bottom-grid{grid-template-columns:1fr}
+  .pv-classic-body{padding:6px}.pv-header-grid{grid-template-columns:1fr!important}.pv-supplier-field{min-width:0}.pv-supplier-field .pv-supplier-dropdown{min-width:100%;left:92px;right:0}.pv-bottom-grid{grid-template-columns:1fr}
   .pv-toolbar-btn{padding:4px 8px;font-size:11px}
   .pv-side-pane{display:block}.pv-side-box{margin-bottom:8px}
   .pv-bills-table{font-size:11px}.pv-bills-table th,.pv-bills-table td{padding:4px}
@@ -1974,7 +1974,7 @@ header.masthead{position:relative;}
             </div>
           </div>
 
-          <div class="pv-header-grid" style="grid-template-columns:1.15fr 1fr 1fr 1fr;">
+          <div class="pv-header-grid" style="grid-template-columns:minmax(620px,2.5fr) minmax(220px,1fr) minmax(180px,1fr) minmax(180px,1fr);">
             <div class="pv-classic-field pv-supplier-field">
               <label>SUPPLIER:</label>
               <div style="flex:1;position:relative">
