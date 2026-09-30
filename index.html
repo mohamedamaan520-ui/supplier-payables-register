@@ -797,7 +797,27 @@
   .pv-bills-table{font-size:11px}.pv-bills-table th,.pv-bills-table td{padding:4px}
 }
 </style>
-<style id="paymentVoucherTopStyles">
+<style id="paymentVoucherFindStyles">
+#pvFindPage{display:none;position:fixed;inset:0;z-index:1200;background:rgba(15,25,40,.78);padding:14px;overflow:auto}
+#pvFindPage .pv-find-window{width:min(1250px,100%);min-height:calc(100vh - 28px);margin:auto;background:#e7eef5;border:1px solid #6e839b;box-shadow:0 18px 60px rgba(0,0,0,.45)}
+.pv-find-titlebar{height:42px;background:linear-gradient(#347dcc,#174f91);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-weight:900}
+.pv-find-close{width:30px;height:25px;border:1px solid #793434;border-radius:3px;background:linear-gradient(#ec8888,#b72f2f);color:#fff;font-weight:900;cursor:pointer}
+.pv-find-toolbar{display:flex;gap:0;align-items:center;flex-wrap:wrap;padding:5px;background:linear-gradient(#edf4fa,#c9d8e6);border-bottom:1px solid #8095ab}
+.pv-find-toolbar button{height:34px;border:0;border-right:1px solid #9badbf;background:linear-gradient(#fff,#d9e4ee);padding:0 13px;font-weight:900;color:#1c2c40;cursor:pointer}
+.pv-find-toolbar button:hover{background:#fff}
+.pv-find-filter{display:flex;gap:7px;align-items:center;padding:9px;background:#d5e1ec;border-bottom:1px solid #93a8bb}
+.pv-find-filter label{font-weight:900;font-size:12px}.pv-find-filter input{height:32px;border:1px solid #8da0b4;background:#fff;padding:4px 8px;font-weight:700}
+#pvFindSearch{min-width:260px;flex:1}
+#pvFindList{padding:10px}
+.pv-find-table{width:100%;border-collapse:collapse;background:#eef3f7;font-size:12px}
+.pv-find-table th{padding:7px;border:1px solid #99aabb;background:linear-gradient(#eef4f9,#cbd8e5);font-weight:900}
+.pv-find-table td{padding:7px;border:1px solid #a6b5c3;font-weight:700}
+.pv-find-table tr:hover td{background:#dcecff}
+.pv-find-actions{white-space:nowrap;text-align:center}
+.pv-find-actions button{margin:1px;padding:5px 9px;border:1px solid #8da0b4;background:#f7fafc;font-weight:800;cursor:pointer}
+.pv-find-empty{text-align:center;padding:30px;color:#667789;font-weight:700;border:1px dashed #9aabba;background:#edf2f6}
+@media(max-width:700px){#pvFindPage{padding:0}.pv-find-window{min-height:100vh!important}.pv-find-filter{align-items:stretch;flex-direction:column}.pv-find-filter input{width:100%;box-sizing:border-box}#pvFindList{overflow:auto}.pv-find-table{min-width:800px}}
+</style><style id="paymentVoucherTopStyles">
   .pv-top-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
   .pv-history-area{margin:0 0 18px;padding:12px;border:1px solid var(--rule);border-radius:12px;background:var(--surface-alt)}
   .pv-history-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
@@ -2029,6 +2049,27 @@ header.masthead{position:relative;}
     </div>
   </div>
 </section>
+<div id="pvFindPage" aria-label="Find Payment Vouchers">
+  <div class="pv-find-window">
+    <div class="pv-find-titlebar">
+      <span>Find Payment Voucher</span>
+      <button class="pv-find-close" id="pvFindPageClose" type="button">×</button>
+    </div>
+    <div class="pv-find-toolbar">
+      <button type="button" id="pvFindOpenNew">NEW PV</button>
+      <button type="button" id="pvFindPrint">PRINT PV</button>
+      <button type="button" id="pvFindDelete">DELETE PV</button>
+      <button type="button" id="pvFindBack">CLOSE</button>
+    </div>
+    <div class="pv-find-filter">
+      <label for="pvFindDate">DATE</label>
+      <input type="date" id="pvFindDate">
+      <label for="pvFindSearch">SEARCH</label>
+      <input type="search" id="pvFindSearch" placeholder="Voucher / supplier / invoice / payment method...">
+    </div>
+    <div id="pvFindList"></div>
+  </div>
+</div>
   <div class="status-row" id="statusRow"></div>
 
   <div class="toolbar">
@@ -2762,6 +2803,52 @@ header.masthead{position:relative;}
     }
   }
 
+  function closePaymentVoucherFindPage(){
+    var p=document.getElementById('pvFindPage'); if(p)p.style.display='none';
+    document.body.style.overflow='';
+  }
+  function renderPaymentVoucherFindPage(){
+    var box=document.getElementById('pvFindList'); if(!box)return;
+    var d=document.getElementById('pvFindDate'), qel=document.getElementById('pvFindSearch');
+    var date=d?String(d.value||'').trim():'', q=qel?String(qel.value||'').trim().toLowerCase():'';
+    var rows=paymentVouchers.slice().sort(function(a,b){
+      return String(b.payment_date||'').localeCompare(String(a.payment_date||'')) ||
+             String(b.voucher_no||'').localeCompare(String(a.voucher_no||''));
+    }).filter(function(v){
+      if(date && String(v.payment_date||'')!==date)return false;
+      if(!q)return true;
+      return [v.voucher_no,v.payment_date,v.supplier_name,v.invoice_number,v.payment_method,v.bank_name,v.cheque_ref,v.paid_by,v.received_by,v.remarks]
+        .some(function(x){return String(x||'').toLowerCase().indexOf(q)>=0;});
+    });
+    if(!rows.length){box.innerHTML='<div class="pv-find-empty">No payment vouchers found.</div>';return;}
+    box.innerHTML='<table class="pv-find-table"><thead><tr><th>PV NO.</th><th>DATE</th><th>SUPPLIER</th><th>INVOICE</th><th>PAY TYPE</th><th>AMOUNT</th><th>ACTIONS</th></tr></thead><tbody>'+
+      rows.map(function(v){
+        return '<tr data-find-pv="'+escapeHtml(String(v.id))+'">'+
+          '<td>'+escapeHtml(v.voucher_no||'')+'</td><td>'+escapeHtml(v.payment_date||'')+'</td>'+
+          '<td>'+escapeHtml(v.supplier_name||'')+'</td><td>'+escapeHtml(v.invoice_number||'')+'</td>'+
+          '<td>'+escapeHtml(v.payment_method||'')+'</td><td>'+fmtMoney(v.amount)+'</td>'+
+          '<td class="pv-find-actions"><button type="button" data-open-pv="'+escapeHtml(String(v.id))+'">OPEN</button><button type="button" data-print-pv="'+escapeHtml(String(v.id))+'">PRINT</button><button type="button" data-delete-pv="'+escapeHtml(String(v.id))+'">DELETE</button></td>'+
+        '</tr>';
+      }).join('')+'</tbody></table>';
+  }
+  function openPaymentVoucherFindPage(){
+    var p=document.getElementById('pvFindPage'); if(!p)return;
+    var d=document.getElementById('pvFindDate'),q=document.getElementById('pvFindSearch');
+    if(d)d.value='';if(q)q.value='';
+    document.getElementById('paymentVoucherPanel').style.display='none';
+    p.style.display='block';document.body.style.overflow='hidden';
+    renderPaymentVoucherFindPage();
+    setTimeout(function(){if(q)q.focus();},50);
+  }
+  function openPaymentVoucherFromFind(id){
+    var v=paymentVouchers.find(function(x){return String(x.id)===String(id);});
+    if(!v)return;
+    closePaymentVoucherFindPage();
+    editPaymentVoucher(id);
+    document.getElementById('paymentVoucherPanel').style.display='block';
+    document.body.style.overflow='hidden';
+  }
+
   function updatePaymentVoucherCredit(){
     var name=String((document.getElementById('pvSupplier')||{}).value||'').trim().toLowerCase();
     var total=0;
@@ -2974,7 +3061,7 @@ header.masthead{position:relative;}
     w.focus();
     setTimeout(function(){ w.print(); }, 300);
   }
-  async function savePaymentVoucher(){
+  async function savePaymentVoucher(closeAfterSave){
     var invoiceId=document.getElementById('pvInvoice').value, e=entries.find(function(x){return String(x.id)===String(invoiceId);});
     if(!e){showToast('Please select an existing invoice.');return;}
     var amount=Number(document.getElementById('pvAmount').value)||0, total=paymentVoucherNet(e), already=(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId), balance=Math.max(0,total-already);
@@ -2991,7 +3078,7 @@ header.masthead{position:relative;}
         if(r.error)throw r.error;v=r.data;
       }
       if(editingVoucherId){var ix=paymentVouchers.findIndex(function(x){return String(x.id)===String(editingVoucherId);});if(ix>=0)paymentVouchers[ix]=v;}else paymentVouchers.push(v);
-      renderPaymentVouchers();renderBankAccounts();render();saveLocalData();closePaymentVoucher();showToast('Payment voucher saved.');
+      renderPaymentVouchers();renderBankAccounts();render();saveLocalData();if(closeAfterSave===false){resetPaymentVoucherForm();document.getElementById('paymentVoucherPanel').style.display='block';}else{closePaymentVoucher();}showToast('Payment voucher saved.');
     }catch(err){showToast('Payment voucher save failed: '+(err.message||'check Supabase table/RLS'));}finally{btn.disabled=false;}
   }
   async function deletePaymentVoucher(id){
@@ -4226,13 +4313,10 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     el=document.getElementById('cancelPaymentVoucherBtnTop'); if(el) el.addEventListener('click',closePaymentVoucher);
     el=document.getElementById('pvToolbarCloseBtn'); if(el) el.addEventListener('click',closePaymentVoucher);
     el=document.getElementById('pvNewBtn'); if(el) el.addEventListener('click',function(){resetPaymentVoucherForm();updatePaymentVoucherSidebar();});
-    el=document.getElementById('pvFindBtn'); if(el) el.addEventListener('click',function(){
-      var h=document.getElementById('pvHistoryArea'); if(h) h.style.display=h.style.display==='none'?'block':'none';
-      renderPaymentVouchers();
-    });
+    el=document.getElementById('pvFindBtn'); if(el) el.addEventListener('click',openPaymentVoucherFindPage);
     el=document.getElementById('pvDeleteBtn'); if(el) el.addEventListener('click',function(){if(editingVoucherId) deletePaymentVoucher(editingVoucherId);});
-    el=document.getElementById('pvPayNewBtn'); if(el) el.addEventListener('click',async function(){await savePaymentVoucher();if(document.getElementById('paymentVoucherPanel').style.display==='block')resetPaymentVoucherForm();});
-    el=document.getElementById('pvPayCloseBtn'); if(el) el.addEventListener('click',savePaymentVoucher);
+    el=document.getElementById('pvPayNewBtn'); if(el) el.addEventListener('click',function(){savePaymentVoucher(false);});
+    el=document.getElementById('pvPayCloseBtn'); if(el) el.addEventListener('click',function(){savePaymentVoucher(true);});
     el=document.getElementById('pvPrintChequeBtn'); if(el) el.addEventListener('click',function(){showToast('Cheque print uses the current payment details.');});
     el=document.getElementById('pvSupplierSearch'); if(el) {
       el.addEventListener('input',filterPaymentVoucherSuppliers);
