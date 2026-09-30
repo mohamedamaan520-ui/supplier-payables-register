@@ -2710,7 +2710,7 @@ header.masthead{position:relative;}
     var list=document.getElementById('pvInvoiceList');
     if(!sel||!list) return;
     var current=sel.value;
-    var supplierName=supplier?String(supplier.value||'').trim().toLowerCase():'';
+    var supplierName=supplier?String(supplier.value||'').trim().replace(/\s+/g,' ').toLowerCase():'';
     var note=document.getElementById('pvInvoiceSelectionNote');
     var opts=['<option value="">— Select invoice —</option>'];
 
@@ -2727,7 +2727,8 @@ header.masthead{position:relative;}
       return String(a.invoiceDate||'').localeCompare(String(b.invoiceDate||'')) ||
              String(a.invoiceNumber||'').localeCompare(String(b.invoiceNumber||''));
     }).forEach(function(e){
-      if(String(e.supplierName||'').trim().toLowerCase()!==supplierName) return;
+      var entrySupplier=String(e.supplierName||'').trim().replace(/\s+/g,' ').toLowerCase();
+      if(!entrySupplier || entrySupplier!==supplierName) return;
       var c=computeEntry(e);
       var balance=Math.max(0,Number(c.outstanding)||0);
       var gross=Math.max(0,(Number(e.grossInvoiceAmount)||0));
@@ -2780,6 +2781,16 @@ header.masthead{position:relative;}
   }
 
 
+  function refreshSelectedPaymentVoucherSupplier(){
+    var s=document.getElementById('pvSupplier');
+    if(s && String(s.value||'').trim()){
+      invoiceVoucherOptions();
+      updatePaymentVoucherCredit();
+      updatePaymentVoucherSidebar();
+    }
+  }
+
+
   function fillPaymentVoucherInvoice(){
     var id=document.getElementById('pvInvoice').value, e=entries.find(function(x){return String(x.id)===String(id);});
     if(!e && id!=='') e=entries[Number(id)];
@@ -2787,7 +2798,10 @@ header.masthead{position:relative;}
     var total=e?paymentVoucherNet(e):0;
     var already=e?(Number(e.paymentMade)||0)+voucherPaidForEntry(e.id,editingVoucherId):0;
     var balance=e?Math.max(0,total-already):0;
-    if(e) document.getElementById('pvSupplier').value=e.supplierName||'';
+    if(e){
+      document.getElementById('pvSupplier').value=e.supplierName||'';
+      var sbox=document.getElementById('pvSupplierSearch'); if(sbox) sbox.value=e.supplierName||'';
+    }
     var supDetails=document.getElementById('pvSupplierDetails');
     if(supDetails) supDetails.style.display=e?'block':'none';
     var supName=document.getElementById('pvSupplierName'); if(supName) supName.value=e?e.supplierName||'':'';
@@ -3427,6 +3441,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
       await loadProfileCloud();
       renderBankAccounts();
       render();
+      refreshSelectedPaymentVoucherSupplier();
       setSyncNote('☁ Synced to Supabase · '+entries.length+' '+(entries.length===1?'entry':'entries'));
       subscribeRealtime();
       return true;
