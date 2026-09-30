@@ -681,6 +681,122 @@
     #paymentVoucherPanel .pv-modal-head h2{font-size:20px}
   }
 </style>
+
+<style id="paymentVoucherClassicStyles">
+/* ===== Classic ERP Payment Voucher workspace ===== */
+#paymentVoucherPanel{
+  position:fixed!important;inset:0!important;z-index:900!important;display:none;
+  overflow:auto;padding:14px!important;background:rgba(25,38,58,.72);
+  backdrop-filter:blur(3px);
+}
+#paymentVoucherPanel .pv-modal-card{
+  width:min(1480px,calc(100vw - 28px));min-height:calc(100vh - 28px);margin:0 auto;
+  padding:0;border:1px solid #7087a4;border-radius:4px;
+  background:linear-gradient(#dce8f4,#eef4f9);box-shadow:0 16px 50px rgba(0,0,0,.38);
+  color:#18283d;overflow:hidden;
+}
+.pv-classic-titlebar{
+  height:42px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 12px;background:linear-gradient(#2f75c8,#174e91);
+  color:#fff;border-bottom:1px solid #143d70;box-shadow:inset 0 1px rgba(255,255,255,.3);
+}
+.pv-classic-title{font-size:18px;font-weight:800;letter-spacing:.01em}
+.pv-classic-close{width:31px!important;height:25px!important;padding:0!important;border:1px solid #783535!important;border-radius:3px!important;background:linear-gradient(#e98282,#b62e2e)!important;color:#fff!important;font-weight:900!important}
+.pv-classic-toolbar{
+  display:flex;align-items:center;gap:0;min-height:48px;padding:4px 8px;
+  background:linear-gradient(#edf3f8,#c8d8e7);border-bottom:1px solid #7c93ad;overflow:auto;
+}
+.pv-toolbar-btn{
+  min-height:34px;padding:4px 12px;border:0;border-right:1px solid #94a8bc;background:linear-gradient(#f8fbfd,#d7e2ed);
+  color:#1b2c42;font-weight:800;font-size:13px;white-space:nowrap;cursor:pointer;
+}
+.pv-toolbar-btn:hover{background:#fff}
+.pv-toolbar-btn .pv-icon{font-size:16px;margin-right:5px}
+.pv-classic-body{padding:10px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:10px}
+.pv-main-pane,.pv-side-pane{min-width:0}
+.pv-form-head{font-size:25px;font-weight:900;color:#8a3737;margin:2px 0 8px 8px;text-shadow:0 1px #fff}
+.pv-header-grid{
+  display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:7px;margin-bottom:7px
+}
+.pv-classic-field{display:flex;align-items:center;min-height:34px}
+.pv-classic-field label{width:92px;font-weight:800;font-size:13px;padding-left:8px}
+.pv-classic-field input,.pv-classic-field select{
+  flex:1;height:32px;border:1px solid #8da0b5;border-radius:2px;padding:4px 8px;
+  background:#f9fbfd;color:#17283c;font-size:14px;font-weight:700;box-shadow:inset 0 1px 2px rgba(0,0,0,.08)
+}
+.pv-classic-field input:focus,.pv-classic-field select:focus{outline:1px solid #2e78ca;border-color:#2e78ca}
+.pv-supplier-field{position:relative}
+.pv-supplier-field #pvSupplierSearch{width:100%;height:32px;border:1px solid #879ab0;border-radius:2px;background:#f9fbfd;padding:4px 8px;font-size:14px;font-weight:800}
+.pv-supplier-field .pv-supplier-result{background:#fff!important;border:1px solid #a6b5c5!important;color:#17283c!important}
+.pv-supplier-field .pv-supplier-dropdown{position:absolute;left:92px;right:0;top:58px;z-index:20}
+.pv-credit-note{
+  margin:7px 0 9px 0;padding:6px 10px;text-align:center;border:1px solid #a79a4c;
+  background:linear-gradient(#fff9a9,#eee16b);color:#6a5b17;font-weight:800;font-size:14px;
+}
+.pv-pay-box{
+  border:2px solid #6683a3;background:#cbd9e8;box-shadow:inset 0 0 0 1px #f8fbff;
+}
+.pv-pay-box-title{display:grid;grid-template-columns:1fr 1fr;background:#3e6089;color:#fff;font-weight:900;text-align:center}
+.pv-pay-box-title span{padding:4px;border-right:1px solid #9db1c8}
+.pv-pay-box-row{display:grid;grid-template-columns:1fr 1fr}
+.pv-pay-box-row select,.pv-pay-box-row input{width:100%;height:34px;border:1px solid #8ea0b3;border-radius:0;background:#eef3cf;font-weight:900;font-size:16px;text-align:right;padding:4px 8px}
+.pv-pay-box-row select{text-align:left;background:#e7edf4}
+.pv-section-title{
+  height:34px;display:flex;align-items:center;justify-content:center;
+  border:1px solid #7e97b3;background:linear-gradient(#4b70a0,#294f7d);color:#fff;font-weight:900;letter-spacing:.04em
+}
+.pv-bills-wrap{border:1px solid #7d94ad;background:#d9e3ed;margin-top:8px}
+.pv-bills-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:7px;padding:4px 8px;border-bottom:1px solid #9badc0;font-weight:800;font-size:12px}
+.pv-bills-table{width:100%;border-collapse:collapse;font-size:13px;background:#e9eff5}
+.pv-bills-table th{padding:6px 7px;border:1px solid #9aabba;background:linear-gradient(#edf3f8,#cbd8e5);font-weight:900}
+.pv-bills-table td{padding:6px 7px;border:1px solid #a9b8c7;background:rgba(255,255,255,.24);font-weight:700}
+.pv-bills-table tbody tr{cursor:pointer}
+.pv-bills-table tbody tr:hover td{background:#dcecff}
+.pv-bills-table tbody tr.selected td{background:#b9d8f8;box-shadow:inset 0 1px #fff}
+.pv-bills-table tbody tr.settled{opacity:.62;cursor:default}
+.pv-bills-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.pv-bills-table .pay-cell{background:#e9f2d5;color:#174d25;font-weight:900}
+.pv-bills-total td{background:#e9c6b8!important;font-weight:900;font-size:14px}
+.pv-invoice-hint{padding:5px 9px;color:#5d6c7b;font-size:11px;background:#edf3f7;border-top:1px solid #aab9c7}
+.pv-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.pv-bottom-box{border:1px solid #8499b0;background:#d9e4ee;padding:7px}
+.pv-bottom-box label{display:block;font-size:11px;font-weight:900;margin-bottom:3px}
+.pv-bottom-box input,.pv-bottom-box select{width:100%;height:31px;border:1px solid #8fa2b5;background:#f8fafc;padding:4px 7px;font-weight:700}
+.pv-side-box{border:1px solid #7b91aa;background:#dbe5ee;margin-bottom:10px}
+.pv-side-title{padding:6px;text-align:center;background:linear-gradient(#4b6d96,#2c4e77);color:#fff;font-weight:900}
+.pv-side-table{width:100%;border-collapse:collapse;font-size:12px}
+.pv-side-table th{background:#edf2f7;border:1px solid #a2b1c0;padding:5px;font-weight:900}
+.pv-side-table td{border:1px solid #a8b6c4;padding:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.pv-side-table tr:nth-child(even) td{background:#e9eff4}
+.pv-side-scroll{max-height:250px;overflow:auto}
+.pv-last-scroll{max-height:320px;overflow:auto}
+.pv-side-empty{padding:12px;text-align:center;color:#657588;font-size:12px}
+.pv-classic-footer{display:flex;justify-content:flex-end;gap:7px;padding:8px;border-top:1px solid #879caf;background:linear-gradient(#e8eef4,#c9d6e2)}
+.pv-classic-footer button{font-weight:900}
+.pv-history-area{display:none!important}
+.pv-supplier-search-wrap{grid-column:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important}
+.pv-supplier-search-wrap label{display:none!important}
+#pvSupplier{display:none!important}
+#pvInvoice{display:none!important}
+#pvSupplierName,#pvSupplierContact,#pvGrossAmount,#pvInvoiceAmount,#pvAlreadyPaid,#pvBalance{display:none!important}
+.pv-invoice-section{grid-column:auto!important}
+.pv-invoice-title{display:none!important}
+#pvInvoiceList{display:block!important}
+#pvAmount{background:#eef3cf!important;font-size:16px!important;font-weight:900!important}
+@media(max-width:1050px){
+  .pv-classic-body{grid-template-columns:1fr}
+  .pv-header-grid{grid-template-columns:1fr 1fr}
+  .pv-side-pane{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pv-side-box{margin:0}
+}
+@media(max-width:700px){
+  #paymentVoucherPanel{padding:0!important}
+  #paymentVoucherPanel .pv-modal-card{width:100%;min-height:100vh}
+  .pv-classic-body{padding:6px}.pv-header-grid{grid-template-columns:1fr}.pv-bottom-grid{grid-template-columns:1fr}
+  .pv-toolbar-btn{padding:4px 8px;font-size:11px}
+  .pv-side-pane{display:block}.pv-side-box{margin-bottom:8px}
+  .pv-bills-table{font-size:11px}.pv-bills-table th,.pv-bills-table td{padding:4px}
+}
+</style>
 <style id="paymentVoucherTopStyles">
   .pv-top-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
   .pv-history-area{margin:0 0 18px;padding:12px;border:1px solid var(--rule);border-radius:12px;background:var(--surface-alt)}
@@ -1803,64 +1919,116 @@ header.masthead{position:relative;}
   </section>
 
     <section class="payment-voucher-manager" aria-label="Payment vouchers" style="margin-top:18px;">
-    <div id="paymentVoucherPanel" style="display:none;">
-      <div class="pv-modal-card">
-        <div class="pv-modal-head">
-          <div>
-            <h2>Payment Voucher</h2>
-            <div class="pv-modal-sub">Create a new payment, find old vouchers by date, edit or delete an existing voucher.</div>
-          </div>
-          <div class="pv-top-actions">
-            <button class="btn btn-ghost btn-small" id="pvFindBtn" type="button">🔎 Find</button>
-            <button class="btn btn-ghost btn-small" id="pvDeleteBtn" type="button" disabled>🗑 Delete</button>
-            <button class="btn btn-primary btn-small" id="pvNewBtn" type="button">＋ New Payment</button>
-            <button class="btn btn-ghost btn-small" id="cancelPaymentVoucherBtnTop" type="button">✕ Close</button>
-          </div>
-        </div>
-        <div id="pvHistoryArea" class="pv-history-area" style="display:none;">
-          <div class="pv-history-tools">
-            <strong>Find Payment Vouchers</strong>
-            <input type="date" id="pvHistoryDate" aria-label="Find payment vouchers by date">
-            <input type="search" id="pvHistorySearch" placeholder="Search voucher, supplier, invoice..." aria-label="Search payment vouchers">
-            <button class="btn btn-ghost btn-small" id="pvHistoryClearBtn" type="button">Clear</button>
-          </div>
-          <div id="pvHistoryList" class="pv-history-list"></div>
-        </div>
-      <div class="field-grid">
-        <div class="field"><label>Voucher No.</label><input id="pvVoucherNo" readonly></div>
-        <div class="field"><label>Payment Date</label><input type="date" id="pvDate"></div>
-        <div class="pv-supplier-search-wrap">
-          <label for="pvSupplierSearch">1. Search Supplier</label>
-          <input id="pvSupplierSearch" type="search" placeholder="Type supplier name..." autocomplete="new-password" autocorrect="off" autocapitalize="words" spellcheck="false">
-          <div id="pvSupplierResults" style="margin-top:8px;"></div>
-          <input type="hidden" id="pvSupplier">
-        </div>
-        <div class="pv-selection-note" id="pvInvoiceSelectionNote">Select a supplier to load that supplier's invoices only.</div>
-        <div class="pv-invoice-section" style="grid-column:1/-1;">
-  <label class="pv-invoice-title">2. Supplier Invoices — Outstanding Payment</label>
-  <div id="pvInvoiceList" class="pv-invoice-list"></div>
-  <select id="pvInvoice" style="display:none;"><option value="">— Select invoice —</option></select>
-</div>
-        <div class="field"><label>Payment Amount</label><input type="number" id="pvAmount" min="0" step="0.01"></div>
-        <div class="field"><label>Payment Method</label><select id="pvMethod">
-          <option value="">— Select —</option><option value="Cash">Cash</option><option value="Bank">Bank</option><option value="Card">Card</option><option value="Cheque (CQ)">Cheque (CQ)</option>
-        </select></div>
-        <div class="field" id="pvBankField" style="display:none;"><label>Bank Account</label><select id="pvBank"><option value="">— Select bank account —</option></select></div>
-        <div class="field" id="pvChequeField" style="display:none;"><label>Cheque No. / Reference</label><input id="pvCheque"></div>
-        <div class="field"><label>Paid By</label><input id="pvPaidBy"></div>
-        <div class="field"><label>Received By</label><input id="pvReceivedBy"></div>
-        <div class="field" style="grid-column:span 2;"><label>Remarks</label><input id="pvRemarks"></div>
+  <div id="paymentVoucherPanel" style="display:none;">
+    <div class="pv-modal-card">
+      <div class="pv-classic-titlebar">
+        <div class="pv-classic-title">New Payment Voucher</div>
+        <button class="pv-classic-close" id="cancelPaymentVoucherBtnTop" type="button">×</button>
       </div>
-      <div id="pvBankInfo" style="display:none;margin:12px 0;padding:12px;border-radius:10px;background:rgba(255,255,255,.04);"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+
+      <div class="pv-classic-toolbar">
+        <button class="pv-toolbar-btn" id="pvPayCloseBtn" type="button">💾 PAY → CLOSE</button>
+        <button class="pv-toolbar-btn" id="pvPayNewBtn" type="button">💾 PAY → NEW [F12]</button>
+        <button class="pv-toolbar-btn" id="pvNewBtn" type="button">📄 NEW PV [SH+ESC]</button>
+        <button class="pv-toolbar-btn" id="pvToolbarCloseBtn" type="button">✕ CLOSE</button>
+        <button class="pv-toolbar-btn" id="pvFindBtn" type="button">🔎 FIND PV</button>
+        <button class="pv-toolbar-btn" id="printPaymentVoucherBtn" type="button">🖨 PRINT PV</button>
+        <button class="pv-toolbar-btn" id="pvPrintChequeBtn" type="button">🖨 PRINT CHQ</button>
+        <button class="pv-toolbar-btn" id="pvDeleteBtn" type="button" disabled>🗑 DELETE PV</button>
+      </div>
+
+      <div class="pv-classic-body">
+        <div class="pv-main-pane">
+          <div class="pv-form-head">Supplier Payment Voucher</div>
+
+          <div class="pv-header-grid">
+            <div class="pv-classic-field"><label>PV NUM:</label><input id="pvVoucherNo" readonly></div>
+            <div class="pv-classic-field"><label>DATE:</label><input type="date" id="pvDate"></div>
+            <div class="pv-classic-field"><label>LOC:</label><select id="pvLocation"><option>02 RAMB</option><option>01 MAIN</option></select></div>
+            <div class="pv-pay-box">
+              <div class="pv-pay-box-title"><span>PAY TYPE</span><span>PAY AMOUNT</span></div>
+              <div class="pv-pay-box-row">
+                <select id="pvMethod"><option value="">—</option><option value="Cash">CASH</option><option value="Bank">BANK</option><option value="Card">CARD</option><option value="Cheque (CQ)">CHEQUE</option></select>
+                <input type="number" id="pvAmount" min="0" step="0.01" placeholder="0.00">
+              </div>
+            </div>
+          </div>
+
+          <div class="pv-header-grid" style="grid-template-columns:1.15fr 1fr 1fr 1fr;">
+            <div class="pv-classic-field pv-supplier-field">
+              <label>SUPPLIER:</label>
+              <div style="flex:1;position:relative">
+                <input id="pvSupplierSearch" type="search" placeholder="Type supplier name..." autocomplete="new-password" autocorrect="off" autocapitalize="words" spellcheck="false">
+                <div id="pvSupplierResults" style="margin-top:2px;"></div>
+              </div>
+              <input type="hidden" id="pvSupplier">
+            </div>
+            <div class="pv-classic-field"><label>MEMO:</label><input id="pvRemarks" placeholder=""></div>
+            <div class="pv-classic-field"><label>PAID BY:</label><input id="pvPaidBy"></div>
+            <div class="pv-classic-field"><label>RECEIVED:</label><input id="pvReceivedBy"></div>
+          </div>
+
+          <div class="pv-credit-note" id="pvCreditNotice">This supplier has credits available: Rs. 0.00</div>
+
+          <div class="pv-bills-wrap">
+            <div class="pv-section-title">BILLS DUE</div>
+            <div class="pv-bills-toolbar">
+              <span>AUTO APPLY THE AMOUNT TO DUE BILLS</span>
+              <input type="checkbox" id="pvAutoApply" checked>
+            </div>
+            <div id="pvInvoiceList" class="pv-invoice-list"></div>
+            <select id="pvInvoice" style="display:none;"><option value="">— Select invoice —</option></select>
+            <div class="pv-invoice-hint" id="pvInvoiceSelectionNote">Select a supplier to load that supplier's bills.</div>
+          </div>
+
+          <div class="pv-bottom-grid">
+            <div class="pv-bottom-box">
+              <label>PAYMENT ACCOUNT</label>
+              <select id="pvBank"><option value="">— Select bank account —</option></select>
+              <div id="pvBankInfo" style="margin-top:5px;font-size:11px;font-weight:700;"></div>
+            </div>
+            <div class="pv-bottom-box">
+              <label>CHEQUE NO. / REFERENCE</label>
+              <input id="pvCheque">
+              <div id="pvBankField" style="display:none"></div><div id="pvChequeField" style="display:none"></div>
+            </div>
+          </div>
+
+          <div class="pv-history-area" id="pvHistoryArea">
+            <div class="pv-history-tools">
+              <strong>Find Payment Vouchers</strong>
+              <input type="date" id="pvHistoryDate">
+              <input type="search" id="pvHistorySearch" placeholder="Search voucher, supplier, invoice...">
+              <button class="btn btn-ghost btn-small" id="pvHistoryClearBtn" type="button">Clear</button>
+            </div>
+            <div id="pvHistoryList" class="pv-history-list"></div>
+          </div>
+        </div>
+
+        <aside class="pv-side-pane">
+          <div class="pv-side-box">
+            <div class="pv-side-title">MOST RECENT PAYMENT VOUCHERS</div>
+            <div class="pv-side-scroll">
+              <table class="pv-side-table"><thead><tr><th>DATE</th><th>SUPPLIER</th><th>PM</th><th>PAYMENT</th></tr></thead><tbody id="pvRecentList"></tbody></table>
+            </div>
+          </div>
+          <div class="pv-side-box">
+            <div class="pv-side-title" id="pvSupplierRecentTitle">LAST 10 PAYMENTS FOR SUPPLIER</div>
+            <div class="pv-last-scroll">
+              <table class="pv-side-table"><thead><tr><th>DATE</th><th>PM</th><th>REF#</th><th>AMOUNT</th></tr></thead><tbody id="pvSupplierRecentList"></tbody></table>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="pv-classic-footer">
         <button class="btn btn-ghost" id="cancelPaymentVoucherBtn" type="button">Close</button>
-        <button class="btn btn-ghost" id="printPaymentVoucherBtn" type="button">Print</button>
+        <button class="btn btn-ghost" id="pvFooterPrintBtn" type="button">Print PV</button>
         <button class="btn btn-primary" id="savePaymentVoucherBtn" type="button">Save Payment Voucher</button>
       </div>
-      </div>
     </div>
-
-  </section>
+  </div>
+</section>
   <div class="status-row" id="statusRow"></div>
 
   <div class="toolbar">
@@ -2499,8 +2667,7 @@ header.masthead{position:relative;}
   function invoiceVoucherOptions(){
     var sel=document.getElementById('pvInvoice'), supplier=document.getElementById('pvSupplier');
     var list=document.getElementById('pvInvoiceList');
-    if(!sel) return;
-
+    if(!sel||!list) return;
     var current=sel.value;
     var supplierName=supplier?String(supplier.value||'').trim().toLowerCase():'';
     var note=document.getElementById('pvInvoiceSelectionNote');
@@ -2508,82 +2675,63 @@ header.masthead{position:relative;}
 
     if(!supplierName){
       sel.innerHTML=opts.join('');
-      if(list) list.innerHTML='<div class="pv-no-invoice">Select a supplier first. Only that supplier\'s invoices will appear here.</div>';
-      if(note) note.textContent='Select a supplier to load that supplier\'s invoices only.';
+      list.innerHTML='<div class="pv-no-invoice" style="padding:18px;text-align:center">Select a supplier to load due bills.</div>';
+      if(note) note.textContent='Select a supplier to load that supplier\'s bills.';
+      updatePaymentVoucherSidebar();
       return;
     }
 
-    // IMPORTANT: show every invoice belonging to the selected supplier.
-    // The balance is calculated separately, so an invoice cannot disappear
-    // just because another payment field is stored differently.
     var items=[];
     entries.slice().sort(function(a,b){
       return String(a.invoiceDate||'').localeCompare(String(b.invoiceDate||'')) ||
              String(a.invoiceNumber||'').localeCompare(String(b.invoiceNumber||''));
     }).forEach(function(e){
       if(e.id==null || String(e.id)==='') return;
-      var en=String(e.supplierName||'').trim().toLowerCase();
-      if(en!==supplierName) return;
-
+      if(String(e.supplierName||'').trim().toLowerCase()!==supplierName) return;
       var c=computeEntry(e);
-      var balance=Number(c.outstanding)||0;
-      var total=Math.max(0,(Number(e.grossInvoiceAmount)||0)-(Number(e.returnedAmount)||0));
-
-      items.push({
-        e:e,
-        total:total,
-        balance:balance,
-        outstanding:balance>0.004
-      });
-
-      opts.push(
-        '<option value="'+escapeHtml(String(e.id))+'">'+
-        escapeHtml((e.invoiceNumber||'(No invoice #)')+' — Balance '+fmtMoney(Math.max(0,balance)))+
-        '</option>'
-      );
+      var balance=Math.max(0,Number(c.outstanding)||0);
+      var gross=Math.max(0,(Number(e.grossInvoiceAmount)||0));
+      var returned=Math.max(0,(Number(e.returnedAmount)||0));
+      var net=Math.max(0,gross-returned);
+      var paid=Math.max(0,net-balance);
+      items.push({e:e,gross:gross,balance:balance,paid:paid,payable:balance>0.004});
+      opts.push('<option value="'+escapeHtml(String(e.id))+'">'+escapeHtml((e.invoiceNumber||'(No invoice #)')+' — '+fmtMoney(balance))+'</option>');
     });
-
     sel.innerHTML=opts.join('');
+    if(current && Array.from(sel.options).some(function(o){return o.value===current;})) sel.value=current;
 
-    if(current && Array.from(sel.options).some(function(o){return o.value===current;})){
-      sel.value=current;
-    }
-
-    if(list){
-      if(!items.length){
-        list.innerHTML='<div class="pv-no-invoice">No invoices found for this supplier.</div>';
-      }else{
-        list.innerHTML=items.map(function(x){
-          var e=x.e, id=String(e.id);
-          var selected=id===String(sel.value||'');
-          var balance=Math.max(0,x.balance);
-          var payable=x.outstanding;
-          return '<button type="button" class="pv-invoice-card'+(selected?' selected':'')+'" data-pv-invoice="'+escapeHtml(id)+'"'+
-            (payable?'':' disabled style="opacity:.58;cursor:not-allowed"')+'>'+
-            '<div><span class="pv-ic-label">Invoice</span><span class="pv-ic-value">'+escapeHtml(e.invoiceNumber||'(No invoice #)')+'</span></div>'+
-            '<div><span class="pv-ic-label">Invoice Date</span><span class="pv-ic-value">'+escapeHtml(fmtDateDisplay(e.invoiceDate)||'')+'</span></div>'+
-            '<div><span class="pv-ic-label">'+(payable?'Outstanding Balance':'Status')+'</span><span class="pv-ic-balance">'+(payable?fmtMoney(balance):'PAID / SETTLED')+'</span></div>'+
-            '<div><span class="btn '+(payable?'btn-primary':'btn-ghost')+' btn-small pv-pay-btn">'+(payable?(selected?'Selected':'Pay this invoice'):'Settled')+'</span></div>'+
-            '</button>';
-        }).join('');
-
-        Array.from(list.querySelectorAll('[data-pv-invoice]:not([disabled])')).forEach(function(card){
-          card.addEventListener('click',function(){
-            sel.value=card.getAttribute('data-pv-invoice')||'';
-            fillPaymentVoucherInvoice();
-            invoiceVoucherOptions();
-            sel.dispatchEvent(new Event('change'));
-          });
+    var totalGross=0,totalBalance=0,totalPayment=0;
+    if(!items.length){
+      list.innerHTML='<table class="pv-bills-table"><tbody><tr><td colspan="6" style="text-align:center;padding:18px">No bills found for this supplier.</td></tr></tbody></table>';
+    }else{
+      items.forEach(function(x){totalGross+=x.gross;totalBalance+=x.balance;});
+      var rows=items.map(function(x){
+        var e=x.e,id=String(e.id),selected=id===String(sel.value||''),payment=selected?Math.min(x.balance,Number((document.getElementById('pvAmount')||{}).value)||x.balance):0;
+        if(selected) totalPayment=payment;
+        var settled=!x.payable;
+        return '<tr class="'+(selected?'selected ':'')+(settled?'settled':'')+'" data-pv-invoice="'+escapeHtml(id)+'">'+
+          '<td>'+escapeHtml(fmtDateDisplay(computeEntry(e).dueDateStr)||'—')+'</td>'+
+          '<td><strong>'+escapeHtml(e.invoiceNumber||'(No bill #)')+'</strong></td>'+
+          '<td>'+escapeHtml(e.remarks||e.purchaseBasis||'')+'</td>'+
+          '<td class="num">'+fmtMoney(x.gross)+'</td>'+
+          '<td class="num">'+fmtMoney(x.balance)+'</td>'+
+          '<td class="num pay-cell">'+(settled?'0.00':fmtMoney(payment).replace('Rs. ',''))+'</td>'+
+        '</tr>';
+      }).join('');
+      list.innerHTML='<table class="pv-bills-table"><thead><tr><th>DUE DATE</th><th>BILL NO.</th><th>MEMO</th><th>BILL AMOUNT</th><th>BALANCE DUE</th><th>PAYMENT</th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr class="pv-bills-total"><td colspan="3" style="text-align:right">Totals:</td><td class="num">'+fmtMoney(totalGross)+'</td><td class="num">'+fmtMoney(totalBalance)+'</td><td class="num">'+fmtMoney(totalPayment)+'</td></tr></tfoot></table>';
+      Array.from(list.querySelectorAll('tbody tr[data-pv-invoice]')).forEach(function(row){
+        if(row.classList.contains('settled')) return;
+        row.addEventListener('click',function(){
+          sel.value=row.getAttribute('data-pv-invoice')||'';
+          fillPaymentVoucherInvoice();
+          invoiceVoucherOptions();
         });
-      }
+      });
     }
-
-    var outstandingCount=items.filter(function(x){return x.outstanding;}).length;
-    if(note){
-      note.textContent=items.length ?
-        (items.length+' invoice(s) for the selected supplier. '+outstandingCount+' outstanding invoice(s) available for payment.') :
-        'No invoices found for this supplier.';
-    }
+    var count=items.filter(function(x){return x.payable;}).length;
+    if(note) note.textContent=items.length+' bill(s) for selected supplier · '+count+' outstanding bill(s) available.';
+    updatePaymentVoucherSidebar();
+    updatePaymentVoucherCredit();
   }
 
 
@@ -2612,6 +2760,32 @@ header.masthead{position:relative;}
       amount.value=e&&balance>0?balance.toFixed(2):'';
       amount.max=e&&balance>0?balance.toFixed(2):'';
     }
+  }
+
+  function updatePaymentVoucherCredit(){
+    var name=String((document.getElementById('pvSupplier')||{}).value||'').trim().toLowerCase();
+    var total=0;
+    if(name) entries.forEach(function(e){
+      if(String(e.supplierName||'').trim().toLowerCase()===name) total+=Math.max(0,Number(e.returnedAmount)||0);
+    });
+    var box=document.getElementById('pvCreditNotice');
+    if(box) box.textContent='This supplier has credits available: '+fmtMoney(total);
+  }
+
+  function updatePaymentVoucherSidebar(){
+    var recent=document.getElementById('pvRecentList'), mine=document.getElementById('pvSupplierRecentList');
+    if(!recent||!mine) return;
+    var all=paymentVouchers.slice().sort(function(a,b){return String(b.payment_date||'').localeCompare(String(a.payment_date||''))||String(b.created_at||'').localeCompare(String(a.created_at||''));});
+    recent.innerHTML=all.slice(0,8).map(function(v){
+      return '<tr><td>'+escapeHtml(v.payment_date||'')+'</td><td title="'+escapeHtml(v.supplier_name||'')+'">'+escapeHtml(v.supplier_name||'').slice(0,14)+'</td><td>'+escapeHtml(String(v.payment_method||'').replace('Cheque (CQ)','CHQ').slice(0,4))+'</td><td class="num">'+fmtMoney(v.amount).replace('Rs. ','')+'</td></tr>';
+    }).join('') || '<tr><td colspan="4" class="pv-side-empty">No payment vouchers yet.</td></tr>';
+    var name=String((document.getElementById('pvSupplier')||{}).value||'').trim().toLowerCase();
+    var title=document.getElementById('pvSupplierRecentTitle');
+    if(title) title.textContent=name?'LAST 10 PAYMENTS FOR '+String((document.getElementById('pvSupplierSearch')||{}).value||'SUPPLIER').toUpperCase():'LAST 10 PAYMENTS FOR SUPPLIER';
+    var mineRows=all.filter(function(v){return String(v.supplier_name||'').trim().toLowerCase()===name;}).slice(0,10);
+    mine.innerHTML=mineRows.map(function(v){
+      return '<tr><td>'+escapeHtml(v.payment_date||'')+'</td><td>'+escapeHtml(String(v.payment_method||'').replace('Cheque (CQ)','CHQ').slice(0,5))+'</td><td>'+escapeHtml(v.cheque_ref||v.invoice_number||'')+'</td><td class="num">'+fmtMoney(v.amount).replace('Rs. ','')+'</td></tr>';
+    }).join('') || '<tr><td colspan="4" class="pv-side-empty">Select a supplier to view payments.</td></tr>';
   }
 
   function renderPaymentVoucherBankOptions(){
@@ -2686,6 +2860,7 @@ header.masthead{position:relative;}
     var del=document.getElementById('pvDeleteBtn'); if(del) del.disabled=true;
   }
   function renderPaymentVouchers(){
+    updatePaymentVoucherSidebar();
     var box=document.getElementById('pvHistoryList'); if(!box)return;
     var searchEl=document.getElementById('pvHistorySearch');
     var dateEl=document.getElementById('pvHistoryDate');
@@ -4049,6 +4224,16 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
     el=document.getElementById('newPaymentVoucherBtn'); if(el) el.addEventListener('click',openPaymentVoucher);
     el=document.getElementById('cancelPaymentVoucherBtn'); if(el) el.addEventListener('click',closePaymentVoucher);
     el=document.getElementById('cancelPaymentVoucherBtnTop'); if(el) el.addEventListener('click',closePaymentVoucher);
+    el=document.getElementById('pvToolbarCloseBtn'); if(el) el.addEventListener('click',closePaymentVoucher);
+    el=document.getElementById('pvNewBtn'); if(el) el.addEventListener('click',function(){resetPaymentVoucherForm();updatePaymentVoucherSidebar();});
+    el=document.getElementById('pvFindBtn'); if(el) el.addEventListener('click',function(){
+      var h=document.getElementById('pvHistoryArea'); if(h) h.style.display=h.style.display==='none'?'block':'none';
+      renderPaymentVouchers();
+    });
+    el=document.getElementById('pvDeleteBtn'); if(el) el.addEventListener('click',function(){if(editingVoucherId) deletePaymentVoucher(editingVoucherId);});
+    el=document.getElementById('pvPayNewBtn'); if(el) el.addEventListener('click',async function(){await savePaymentVoucher();if(document.getElementById('paymentVoucherPanel').style.display==='block')resetPaymentVoucherForm();});
+    el=document.getElementById('pvPayCloseBtn'); if(el) el.addEventListener('click',savePaymentVoucher);
+    el=document.getElementById('pvPrintChequeBtn'); if(el) el.addEventListener('click',function(){showToast('Cheque print uses the current payment details.');});
     el=document.getElementById('pvSupplierSearch'); if(el) {
       el.addEventListener('input',filterPaymentVoucherSuppliers);
       el.addEventListener('focus',filterPaymentVoucherSuppliers);
@@ -4086,6 +4271,8 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
       var amt=document.getElementById('pvAmount'); if(amt) amt.value='';
       invoiceVoucherOptions();
       fillPaymentVoucherInvoice();
+      updatePaymentVoucherCredit();
+      updatePaymentVoucherSidebar();
     });
     el=document.getElementById('pvInvoice'); if(el) el.addEventListener('change',function(){document.getElementById('pvAmount').value='';fillPaymentVoucherInvoice();});
     el=document.getElementById('pvMethod'); if(el) el.addEventListener('change',updatePaymentVoucherMethod);
@@ -4100,6 +4287,7 @@ var CLOUD_MIGRATION_KEY = 'spr_cloud_migration_v1';
       var b=bankAccounts[Number(document.getElementById('pvBank').value)];if(b){v.bank_name=b.bankName||'';v.bank_account_no=b.accountNo||'';}
       printPaymentVoucher(v);
     });
+    el=document.getElementById('pvFooterPrintBtn'); if(el) el.addEventListener('click',function(){var b=document.getElementById('printPaymentVoucherBtn');if(b)b.click();});
     el=document.getElementById('paymentVoucherSearch'); if(el) el.addEventListener('input',renderPaymentVouchers);
     el=document.getElementById('paymentVoucherDateFilter'); if(el) el.addEventListener('change',renderPaymentVouchers);
     el=document.getElementById('clearPaymentVoucherSearch'); if(el) el.addEventListener('click',function(){
