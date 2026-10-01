@@ -2958,7 +2958,7 @@ header.masthead{position:relative;}
     var br=document.getElementById('pvChequeBranch')?.value||'';
     var ac=document.getElementById('pvChequeAccount')?.value||'';
     if(!d&&!n&&!br&&!ac) return '';
-    return ['CHQ',d,n,br,ac].map(function(x){return String(x||'').replace(/\\|/g,' ');}).join('|');
+    return ['CHQ',d,n,br,ac].map(function(x){return String(x||'').replace(/\|/g,' ');}).join('|');
   }
   function decodePaymentVoucherCheque(ref){
     var p=String(ref||'').split('|');
