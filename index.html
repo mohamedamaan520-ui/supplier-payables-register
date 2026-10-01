@@ -534,7 +534,17 @@
 .pv-method-panel{border:1px solid #8da0b5;background:var(--surface-alt);padding:9px 10px}
 .pv-method-panel>label{display:block;font-size:11px;font-weight:900;letter-spacing:.05em;margin-bottom:5px}
 .pv-method-panel select,.pv-method-panel input{width:100%;height:34px;border:1px solid #8da0b5;border-radius:3px;padding:5px 8px;background:var(--bg);font-weight:700}
-.pv-method-info{margin-top:5px;font-size:11px;font-weight:700;color:var(--ink-soft)}
+.pv-method-info{margin-top:0;font-size:11px;font-weight:700;color:var(--ink-soft)}
+.pv-bank-detail-table{border:1px solid #8da0b5;background:var(--bg)}
+.pv-bank-detail-row{display:grid;grid-template-columns:1.25fr 1fr;border-bottom:1px solid #8da0b5}
+.pv-bank-detail-row:last-child{border-bottom:0}
+.pv-bank-detail-cell{padding:7px 9px;border-right:1px solid #8da0b5}
+.pv-bank-detail-cell:last-child{border-right:0}
+.pv-bank-detail-cell>span{display:block;font-size:10px;font-weight:900;letter-spacing:.05em;margin-bottom:4px;color:var(--ink-soft)}
+.pv-bank-detail-cell select,.pv-bank-detail-cell input{width:100%;height:34px;border:1px solid #8da0b5;border-radius:3px;padding:5px 8px;background:var(--surface);font-weight:800}
+.pv-bank-detail-cell input[readonly]{background:var(--surface-alt);color:var(--ink)}
+.pv-bank-balance-row{grid-template-columns:1fr}
+.pv-bank-balance-row .pv-bank-detail-cell{border-right:0}
 .pv-cheque-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .pv-cheque-grid label{display:block;font-size:10px;font-weight:900;margin-bottom:4px;color:var(--ink-soft)}
 @media(max-width:700px){.pv-cheque-grid{grid-template-columns:1fr 1fr}}
@@ -2014,8 +2024,24 @@ header.masthead{position:relative;}
           <div class="pv-payment-details" id="pvPaymentDetails">
             <div class="pv-method-panel" id="pvBankField" style="display:none">
               <label>BANK ACCOUNT</label>
-              <select id="pvBank"><option value="">— Select bank account —</option></select>
-              <div id="pvBankInfo" class="pv-method-info"></div>
+              <div class="pv-bank-detail-table">
+                <div class="pv-bank-detail-row">
+                  <div class="pv-bank-detail-cell">
+                    <span>BANK</span>
+                    <select id="pvBank"><option value="">— Select bank account —</option></select>
+                  </div>
+                  <div class="pv-bank-detail-cell">
+                    <span>ACCOUNT NO.</span>
+                    <input id="pvBankAccountNo" type="text" readonly placeholder="Account number">
+                  </div>
+                </div>
+                <div class="pv-bank-detail-row pv-bank-balance-row">
+                  <div class="pv-bank-detail-cell">
+                    <span>ACCOUNT BALANCE</span>
+                    <div id="pvBankInfo" class="pv-method-info"></div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="pv-method-panel" id="pvCardField" style="display:none">
               <label>CARD TYPE</label>
@@ -2965,11 +2991,13 @@ header.masthead{position:relative;}
     return {date:'',no:String(ref||''),branch:'',account:''};
   }
   function updatePaymentVoucherBankInfo(){
-    var i=document.getElementById('pvBank').value, b=bankAccounts[Number(i)], box=document.getElementById('pvBankInfo');
+    var sel=document.getElementById('pvBank'), i=sel?sel.value:'', b=bankAccounts[Number(i)];
+    var box=document.getElementById('pvBankInfo'), account=document.getElementById('pvBankAccountNo');
+    if(account) account.value=b?String(b.accountNo||''):'';
     if(!box) return;
     if(!b){box.textContent='';return;}
     var current=(Number(b.openingBalance)||0)-(bankPaymentsByAccount()[String(b.accountNo||'')]||0);
-    box.innerHTML='<strong>'+escapeHtml(b.bankName||'Bank')+'</strong> · Account: '+escapeHtml(b.accountNo||'')+' · Current balance: <strong>'+fmtMoney(current)+'</strong>';
+    box.innerHTML='<strong>'+escapeHtml(b.bankName||'Bank')+'</strong> · Current balance: <strong>'+fmtMoney(current)+'</strong>';
   }
   function nextPaymentVoucherNumber(){
     var max=0;
@@ -2987,6 +3015,7 @@ header.masthead{position:relative;}
     document.getElementById('pvSupplier').value='';
     invoiceVoucherOptions();
     document.getElementById('pvVoucherNo').value=nextPaymentVoucherNumber();
+    var pvBankAccountNo=document.getElementById('pvBankAccountNo'); if(pvBankAccountNo) pvBankAccountNo.value='';
     document.getElementById('pvDate').value=fmtDateUTC(todayUTC());
     ['pvInvoice','pvSupplier','pvInvoiceAmount','pvAlreadyPaid','pvBalance','pvAmount','pvCheque','pvChequeDate','pvChequeNo','pvChequeBranch','pvChequeAccount','pvPaidBy','pvReceivedBy','pvRemarks'].forEach(function(id){var x=document.getElementById(id);if(x)x.value='';});
     document.getElementById('pvMethod').value=''; document.getElementById('pvBank').value=''; document.getElementById('pvCardType').value=''; updatePaymentVoucherMethod();
